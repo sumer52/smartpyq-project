@@ -195,3 +195,4 @@ See `.env.example` for the full template.
 ## License
 
 MIT License — see [LICENSE](LICENSE) for details.
+# Trigger CI
