@@ -191,3 +191,7 @@ See `.env.example` for the full template.
 ## Documentation
 
 - `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `docs/BACKUP_RESTORE.md` — architecture and operations.
+
+## License
+
+MIT License — see [LICENSE](LICENSE) for details.
