@@ -1,0 +1,74 @@
+# =============================================================================
+# SmartPYQ Docker Ignore
+# =============================================================================
+
+# Git
+.git
+.gitignore
+
+# Environment files (secrets)
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.egg-info
+dist
+build
+.eggs
+*.egg
+
+# Virtual environments
+.venv
+venv
+ENV
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Uploaded files (will be mounted as volume)
+uploads/
+storage/
+
+# Test files
+tests/
+test_*.pdf
+e2e_*.pdf
+.pytest_cache
+.coverage
+htmlcov
+
+# Documentation
+docs/
+*.md
+LICENSE
+
+# Frontend (separate build)
+smartpyq-frontend/
+
+# Docker
+docker-compose*.yml
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Supabase temp
+supabase/.temp/

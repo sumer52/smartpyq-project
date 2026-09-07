@@ -1,0 +1,87 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+firebase-debug.log*
+firebase-debug.*.log*
+
+# Firebase cache
+.firebase/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Dependency directories
+node_modules/
+
+# Optional npm cache
+.npm/
+.eslintcache
+
+# dotenv environment variables (real values never committed; keep .env.example)
+.env
+.env.local
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.mypy_cache/
+.pytest_cache/
+.venv/
+dist/
+build/
+*.egg-info/
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Uploaded files (use Supabase Storage in production)
+uploads/
+storage/
+
+# Test artifacts
+test_*.pdf
+e2e_*.pdf
+*.tmp
+*.temp
+*.bak
+*.old
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Supabase
+supabase/.temp/
+
+# Build output
+smartpyq-frontend/dist/
+smartpyq-frontend/build/
+
+# Local tooling / session artifacts
+.freebuff/
+freebuff-visuals/
+.pinokio_agent/
+
+# Local dev notes (living document, not part of the shipped repo)
+/brain.md

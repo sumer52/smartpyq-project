@@ -1,0 +1,1413 @@
+{
+  "RDBMS": {
+    "1. Introduction to DBMS — 10 Q&A": [],
+    "2. Relational Model — 10 Q&A": [],
+    "3. ER Model — 10 Q&A": [],
+    "4. SQL — 10 Q&A": [],
+    "5. Normalization — 10 Q&A": [],
+    "6. Functional Dependencies — 10 Q&A": [],
+    "7. Transactions — 10 Q&A": [],
+    "8. Concurrency Control — 10 Q&A": [],
+    "9. Indexing — 10 Q&A": [],
+    "10. Database Security — 10 Q&A": [],
+    "11. Query Processing — 10 Q&A": [],
+    "Introduction to DBMS": [
+      {
+        "q": "What is a DBMS?",
+        "a": "A Database Management System (DBMS) is software that lets users define, create, maintain, and control access to a database, providing an interface between the database and its users/applications."
+      },
+      {
+        "q": "List four advantages of a DBMS over traditional file systems.",
+        "a": "1) Reduced data redundancy 2) Data consistency 3) Better data security and access control 4) Support for concurrent access and data integrity constraints."
+      },
+      {
+        "q": "What is data independence? Name its two types.",
+        "a": "Data independence is the capacity to change the schema at one level without affecting the schema at the next higher level. Types: Logical data independence and Physical data independence."
+      },
+      {
+        "q": "Differentiate between DDL and DML with an example each.",
+        "a": "DDL (Data Definition Language) defines schema, e.g. CREATE TABLE. DML (Data Manipulation Language) manipulates data, e.g. INSERT, UPDATE, DELETE, SELECT."
+      },
+      {
+        "q": "What is the three-schema architecture?",
+        "a": "It organizes a database into three levels: the Internal (physical) level, the Conceptual (logical) level, and the External (view) level, to achieve data independence."
+      },
+      {
+        "q": "What is a database schema versus a database instance?",
+        "a": "A schema is the overall design/structure of the database (relatively static), while an instance is the actual data stored in the database at a particular moment (changes over time)."
+      },
+      {
+        "q": "Name the main components of a DBMS environment.",
+        "a": "Hardware, software (DBMS + OS), data, procedures, database access language, and users (DBA, application programmers, end users)."
+      },
+      {
+        "q": "What is a Database Administrator (DBA) responsible for?",
+        "a": "Schema definition, storage structure/access method definition, granting authorization, routine maintenance, backup/recovery, and performance monitoring."
+      },
+      {
+        "q": "What is metadata in the context of DBMS?",
+        "a": "Metadata is 'data about data' — information describing the structure, constraints, and properties of the database, typically stored in the data dictionary/system catalog."
+      }
+    ],
+    "Relational Model": [
+      {
+        "q": "What are the disadvantages of using a DBMS?",
+        "a": "Increased cost of hardware/software, complexity of design and administration, need for trained personnel, and overhead for security/backup features."
+      },
+      {
+        "q": "Define a relation in the relational model.",
+        "a": "A relation is a table consisting of rows (tuples) and columns (attributes), where each tuple represents a unique record and each attribute has a domain of allowed values."
+      },
+      {
+        "q": "What is a tuple and what is degree of a relation?",
+        "a": "A tuple is a single row of a relation representing one record. The degree of a relation is the number of attributes (columns) it has."
+      },
+      {
+        "q": "Differentiate between candidate key, primary key, and alternate key.",
+        "a": "A candidate key is a minimal set of attributes that uniquely identifies a tuple. The primary key is the candidate key chosen to identify tuples uniquely. Alternate keys are the remaining candidate keys not chosen as primary key."
+      },
+      {
+        "q": "What is a foreign key and what integrity constraint does it enforce?",
+        "a": "A foreign key is an attribute (or set) in one relation referencing the primary key of another relation; it enforces referential integrity, ensuring references point to existing tuples."
+      },
+      {
+        "q": "What is entity integrity constraint?",
+        "a": "It states that no attribute of a primary key can be NULL, ensuring every tuple can be uniquely identified."
+      },
+      {
+        "q": "What are the relational algebra operations? Name at least six.",
+        "a": "Selection (σ), Projection (π), Union (∪), Set Difference (−), Cartesian Product (×), Rename (ρ), and derived operations like Join (■) and Intersection (∩)."
+      },
+      {
+        "q": "Differentiate between relational algebra and relational calculus.",
+        "a": "Relational algebra is a procedural query language specifying 'how' to obtain results via a sequence of operations, while relational calculus is a non-procedural/declarative language specifying 'what' result is needed."
+      },
+      {
+        "q": "What is a super key?",
+        "a": "A super key is any set of attributes that uniquely identifies a tuple in a relation; it may contain extra attributes beyond the minimal candidate key."
+      },
+      {
+        "q": "Explain the Cartesian Product operation with an example.",
+        "a": "Cartesian Product (R × S) combines every tuple of relation R with every tuple of relation S, producing a result with degree = deg(R)+deg(S) and cardinality = |R|×|S|."
+      }
+    ],
+    "ER Model": [
+      {
+        "q": "What is a view in the relational model?",
+        "a": "A view is a virtual relation derived from one or more base tables using a query; it does not store data itself but presents data dynamically computed from underlying tables."
+      },
+      {
+        "q": "What is an Entity-Relationship (ER) model?",
+        "a": "The ER model is a high-level conceptual data model that represents data using entities, attributes, and relationships to design the logical structure of a database."
+      },
+      {
+        "q": "Differentiate between strong entity and weak entity.",
+        "a": "A strong entity has its own primary key and exists independently. A weak entity has no primary key of its own and depends on a strong (owner) entity for identification, using a partial/discriminator key."
+      },
+      {
+        "q": "What are the types of attributes in the ER model?",
+        "a": "Simple, Composite, Single-valued, Multi-valued, and Derived attributes."
+      },
+      {
+        "q": "Explain the cardinality ratios possible between two entity sets.",
+        "a": "One-to-One (1:1), One-to-Many (1:N), Many-to-One (N:1), and Many-to-Many (M:N), describing how many instances of one entity relate to instances of another."
+      },
+      {
+        "q": "What is participation constraint? Differentiate total and partial participation.",
+        "a": "Participation constraint specifies whether every entity instance must participate in a relationship. Total participation requires every entity to participate; partial participation allows some entities to not participate."
+      },
+      {
+        "q": "What is generalization and specialization in ER modeling?",
+        "a": "Generalization combines lower-level entities with common features into a higher-level entity (bottom-up). Specialization divides a higher-level entity into sub-entities based on distinguishing characteristics (top-down)."
+      },
+      {
+        "q": "What is aggregation in the ER model?",
+        "a": "Aggregation is a concept used to model a relationship between a relationship set and an entity set, treating the relationship as a higher-level entity for further relationships."
+      },
+      {
+        "q": "How is a weak entity represented in an ER diagram?",
+        "a": "A weak entity is represented by a double rectangle, its identifying relationship by a double diamond, and its partial key is underlined with a dashed line."
+      },
+      {
+        "q": "Explain the process of converting an ER diagram to relational tables.",
+        "a": "Each strong entity becomes a table with its attributes; weak entities become tables including the owner's primary key; 1:1 and 1:N relationships are handled by foreign keys; M:N relationships require a separate junction table."
+      }
+    ],
+    "SQL": [
+      {
+        "q": "What is a recursive relationship in ER modeling?",
+        "a": "A recursive (unary) relationship occurs when an entity set is related to itself, e.g., an 'Employee supervises Employee' relationship."
+      },
+      {
+        "q": "What is the difference between DELETE, TRUNCATE, and DROP?",
+        "a": "DELETE removes rows (can be rolled back, fires triggers, keeps table structure); TRUNCATE removes all rows quickly (minimal logging, resets identity, cannot use WHERE); DROP removes the entire table structure and data permanently."
+      },
+      {
+        "q": "Write the SQL to find the second highest salary from an Employee table.",
+        "a": "SELECT MAX(salary) FROM Employee WHERE salary < (SELECT MAX(salary) FROM Employee);"
+      },
+      {
+        "q": "What is the difference between WHERE and HAVING clauses?",
+        "a": "WHERE filters individual rows before grouping/aggregation, and cannot use aggregate functions. HAVING filters groups after GROUP BY, and can use aggregate functions."
+      },
+      {
+        "q": "Explain the difference between INNER JOIN and OUTER JOIN.",
+        "a": "INNER JOIN returns only matching rows from both tables. OUTER JOIN (LEFT/RIGHT/FULL) returns matching rows plus unmatched rows from one or both tables, filling missing values with NULL."
+      },
+      {
+        "q": "What are aggregate functions in SQL? Give four examples.",
+        "a": "Aggregate functions perform a calculation over a set of rows and return a single value: COUNT(), SUM(), AVG(), MAX(), MIN()."
+      },
+      {
+        "q": "What is a subquery? Differentiate correlated and non-correlated subqueries.",
+        "a": "A subquery is a query nested inside another query. A non-correlated subquery executes independently of the outer query; a correlated subquery references columns from the outer query and executes once per outer row."
+      },
+      {
+        "q": "What is the purpose of GROUP BY and give a query example.",
+        "a": "GROUP BY groups rows sharing a value into summary rows, often used with aggregate functions. Example: SELECT dept, COUNT(*) FROM Employee GROUP BY dept;"
+      },
+      {
+        "q": "Differentiate between UNION and UNION ALL.",
+        "a": "UNION combines results of two queries and removes duplicate rows. UNION ALL combines results without removing duplicates, making it faster."
+      }
+    ],
+    "invoked explicitly. A trigger is a set of SQL statements automatically executed in response to specified": [
+      {
+        "q": "What is a stored procedure and what is a trigger?",
+        "a": "A stored procedure is a precompiled set of SQL statements stored in the database and events (INSERT/UPDATE/DELETE) on a table."
+      }
+    ],
+    "Normalization": [
+      {
+        "q": "Explain the SQL constraints: PRIMARY KEY, UNIQUE, CHECK, and NOT NULL.",
+        "a": "PRIMARY KEY uniquely identifies each row and disallows NULLs; UNIQUE ensures all values in a column are distinct (allows one NULL); CHECK enforces a condition on column values; NOT NULL disallows NULL values in a column."
+      },
+      {
+        "q": "What is normalization and why is it needed?",
+        "a": "Normalization is the process of organizing relations to reduce data redundancy and avoid insertion, update, and deletion anomalies by decomposing tables based on functional dependencies."
+      },
+      {
+        "q": "Define First Normal Form (1NF).",
+        "a": "A relation is in 1NF if every attribute contains only atomic (indivisible) values and there are no repeating groups or multi-valued attributes."
+      },
+      {
+        "q": "Define Second Normal Form (2NF).",
+        "a": "A relation is in 2NF if it is in 1NF and every non-prime attribute is fully functionally dependent on the entire primary key (no partial dependency on part of a composite key)."
+      },
+      {
+        "q": "Define Third Normal Form (3NF).",
+        "a": "A relation is in 3NF if it is in 2NF and has no transitive dependency, i.e., no non-prime attribute depends on another non-prime attribute."
+      },
+      {
+        "q": "What is Boyce-Codd Normal Form (BCNF)? How does it differ from 3NF?",
+        "a": "A relation is in BCNF if for every functional dependency X→Y, X must be a super key. BCNF is stricter than 3NF because it removes anomalies that can still exist in 3NF when a non-key attribute determines part of a candidate key."
+      },
+      {
+        "q": "What are insertion, deletion, and update anomalies?",
+        "a": "Insertion anomaly: unable to insert data due to missing unrelated data. Deletion anomaly: deleting a record unintentionally removes other useful data. Update anomaly: updating data in multiple places, risking inconsistency, due to redundancy."
+      },
+      {
+        "q": "What is a partial dependency? Give an example.",
+        "a": "A partial dependency occurs when a non-prime attribute depends on only part of a composite primary key. Example: In (StudentID, CourseID) → InstructorName, if InstructorName depends only on CourseID, it's a partial dependency."
+      },
+      {
+        "q": "What is a transitive dependency? Give an example.",
+        "a": "A transitive dependency occurs when a non-prime attribute depends on another non-prime attribute rather than directly on the key. Example: StudentID → DeptID → DeptHead means DeptHead transitively depends on StudentID."
+      },
+      {
+        "q": "Explain 4NF and the concept of multi-valued dependency.",
+        "a": "4NF requires a relation to be in BCNF and have no non-trivial multi-valued dependencies. A multi-valued dependency (X ■ Y) exists when attribute X determines a set of values of Y independently of other attributes."
+      }
+    ],
+    "Functional Dependencies": [
+      {
+        "q": "What is denormalization and when is it used?",
+        "a": "Denormalization is intentionally introducing redundancy into a normalized schema to improve read performance, often used in data warehousing/reporting systems where query speed outweighs storage/update efficiency."
+      },
+      {
+        "q": "Define functional dependency with notation.",
+        "a": "A functional dependency X → Y means that for any two tuples, if they agree on attribute set X, they must also agree on attribute set Y; X is called the determinant."
+      },
+      {
+        "q": "What is a trivial functional dependency?",
+        "a": "A functional dependency X → Y is trivial if Y is a subset of X, since it always holds true (e.g., {A,B} → A)."
+      },
+      {
+        "q": "State Armstrong's Axioms.",
+        "a": "Reflexivity: if Y ⊆ X then X → Y. Augmentation: if X → Y then XZ → YZ. Transitivity: if X → Y and Y → Z then X → Z."
+      },
+      {
+        "q": "What is closure of a set of attributes (X+)?",
+        "a": "The closure X+ is the set of all attributes that are functionally determined by X using the given functional dependencies and Armstrong's axioms; used to find candidate keys."
+      },
+      {
+        "q": "How do you determine if X is a candidate key using attribute closure?",
+        "a": "Compute X+ using the functional dependencies; if X+ equals the full set of attributes in the relation, and no proper subset of X has this property, then X is a candidate key."
+      },
+      {
+        "q": "What is a canonical (minimal) cover of functional dependencies?",
+        "a": "A minimal cover is an equivalent set of functional dependencies with singleton right-hand sides, no extraneous attributes on the left, and no redundant dependencies."
+      },
+      {
+        "q": "Differentiate between full functional dependency and partial functional dependency.",
+        "a": "In full functional dependency, Y depends on the entire composite key X (removing any attribute from X breaks the dependency). In partial dependency, Y depends only on a subset of the composite key X."
+      },
+      {
+        "q": "What are derived (inferred) functional dependencies?",
+        "a": "Derived functional dependencies are dependencies that can be logically inferred from a given set of FDs using Armstrong's axioms (reflexivity, augmentation, transitivity), even though not explicitly stated."
+      },
+      {
+        "q": "Explain the additional rules: Union, Decomposition, and Pseudotransitivity.",
+        "a": "Union: if X→Y and X→Z then X→YZ. Decomposition: if X→YZ then X→Y and X→Z. Pseudotransitivity: if X→Y and WY→Z then WX→Z."
+      }
+    ],
+    "Transactions": [
+      {
+        "q": "Why are functional dependencies important in database design?",
+        "a": "They form the theoretical basis for normalization, help identify candidate keys, detect redundancy, and guide lossless, dependency-preserving decomposition of relations."
+      },
+      {
+        "q": "What is a transaction in DBMS?",
+        "a": "A transaction is a logical unit of work comprising one or more database operations (read/write) that must be executed atomically, taking the database from one consistent state to another."
+      },
+      {
+        "q": "List and explain the ACID properties.",
+        "a": "Atomicity: all operations complete or none do. Consistency: transaction takes DB from one valid state to another. Isolation: concurrent transactions don't interfere with each other. Durability: committed changes persist even after failure."
+      },
+      {
+        "q": "Describe the states of a transaction.",
+        "a": "Active → Partially Committed → Committed, or Active → Failed → Aborted. States: Active (executing), Partially Committed (last statement executed), Committed (successfully completed), Failed (cannot proceed), Aborted (rolled back)."
+      },
+      {
+        "q": "What is the difference between COMMIT and ROLLBACK?",
+        "a": "COMMIT permanently saves all changes made by a transaction to the database. ROLLBACK undoes all changes made by the transaction, restoring the database to its state before the transaction began."
+      },
+      {
+        "q": "What is a schedule in the context of transactions?",
+        "a": "A schedule is a sequence of interleaved operations from multiple transactions executed by the DBMS, used to represent the chronological order of execution."
+      },
+      {
+        "q": "Differentiate serial schedule from concurrent (non-serial) schedule.",
+        "a": "A serial schedule executes transactions one after another without interleaving. A concurrent/non-serial schedule interleaves operations of multiple transactions to improve throughput and resource utilization."
+      },
+      {
+        "q": "What is serializability and why is it important?",
+        "a": "Serializability is a property ensuring that the outcome of executing transactions concurrently is equivalent to some serial execution of those transactions, guaranteeing correctness while allowing concurrency."
+      },
+      {
+        "q": "Differentiate between conflict serializability and view serializability.",
+        "a": "Conflict serializability requires a schedule to be equivalent to a serial schedule by swapping non-conflicting operations (checked via precedence graph). View serializability is a broader notion requiring equivalent reads/final writes, even if operations aren't swappable."
+      },
+      {
+        "q": "What is a checkpoint and why is it used in recovery?",
+        "a": "A checkpoint is a point where the DBMS writes all buffered/modified data to disk and records this in the log, reducing recovery time after a crash by limiting how far back the log must be scanned."
+      }
+    ],
+    "Concurrency Control": [
+      {
+        "q": "Explain the concept of a log-based recovery system (WAL).",
+        "a": "Write-Ahead Logging (WAL) requires that log records describing a change be written to stable storage before the actual data change, enabling undo/redo operations to recover the database to a consistent state after a crash."
+      },
+      {
+        "q": "What is concurrency control and why is it needed?",
+        "a": "Concurrency control is a set of techniques ensuring that concurrent execution of transactions leaves the database in a consistent state, preventing problems like lost updates, dirty reads, and inconsistent retrievals."
+      },
+      {
+        "q": "List the main problems that arise due to uncontrolled concurrent execution.",
+        "a": "Lost Update problem, Dirty Read (Temporary Update) problem, Incorrect Summary (Inconsistent Retrieval) problem, and Unrepeatable Read problem."
+      },
+      {
+        "q": "Explain the Lock-Based Protocol and its types of locks.",
+        "a": "A lock-based protocol requires a transaction to acquire a lock before accessing data. Shared (S) lock allows read access by multiple transactions; Exclusive (X) lock allows only one transaction to read/write, blocking all others."
+      },
+      {
+        "q": "What is the Two-Phase Locking (2PL) Protocol?",
+        "a": "2PL has a Growing Phase where a transaction acquires locks but releases none, and a Shrinking Phase where it releases locks but acquires none; this guarantees conflict serializability."
+      },
+      {
+        "q": "What is Strict Two-Phase Locking?",
+        "a": "Strict 2PL requires that all exclusive locks held by a transaction be released only after the transaction commits or aborts, preventing cascading rollbacks."
+      },
+      {
+        "q": "Explain Timestamp Ordering Protocol.",
+        "a": "Each transaction is assigned a unique timestamp when it starts; the protocol orders conflicting operations based on these timestamps, ensuring the schedule is equivalent to a serial schedule in timestamp order."
+      },
+      {
+        "q": "What is deadlock? Name two methods to handle it.",
+        "a": "Deadlock occurs when two or more transactions wait indefinitely for each other's locked resources. Handling methods: Deadlock Prevention (e.g., Wait-Die, Wound-Wait schemes) and Deadlock Detection & Recovery (using wait-for graphs)."
+      },
+      {
+        "q": "Explain the Wait-Die and Wound-Wait deadlock prevention schemes.",
+        "a": "Wait-Die: an older transaction waits for a younger one holding a lock; a younger transaction requesting a lock held by an older one is aborted (dies). Wound-Wait: an older transaction preempts (wounds/aborts) a younger one holding the lock; a younger transaction waits for an older one."
+      },
+      {
+        "q": "What is starvation in concurrency control and how can it be avoided?",
+        "a": "Starvation occurs when a transaction waits indefinitely because other transactions are repeatedly given priority. It can be avoided using a first-come-first-served lock granting policy or by increasing priority the longer a transaction waits."
+      }
+    ],
+    "Indexing": [
+      {
+        "q": "What is Multiversion Concurrency Control (MVCC)?",
+        "a": "MVCC maintains multiple versions of a data item, allowing read operations to access an older consistent version while write operations create a new version, increasing concurrency by avoiding read-write conflicts."
+      },
+      {
+        "q": "What is an index in a database and why is it used?",
+        "a": "An index is a data structure that improves the speed of data retrieval operations on a table at the cost of additional storage and slower writes, by providing quick lookup paths instead of scanning the whole table."
+      },
+      {
+        "q": "Differentiate between primary index and secondary index.",
+        "a": "A primary index is built on the primary/ordering key of a sorted data file (one entry per block). A secondary index is built on a non-ordering (often non-key) field and requires an entry for every record, used for additional access paths."
+      },
+      {
+        "q": "What is a clustering index?",
+        "a": "A clustering index is defined on an ordering non-key field of the data file, where records are physically sorted according to the indexed attribute; only one clustering index can exist per table."
+      },
+      {
+        "q": "Explain dense index versus sparse index.",
+        "a": "A dense index has an index entry for every search key value (record) in the file. A sparse index has entries only for some records (typically one per block), reducing index size but requiring a search within the block."
+      },
+      {
+        "q": "What is a B-Tree and why is it used for indexing?",
+        "a": "A B-Tree is a balanced, self-organizing tree data structure where each node can have multiple children and keys are kept sorted, allowing efficient (logarithmic time) search, insertion, and deletion — well suited for disk-based indexing."
+      },
+      {
+        "q": "Differentiate between B-Tree and B+-Tree.",
+        "a": "In a B-Tree, data pointers exist in both internal and leaf nodes. In a B+-Tree, all data pointers exist only in leaf nodes, which are also linked sequentially, making B+-Trees more efficient for range queries."
+      },
+      {
+        "q": "What is a multilevel index?",
+        "a": "A multilevel index is an index built on top of a first-level index, creating additional levels to reduce the number of blocks scanned when the first-level index itself becomes too large to fit in memory."
+      },
+      {
+        "q": "What is a hash index and how does hashing work?",
+        "a": "A hash index uses a hash function to map a search key directly to a bucket/location storing the record, enabling average O(1) lookup time; it's efficient for equality searches but not for range queries."
+      },
+      {
+        "q": "What are the trade-offs of using too many indexes on a table?",
+        "a": "While indexes speed up SELECT queries, they slow down INSERT, UPDATE, and DELETE operations (since indexes must also be updated) and consume additional disk storage."
+      }
+    ],
+    "Database Security": [
+      {
+        "q": "What is a composite (multi-column) index?",
+        "a": "A composite index is built on two or more columns of a table together, useful for queries that filter or sort on those columns jointly; column order in the index matters for query optimization."
+      },
+      {
+        "q": "What is database security and what threats does it address?",
+        "a": "Database security refers to mechanisms protecting the database from unauthorized access, misuse, or damage, addressing threats like theft/fraud, loss of confidentiality/privacy, loss of integrity, and loss of availability."
+      },
+      {
+        "q": "Differentiate between authentication and authorization.",
+        "a": "Authentication verifies the identity of a user (who they are), typically via credentials like passwords. Authorization determines what an authenticated user is permitted to do (their access rights/privileges)."
+      }
+    ],
+    "owner/administrator, typically implemented using GRANT and REVOKE SQL commands.": [
+      {
+        "q": "What is Discretionary Access Control (DAC)?",
+        "a": "DAC grants and revokes access privileges to database objects at the discretion of the"
+      },
+      {
+        "q": "What is Mandatory Access Control (MAC)?",
+        "a": "MAC assigns security classifications to both data and users (e.g., classified levels), and access is granted based on comparing these classification levels according to a system-wide policy, not user discretion."
+      },
+      {
+        "q": "Explain Role-Based Access Control (RBAC).",
+        "a": "RBAC assigns permissions to roles rather than individual users; users are then assigned to roles, simplifying management of access rights especially in large organizations."
+      },
+      {
+        "q": "What are SQL GRANT and REVOKE statements used for?",
+        "a": "GRANT is used to give specific privileges (e.g., SELECT, INSERT, UPDATE) on database objects to users or roles. REVOKE is used to withdraw previously granted privileges."
+      },
+      {
+        "q": "What is SQL Injection and how can it be prevented?",
+        "a": "SQL Injection is an attack where malicious SQL code is inserted into input fields to manipulate queries. It can be prevented using parameterized queries/prepared statements, input validation, and stored procedures."
+      },
+      {
+        "q": "What is data encryption and why is it used in databases?",
+        "a": "Encryption converts data into an unreadable format using cryptographic algorithms, protecting sensitive data at rest or in transit from unauthorized access, even if the storage medium or network is compromised."
+      },
+      {
+        "q": "What is an audit trail in database security?",
+        "a": "An audit trail is a chronological record of database activities (who accessed/modified what and when), used to detect unauthorized access, ensure accountability, and support forensic analysis."
+      },
+      {
+        "q": "What is the principle of least privilege?",
+        "a": "The principle states that users should be granted only the minimum access rights necessary to perform their job functions, minimizing the potential damage from accidental or malicious misuse."
+      },
+      {
+        "q": "What is query processing? List its main steps.",
+        "a": "Query processing is the process of translating a high-level (SQL) query into low-level operations executable on the database. Steps: Parsing & Translation, Optimization, and Execution."
+      },
+      {
+        "q": "What is a query tree (or query graph)?",
+        "a": "A query tree is an internal, tree-structured representation of a relational algebra expression corresponding to the input query, where leaf nodes are relations and internal nodes are relational operations."
+      },
+      {
+        "q": "What is query optimization and why is it necessary?",
+        "a": "Query optimization is the process of selecting the most efficient execution plan for a query among multiple equivalent alternatives, minimizing resource usage (I/O, CPU, time) since the same result can be computed in many ways."
+      },
+      {
+        "q": "Differentiate between heuristic (rule-based) and cost-based query optimization.",
+        "a": "Heuristic optimization applies general transformation rules (e.g., push selections/projections down) to reorder operations without estimating cost. Cost-based optimization estimates the cost of multiple execution plans using statistics and chooses the cheapest one."
+      },
+      {
+        "q": "What are common heuristic rules used to transform a query tree?",
+        "a": "Perform selection operations as early as possible; perform projections early; combine Cartesian product with a following selection into a join; reorder joins based on selectivity."
+      },
+      {
+        "q": "Explain the Nested-Loop Join algorithm.",
+        "a": "For each tuple in the outer relation, the algorithm scans the entire inner relation to find matching tuples, resulting in a cost proportional to the product of the number of tuples in both relations (in the naive case)."
+      },
+      {
+        "q": "Explain the Sort-Merge Join algorithm.",
+        "a": "Both relations are first sorted on the join attribute, then merged together in a single pass comparing corresponding sorted tuples, efficient when relations are already sorted or fit for external sorting."
+      },
+      {
+        "q": "What is a Hash Join and when is it efficient?",
+        "a": "Hash Join builds an in-memory hash table on the smaller relation using the join attribute, then probes it with tuples from the other relation; it is efficient for equi-joins, especially when one relation fits in memory."
+      },
+      {
+        "q": "What statistics does a query optimizer use to estimate costs?",
+        "a": "Number of tuples/pages in relations, selectivity/distribution of attribute values (histograms), index availability, and available buffer/memory size."
+      }
+    ]
+  },
+  "Calculus - Degree 1": {
+    "1. Limits — 10 Q&A": [],
+    "2. Continuity — 10 Q&A": [],
+    "3. Differentiation — 10 Q&A": [],
+    "4. Applications of Derivatives — 10 Q&A": [],
+    "5. Integration — 10 Q&A": [],
+    "6. Definite Integrals — 10 Q&A": [],
+    "7. Applications of Integration — 10 Q&A": [],
+    "8. Differential Equations — 10 Q&A": [],
+    "Limits": [
+      {
+        "q": "What is the difference between logical and physical query optimization?",
+        "a": "Logical optimization rewrites the relational algebra expression (query tree) into an equivalent, more efficient form. Physical optimization selects specific algorithms/access paths (e.g., which join algorithm, which index) to implement each operation."
+      },
+      {
+        "q": "Define the limit of a function f(x) as x approaches a.",
+        "a": "lim(x→a) f(x) = L means that as x gets arbitrarily close to a (but not equal to a), f(x) gets arbitrarily close to L; formally, for every ε>0 there exists δ>0 such that 0<|x−a|<δ implies |f(x)−L|<ε."
+      },
+      {
+        "q": "Evaluate lim(x→2) (x^2 − 4)/(x − 2).",
+        "a": "Factor: (x−2)(x+2)/(x−2) = x+2 for x≠2. So the limit as x→2 is 2+2 = 4."
+      },
+      {
+        "q": "What is the difference between a one-sided limit and a two-sided limit?",
+        "a": "A one-sided limit considers the behavior of f(x) as x approaches a from only the left (x→a■) or only the right (x→a■). A two-sided limit exists only if both one-sided limits exist and are equal."
+      },
+      {
+        "q": "Evaluate lim(x→0) sin(x)/x.",
+        "a": "Using the standard trigonometric limit, lim(x→0) sin(x)/x = 1."
+      },
+      {
+        "q": "Evaluate lim(x→∞) (3x^2 + 2x)/(5x^2 − 1).",
+        "a": "Divide numerator and denominator by x^2: lim = (3 + 2/x)/(5 − 1/x^2) → 3/5 as x→∞."
+      },
+      {
+        "q": "What does it mean for a limit to not exist? Give an example.",
+        "a": "A limit does not exist if f(x) does not approach a single finite value as x→a — e.g., left and right limits differ, or the function oscillates/goes to infinity. Example: lim(x→0) 1/x does not exist (goes to +∞ from the right and −∞ from the left)."
+      },
+      {
+        "q": "State L'Hôpital's Rule and when it is applicable.",
+        "a": "If lim f(x)/g(x) gives an indeterminate form 0/0 or ∞/∞, then lim f(x)/g(x) = lim f'(x)/g'(x), provided the latter limit exists."
+      },
+      {
+        "q": "Evaluate lim(x→0) (e^x − 1)/x using L'Hôpital's Rule.",
+        "a": "This is 0/0 form. Differentiate numerator and denominator: lim(x→0) e^x/1 = e^0 = 1."
+      },
+      {
+        "q": "What is an indeterminate form? Name four examples.",
+        "a": "An indeterminate form arises when the limit's value cannot be determined directly from the individual limits. Examples: 0/0, ∞/∞, 0×∞, ∞−∞."
+      }
+    ],
+    "Continuity": [
+      {
+        "q": "Evaluate lim(x→1) (x^3 − 1)/(x − 1).",
+        "a": "Factor: x^3−1 = (x−1)(x^2+x+1), so the expression simplifies to x^2+x+1 for x≠1; the limit as x→1 is 1+1+1 = 3."
+      },
+      {
+        "q": "State the three conditions for a function f(x) to be continuous at x=a.",
+        "a": "1) f(a) is defined. 2) lim(x→a) f(x) exists. 3) lim(x→a) f(x) = f(a)."
+      },
+      {
+        "q": "What is a removable discontinuity?",
+        "a": "A removable discontinuity occurs when lim(x→a) f(x) exists but is not equal to f(a) (or f(a) is undefined), so the discontinuity can be 'removed' by redefining f(a) appropriately."
+      },
+      {
+        "q": "What is a jump discontinuity?",
+        "a": "A jump discontinuity occurs when the left-hand limit and right-hand limit at a point both exist but are unequal, causing the function to 'jump' at that point."
+      },
+      {
+        "q": "Check the continuity of f(x) = x^2 at x = 3.",
+        "a": "f(3)=9, lim(x→3) x^2 = 9, and f(3)=lim, so f(x)=x^2 is continuous at x=3."
+      },
+      {
+        "q": "State the Intermediate Value Theorem (IVT).",
+        "a": "If f is continuous on [a,b] and k is any value between f(a) and f(b), then there exists at least one c in [a,b] such that f(c) = k."
+      },
+      {
+        "q": "What is an infinite discontinuity? Give an example.",
+        "a": "An infinite discontinuity occurs when the function's value approaches +∞ or −∞ near a point, such as f(x) = 1/x at x = 0."
+      },
+      {
+        "q": "Is the function f(x) = |x| continuous at x = 0? Justify.",
+        "a": "Yes. f(0)=0, and lim(x→0■)|x| = lim(x→0■)|x| = 0, so lim(x→0)f(x) = 0 = f(0), confirming continuity (though it is not differentiable there)."
+      },
+      {
+        "q": "What does it mean for a function to be continuous on an interval?",
+        "a": "A function is continuous on an interval if it is continuous at every point within that interval; for closed intervals [a,b], one-sided continuity is required at the endpoints."
+      },
+      {
+        "q": "State the relationship between differentiability and continuity.",
+        "a": "If a function is differentiable at a point, it must be continuous there. However, the converse is not true — a function can be continuous at a point without being differentiable (e.g., f(x)=|x| at x=0)."
+      }
+    ],
+    "Differentiation": [
+      {
+        "q": "Give an example of a function continuous everywhere except at one point, and identify",
+        "a": "f(x) = (x^2−1)/(x−1) for x≠1, and f(1)=5. It's continuous everywhere except x=1, where there's a removable discontinuity since lim(x→1)f(x)=2 ≠ f(1)=5."
+      },
+      {
+        "q": "Define the derivative of a function f(x) using first principles.",
+        "a": "f'(x) = lim(h→0) [f(x+h) − f(x)] / h, representing the instantaneous rate of change of f at x."
+      },
+      {
+        "q": "State the Power Rule for differentiation.",
+        "a": "d/dx (x^n) = n·x^(n−1), for any real number n."
+      },
+      {
+        "q": "Differentiate f(x) = 3x^4 − 5x^2 + 7.",
+        "a": "f'(x) = 12x^3 − 10x."
+      },
+      {
+        "q": "State the Product Rule for differentiation.",
+        "a": "If h(x) = f(x)·g(x), then h'(x) = f'(x)g(x) + f(x)g'(x)."
+      },
+      {
+        "q": "State the Quotient Rule for differentiation.",
+        "a": "If h(x) = f(x)/g(x), then h'(x) = [f'(x)g(x) − f(x)g'(x)] / [g(x)]^2, provided g(x) ≠ 0."
+      },
+      {
+        "q": "State the Chain Rule with an example.",
+        "a": "If y = f(g(x)), then dy/dx = f'(g(x))·g'(x). Example: for y = sin(x^2), dy/dx = cos(x^2)·2x."
+      },
+      {
+        "q": "Find the derivative of f(x) = e^(3x).",
+        "a": "Using the chain rule: f'(x) = 3e^(3x)."
+      },
+      {
+        "q": "Find the derivative of f(x) = ln(x).",
+        "a": "f'(x) = 1/x, for x > 0."
+      },
+      {
+        "q": "What is implicit differentiation? Differentiate x^2 + y^2 = 25 with respect to x.",
+        "a": "Implicit differentiation is used when y is not explicitly solved in terms of x. Differentiating: 2x + 2y(dy/dx) = 0, so dy/dx = −x/y."
+      }
+    ],
+    "Applications of Derivatives": [
+      {
+        "q": "What does the second derivative f''(x) represent?",
+        "a": "The second derivative represents the rate of change of the first derivative (i.e., the curvature/concavity of the function); it also gives acceleration when f(x) represents position with respect to time."
+      },
+      {
+        "q": "How are derivatives used to find intervals of increase and decrease of a function?",
+        "a": "If f'(x) > 0 on an interval, f is increasing there; if f'(x) < 0, f is decreasing. These intervals are found by locating critical points (where f'(x)=0 or undefined) and testing sign of f' between them."
+      },
+      {
+        "q": "How do you find critical points of a function?",
+        "a": "Critical points occur where f'(x) = 0 or where f'(x) does not exist, within the domain of f."
+      },
+      {
+        "q": "State the First Derivative Test for local extrema.",
+        "a": "If f'(x) changes from positive to negative at a critical point c, f has a local maximum at c. If it changes from negative to positive, f has a local minimum at c. If no sign change, c is neither."
+      },
+      {
+        "q": "State the Second Derivative Test for local extrema.",
+        "a": "At a critical point c where f'(c)=0: if f''(c) > 0, c is a local minimum; if f''(c) < 0, c is a local maximum; if f''(c) = 0, the test is inconclusive."
+      },
+      {
+        "q": "How are derivatives used to determine concavity and points of inflection?",
+        "a": "If f''(x) > 0 on an interval, the graph is concave up; if f''(x) < 0, concave down. A point of inflection occurs where concavity changes, typically where f''(x)=0 or is undefined."
+      },
+      {
+        "q": "Explain how derivatives are used in optimization (max/min) problems.",
+        "a": "To optimize a quantity, express it as a function of one variable, find critical points by setting the derivative to zero, and use the first/second derivative test (or check endpoints) to identify the maximum or minimum value."
+      },
+      {
+        "q": "What is the derivative's role in Related Rates problems?",
+        "a": "Related rates problems use implicit differentiation with respect to time to relate the rates of change of two or more quantities that are functions of time and connected by an equation."
+      },
+      {
+        "q": "State the Mean Value Theorem (MVT).",
+        "a": "If f is continuous on [a,b] and differentiable on (a,b), then there exists at least one c in (a,b) such that f'(c) = [f(b) − f(a)] / (b − a)."
+      },
+      {
+        "q": "How is the derivative used to find the equation of a tangent line to a curve at a point?",
+        "a": "The slope of the tangent line at x=a is f'(a); the tangent line equation is y − f(a) = f'(a)(x − a)."
+      }
+    ],
+    "Integration": [
+      {
+        "q": "Explain how derivatives model velocity and acceleration in physics.",
+        "a": "If s(t) is the position function, velocity v(t) = s'(t) is the derivative of position with respect to time, and acceleration a(t) = v'(t) = s''(t) is the derivative of velocity with respect to time."
+      },
+      {
+        "q": "Define indefinite integration.",
+        "a": "Indefinite integration is the process of finding the antiderivative F(x) of a function f(x), such that F'(x) = f(x); written as ∫f(x)dx = F(x) + C, where C is the constant of integration."
+      },
+      {
+        "q": "State the Power Rule for integration.",
+        "a": "∫x^n dx = x^(n+1)/(n+1) + C, for n ≠ −1."
+      },
+      {
+        "q": "Evaluate ∫(3x^2 − 4x + 5) dx.",
+        "a": "∫(3x^2 − 4x + 5) dx = x^3 − 2x^2 + 5x + C."
+      },
+      {
+        "q": "Evaluate ∫e^x dx and ∫(1/x) dx.",
+        "a": "∫e^x dx = e^x + C. ∫(1/x) dx = ln|x| + C."
+      },
+      {
+        "q": "Explain integration by substitution with an example.",
+        "a": "Substitution replaces a part of the integrand with a new variable u to simplify the integral. Example: ∫2x·cos(x^2)dx, let u=x^2, du=2x dx, giving ∫cos(u)du = sin(u)+C = sin(x^2)+C."
+      },
+      {
+        "q": "State the formula for Integration by Parts.",
+        "a": "∫u dv = uv − ∫v du, where u and dv are chosen parts of the integrand (commonly using the LIATE rule to choose u)."
+      },
+      {
+        "q": "Evaluate ∫x·e^x dx using integration by parts.",
+        "a": "Let u=x, dv=e^x dx, so du=dx, v=e^x. Then ∫x·e^x dx = x·e^x − ∫e^x dx = x·e^x − e^x + C."
+      },
+      {
+        "q": "Evaluate ∫sin(x) dx and ∫cos(x) dx.",
+        "a": "∫sin(x) dx = −cos(x) + C. ∫cos(x) dx = sin(x) + C."
+      },
+      {
+        "q": "What is the relationship between differentiation and integration?",
+        "a": "Integration is the reverse process of differentiation; this relationship is formalized in the Fundamental Theorem of Calculus, which states that differentiating the integral of a function returns the original function."
+      }
+    ],
+    "Definite Integrals": [
+      {
+        "q": "Evaluate ∫(2x+3)^5 dx using substitution.",
+        "a": "Let u = 2x+3, du = 2dx. ∫u^5 (du/2) = (1/2)·u^6/6 + C = (2x+3)^6/12 + C."
+      },
+      {
+        "q": "Define the definite integral ∫[a to b] f(x) dx.",
+        "a": "It represents the signed area under the curve y=f(x) between x=a and x=b, formally defined as the limit of a Riemann sum: lim(n→∞) Σ f(x■*)Δx as the partition width approaches zero."
+      },
+      {
+        "q": "State the Fundamental Theorem of Calculus (Part 2), used to evaluate definite integrals.",
+        "a": "If F is an antiderivative of f on [a,b], then ∫[a to b] f(x)dx = F(b) − F(a)."
+      },
+      {
+        "q": "Evaluate ∫[0 to 2] x^2 dx.",
+        "a": "Antiderivative is x^3/3. Evaluating: (2^3/3) − (0^3/3) = 8/3."
+      },
+      {
+        "q": "Evaluate ∫[1 to e] (1/x) dx.",
+        "a": "Antiderivative is ln|x|. Evaluating: ln(e) − ln(1) = 1 − 0 = 1."
+      },
+      {
+        "q": "State the property ∫[a to b] f(x)dx = −∫[b to a] f(x)dx.",
+        "a": "This property states that reversing the limits of integration changes the sign of the definite integral, following from the definition via the Fundamental Theorem of Calculus."
+      },
+      {
+        "q": "State the additive property of definite integrals over intervals.",
+        "a": "∫[a to c] f(x)dx = ∫[a to b] f(x)dx + ∫[b to c] f(x)dx, for any point b, provided f is integrable on the combined interval."
+      },
+      {
+        "q": "How is a definite integral evaluated using substitution? Give the key extra step compared",
+        "a": "Besides substituting u=g(x) and du=g'(x)dx, the limits of integration must also be converted from x-values to corresponding u-values before evaluating, avoiding the need to substitute back."
+      },
+      {
+        "q": "Evaluate ∫[0 to π] sin(x) dx.",
+        "a": "Antiderivative is −cos(x). Evaluating: −cos(π) − (−cos(0)) = −(−1) − (−1) = 1 + 1 = 2."
+      },
+      {
+        "q": "What does it mean if a definite integral evaluates to a negative value?",
+        "a": "It means the area between the curve and the x-axis over that interval lies below the x-axis (f(x) is negative there), since the definite integral gives signed area, not absolute area."
+      }
+    ],
+    "Applications of Integration": [
+      {
+        "q": "What is the difference between a definite integral and an indefinite integral?",
+        "a": "A definite integral has specified limits of integration and evaluates to a single numerical value representing net area. An indefinite integral has no limits and results in a general antiderivative function plus a constant C."
+      },
+      {
+        "q": "How is a definite integral used to find the area between a curve and the x-axis?",
+        "a": "The area under a curve y=f(x) ≥ 0 from x=a to x=b is given by ∫[a to b] f(x)dx; if f(x) is negative on part of the interval, take the absolute value of that portion or use |f(x)|."
+      },
+      {
+        "q": "Give the formula for the area between two curves y=f(x) and y=g(x) from x=a to x=b, where",
+        "a": "Area = ∫[a to b] [f(x) − g(x)] dx."
+      },
+      {
+        "q": "State the Disk Method formula for finding the volume of a solid of revolution about the",
+        "a": "V = π∫[a to b] [f(x)]^2 dx, where the region under y=f(x) from x=a to x=b is revolved about the x-axis."
+      },
+      {
+        "q": "State the Washer Method formula for a solid with a hole, revolved about the x-axis.",
+        "a": "V = π∫[a to b] {[f(x)]^2 − [g(x)]^2} dx, where f(x) is the outer radius and g(x) is the inner radius."
+      },
+      {
+        "q": "How is integration used to find the length of a curve (arc length)?",
+        "a": "Arc length L = ∫[a to b] √(1 + [f'(x)]^2) dx, for a smooth curve y=f(x) from x=a to x=b."
+      },
+      {
+        "q": "How is a definite integral used to compute the average value of a function on [a,b]?",
+        "a": "Average value = (1/(b−a)) ∫[a to b] f(x) dx."
+      },
+      {
+        "q": "How is integration used to find work done by a variable force?",
+        "a": "Work W = ∫[a to b] F(x) dx, where F(x) is the force as a function of position x, integrated over the displacement from a to b."
+      },
+      {
+        "q": "How is integration applied to find the volume using the Shell Method?",
+        "a": "V = 2π∫[a to b] x·f(x) dx, for a region revolved about the y-axis, where x is the shell radius and f(x) is the shell height."
+      },
+      {
+        "q": "How is total distance traveled found using integration, given a velocity function v(t)?",
+        "a": "Total distance = ∫[a to b] |v(t)| dt, taking the absolute value to account for direction changes (unlike net displacement, which is ∫v(t)dt without absolute value)."
+      }
+    ],
+    "Differential Equations": [
+      {
+        "q": "Give an application of integration in finding the center of mass or centroid of a region.",
+        "a": "The centroid coordinates (x■, ■) of a plane region under y=f(x) can be found using x■ = (1/A)∫x·f(x)dx and ■ = (1/A)∫[f(x)]^2/2 dx, where A is the total area of the region."
+      },
+      {
+        "q": "What is a differential equation? Give an example.",
+        "a": "A differential equation is an equation involving an unknown function and its derivatives. Example: dy/dx = 3x^2, relating the derivative of y to x."
+      },
+      {
+        "q": "What is the order of a differential equation?",
+        "a": "The order is the highest derivative present in the equation. Example: d²y/dx² + y = 0 is a second-order differential equation."
+      },
+      {
+        "q": "Differentiate between the general solution and a particular solution of a differential",
+        "a": "The general solution contains an arbitrary constant (or constants) and represents a family of solutions. A particular solution is obtained by using given initial/boundary conditions to determine the specific constant(s)."
+      },
+      {
+        "q": "Solve the differential equation dy/dx = 2x.",
+        "a": "Integrating both sides: y = ∫2x dx = x^2 + C, which is the general solution."
+      },
+      {
+        "q": "What is a separable differential equation? Give the general method to solve it.",
+        "a": "A separable equation can be written as g(y)dy = f(x)dx, separating variables on each side; both sides are then integrated independently to find the solution."
+      },
+      {
+        "q": "Solve the separable equation dy/dx = y (i.e., y' = y).",
+        "a": "Separate variables: dy/y = dx. Integrate: ln|y| = x + C, so y = A·e^x, where A = e^C is an arbitrary constant."
+      },
+      {
+        "q": "What is a linear first-order differential equation and what technique is used to solve it?",
+        "a": "It has the form dy/dx + P(x)y = Q(x). It is solved using an integrating factor µ(x) = e^(∫P(x)dx), multiplying through and integrating: y·µ(x) = ∫Q(x)µ(x)dx + C."
+      },
+      {
+        "q": "What is an initial value problem (IVP)?",
+        "a": "An IVP is a differential equation paired with a specified initial condition (e.g., y(x■) = y■), used to determine the particular solution from the general solution."
+      },
+      {
+        "q": "Give an example of a real-world application modeled by a differential equation.",
+        "a": "Newton's Law of Cooling: dT/dt = −k(T − T_ambient), modeling how the temperature of an object changes over time toward the surrounding ambient temperature."
+      }
+    ]
+  },
+  "Statistical Inference": {
+    "1. Probability Basics — 10 Q&A": [],
+    "2. Random Variables — 10 Q&A": [],
+    "3. Probability Distributions — 10 Q&A": [],
+    "4. Sampling — 10 Q&A": [],
+    "5. Estimation — 10 Q&A": [],
+    "6. Confidence Intervals — 10 Q&A": [],
+    "7. Hypothesis Testing — 10 Q&A": [],
+    "8. Type I and Type II Errors — 10 Q&A": [],
+    "9. p-values — 10 Q&A": [],
+    "10. Z-Test — 10 Q&A": [],
+    "11. T-Test — 10 Q&A": [],
+    "12. Chi-Square Test — 10 Q&A": [],
+    "13. ANOVA — 10 Q&A": [],
+    "Probability Basics": [
+      {
+        "q": "Solve the linear differential equation dy/dx + y = 0.",
+        "a": "This is separable: dy/y = −dx, so ln|y| = −x + C, giving y = A·e^(−x), where A is an arbitrary constant."
+      },
+      {
+        "q": "Define probability of an event.",
+        "a": "The probability of an event A, P(A), is the ratio of the number of favorable outcomes to the total number of equally likely outcomes in a sample space: P(A) = n(A)/n(S), with 0 ≤ P(A) ≤ 1."
+      },
+      {
+        "q": "Define mutually exclusive and independent events.",
+        "a": "Mutually exclusive events cannot occur simultaneously (P(A∩B)=0). Independent events are such that the occurrence of one does not affect the probability of the other (P(A∩B)=P(A)P(B))."
+      },
+      {
+        "q": "State the Addition Rule of probability for two events.",
+        "a": "P(A∪B) = P(A) + P(B) − P(A∩B). If A and B are mutually exclusive, P(A∪B) = P(A) + P(B)."
+      },
+      {
+        "q": "State the Multiplication Rule of probability.",
+        "a": "For independent events: P(A∩B) = P(A)·P(B). For dependent events: P(A∩B) = P(A)·P(B|A)."
+      },
+      {
+        "q": "Define conditional probability with its formula.",
+        "a": "Conditional probability P(A|B) is the probability of event A occurring given that event B has occurred: P(A|B) = P(A∩B)/P(B), provided P(B) > 0."
+      },
+      {
+        "q": "State Bayes' Theorem.",
+        "a": "P(A|B) = [P(B|A)·P(A)] / P(B), used to update the probability of a hypothesis A given new evidence B, based on prior probability and likelihood."
+      },
+      {
+        "q": "A fair die is rolled once. What is the probability of getting a number greater than 4?",
+        "a": "Favorable outcomes: {5,6}, so P = 2/6 = 1/3."
+      },
+      {
+        "q": "What is the Law of Total Probability?",
+        "a": "If B■, B■, ..., B■ partition the sample space, then P(A) = Σ P(A|B■)·P(B■), summing over all partitions."
+      },
+      {
+        "q": "Differentiate between a sample space and an event.",
+        "a": "The sample space (S) is the set of all possible outcomes of a random experiment. An event is any subset of the sample space representing one or more outcomes of interest."
+      }
+    ],
+    "Random Variables": [
+      {
+        "q": "Two coins are tossed. Find the probability of getting at least one head.",
+        "a": "Sample space: {HH,HT,TH,TT}. P(at least one head) = 1 − P(no heads) = 1 − 1/4 = 3/4."
+      },
+      {
+        "q": "Define a random variable.",
+        "a": "A random variable is a function that assigns a numerical value to each outcome of a random experiment's sample space."
+      },
+      {
+        "q": "Differentiate between discrete and continuous random variables.",
+        "a": "A discrete random variable takes on a countable (finite or countably infinite) number of distinct values. A continuous random variable can take any value within a continuous range/interval."
+      },
+      {
+        "q": "What is a probability mass function (PMF)?",
+        "a": "A PMF gives the probability that a discrete random variable X equals a specific value x: p(x) = P(X=x), satisfying p(x) ≥ 0 and Σp(x) = 1."
+      },
+      {
+        "q": "What is a probability density function (PDF)?",
+        "a": "A PDF f(x) describes the relative likelihood of a continuous random variable taking a given value, where probability over an interval is P(a≤X≤b) = ∫[a to b] f(x)dx, and total area under f(x) equals 1."
+      },
+      {
+        "q": "Define the expected value (mean) of a discrete random variable.",
+        "a": "E(X) = Σ [x·p(x)], summed over all possible values x, representing the long-run average value of X."
+      },
+      {
+        "q": "Define the variance of a random variable and its formula.",
+        "a": "Variance measures the spread of a random variable around its mean: Var(X) = E[(X−µ)^2] = E(X^2) − [E(X)]^2."
+      },
+      {
+        "q": "What is a cumulative distribution function (CDF)?",
+        "a": "The CDF F(x) = P(X ≤ x) gives the probability that a random variable X takes a value less than or equal to x, and is non-decreasing from 0 to 1."
+      },
+      {
+        "q": "State the properties of expectation: E(aX+b) and Var(aX+b).",
+        "a": "E(aX+b) = a·E(X) + b. Var(aX+b) = a²·Var(X), since adding a constant doesn't change spread and variance scales with the square of the multiplicative constant."
+      },
+      {
+        "q": "A random variable X has values 1, 2, 3 with probabilities 0.2, 0.5, 0.3. Find E(X).",
+        "a": "E(X) = 1(0.2) + 2(0.5) + 3(0.3) = 0.2 + 1.0 + 0.9 = 2.1."
+      }
+    ],
+    "Probability Distributions": [
+      {
+        "q": "What is the difference between joint, marginal, and conditional distributions of two",
+        "a": "Joint distribution gives probabilities for combinations of two random variables. Marginal distribution gives the probability distribution of one variable, summing/integrating out the other. Conditional distribution gives the distribution of one variable given a specific value of the other."
+      },
+      {
+        "q": "What is a Bernoulli distribution?",
+        "a": "A Bernoulli distribution describes a random variable with exactly two outcomes (success=1 with probability p, failure=0 with probability 1−p), used to model a single trial."
+      },
+      {
+        "q": "Define the Binomial distribution and state its parameters.",
+        "a": "The Binomial distribution models the number of successes in n independent Bernoulli trials, each with success probability p; parameters are n (number of trials) and p (probability of success), with mean np and variance np(1−p)."
+      },
+      {
+        "q": "Define the Poisson distribution and give its probability formula.",
+        "a": "The Poisson distribution models the number of events occurring in a fixed interval of time/space, given a constant average rate λ: P(X=k) = (e^(−λ)·λ^k)/k!, with mean and variance both equal to λ."
+      },
+      {
+        "q": "Define the Normal (Gaussian) distribution and its key properties.",
+        "a": "The Normal distribution is a continuous, symmetric, bell-shaped distribution defined by mean µ and standard deviation σ, with PDF f(x) = (1/(σ√(2π)))·e^(−(x−µ)²/(2σ²)); about 68%, 95%, and 99.7% of data lie within 1, 2, and 3 standard deviations of the mean respectively."
+      },
+      {
+        "q": "What is the Standard Normal Distribution?",
+        "a": "The Standard Normal Distribution is a Normal distribution with mean µ=0 and standard deviation σ=1; any normal variable X can be converted to standard form using Z = (X−µ)/σ."
+      },
+      {
+        "q": "Define the Uniform distribution (continuous).",
+        "a": "A continuous Uniform distribution on [a,b] assigns equal probability density to every value in the interval, with constant PDF f(x) = 1/(b−a) for a ≤ x ≤ b, mean (a+b)/2, and variance (b−a)²/12."
+      },
+      {
+        "q": "What is the Exponential distribution used to model?",
+        "a": "The Exponential distribution models the time between successive events in a Poisson process (e.g., time until next arrival), with PDF f(x) = λe^(−λx) for x ≥ 0, mean 1/λ."
+      },
+      {
+        "q": "State the conditions under which a Binomial distribution can be approximated by a",
+        "a": "When n is large, p is small, and np (=λ) remains moderate (rule of thumb: n≥20, p≤0.05), the Binomial distribution can be approximated by a Poisson distribution with parameter λ=np."
+      },
+      {
+        "q": "What is the Central Limit Theorem's connection to the Normal distribution?",
+        "a": "The Central Limit Theorem states that the sampling distribution of the sample mean approaches a Normal distribution as sample size increases, regardless of the population's original distribution, provided the sample size is sufficiently large."
+      }
+    ],
+    "Sampling": [
+      {
+        "q": "Compare discrete distributions (Binomial, Poisson) with continuous distributions",
+        "a": "Discrete distributions model countable outcomes (e.g., number of successes/events), described by PMFs. Continuous distributions model measurable outcomes over a range (e.g., time, height), described by PDFs, with probabilities computed via integration rather than summation."
+      },
+      {
+        "q": "Define population and sample.",
+        "a": "A population is the entire group of individuals or items under study. A sample is a subset of the population selected for actual observation/measurement, used to draw inferences about the population."
+      },
+      {
+        "q": "What is a sampling distribution?",
+        "a": "A sampling distribution is the probability distribution of a given statistic (e.g., sample mean) computed from repeated random samples of the same size drawn from the same population."
+      },
+      {
+        "q": "Differentiate between simple random sampling and stratified sampling.",
+        "a": "Simple random sampling gives every member of the population an equal chance of selection. Stratified sampling divides the population into homogeneous subgroups (strata) and samples proportionally from each stratum, improving representativeness."
+      },
+      {
+        "q": "What is systematic sampling?",
+        "a": "Systematic sampling selects every k-th element from a population list after a random starting point, where k = population size / sample size."
+      },
+      {
+        "q": "What is cluster sampling?",
+        "a": "Cluster sampling divides the population into clusters (often geographically), randomly selects some clusters, and includes all (or a random sample of) members within the chosen clusters."
+      },
+      {
+        "q": "State the Central Limit Theorem (CLT).",
+        "a": "For a sufficiently large sample size n, the sampling distribution of the sample mean approaches a Normal distribution with mean µ (population mean) and standard deviation σ/√n, regardless of the population's original distribution."
+      },
+      {
+        "q": "What is sampling error versus non-sampling error?",
+        "a": "Sampling error is the natural difference between a sample statistic and the true population parameter due to using only a subset of the population. Non-sampling error arises from other sources like measurement error, non-response, or data entry mistakes."
+      },
+      {
+        "q": "What is the standard error of the mean?",
+        "a": "The standard error of the mean (SE) is the standard deviation of the sampling distribution of the sample mean, calculated as SE = σ/√n, where σ is the population standard deviation and n is the sample size."
+      },
+      {
+        "q": "What is convenience sampling and what is its main drawback?",
+        "a": "Convenience sampling selects readily available subjects rather than using randomization; its main drawback is the high risk of selection bias, making results less generalizable to the population."
+      }
+    ],
+    "Estimation": [
+      {
+        "q": "Why does increasing sample size reduce the standard error?",
+        "a": "Since standard error = σ/√n, as n increases, the denominator √n increases, causing the standard error to decrease, meaning sample means from larger samples cluster more tightly around the true population mean."
+      },
+      {
+        "q": "Differentiate between a point estimate and an interval estimate.",
+        "a": "A point estimate is a single value (e.g., sample mean x■) used to estimate a population parameter. An interval estimate provides a range of plausible values (e.g., a confidence interval) along with a level of confidence."
+      },
+      {
+        "q": "What are the desirable properties of a good estimator?",
+        "a": "Unbiasedness (expected value equals true parameter), Consistency (converges to true parameter as sample size increases), Efficiency (smallest variance among unbiased estimators), and Sufficiency (uses all relevant information in the sample)."
+      },
+      {
+        "q": "What does it mean for an estimator to be unbiased?",
+        "a": "An estimator θ■ is unbiased if its expected value equals the true population parameter: E(θ■) = θ."
+      },
+      {
+        "q": "Why is the sample mean x■ considered an unbiased estimator of the population mean µ?",
+        "a": "Because E(x■) = µ, meaning that on average across repeated sampling, the sample mean equals the true population mean, with no systematic over- or under-estimation."
+      },
+      {
+        "q": "What is Maximum Likelihood Estimation (MLE)?",
+        "a": "MLE is a method of estimating parameters by choosing the parameter values that maximize the likelihood function, i.e., the values that make the observed sample data most probable."
+      },
+      {
+        "q": "What is the Method of Moments for parameter estimation?",
+        "a": "The Method of Moments estimates parameters by equating sample moments (e.g., sample mean, sample variance) to the corresponding theoretical population moments and solving for the parameters."
+      },
+      {
+        "q": "Why is the sample variance formula divided by (n−1) instead of n?",
+        "a": "Dividing by (n−1), called Bessel's correction, corrects for the bias that would otherwise occur (using n would systematically underestimate the population variance), making the estimator unbiased."
+      },
+      {
+        "q": "What is meant by 'efficiency' when comparing two unbiased estimators?",
+        "a": "An unbiased estimator is more efficient than another if it has a smaller variance, meaning its estimates are more tightly clustered around the true parameter value across repeated samples."
+      },
+      {
+        "q": "What is a consistent estimator?",
+        "a": "An estimator is consistent if, as the sample size n increases toward infinity, the estimator converges in probability to the true value of the parameter being estimated."
+      }
+    ],
+    "Confidence Intervals": [
+      {
+        "q": "Explain interval estimation with an example.",
+        "a": "Interval estimation provides a range within which the population parameter is expected to lie with a certain confidence level. Example: a 95% confidence interval for the population mean might be (48.2, 51.8), meaning we are 95% confident the true mean lies in this range."
+      },
+      {
+        "q": "Define a confidence interval.",
+        "a": "A confidence interval is a range of values, derived from sample data, that is likely to contain the true population parameter with a specified level of confidence (e.g., 95%)."
+      },
+      {
+        "q": "Give the formula for a confidence interval for the population mean when the population",
+        "a": "CI = x■ ± Zα/2 · (σ/√n), where x■ is the sample mean, Zα/2 is the critical value from the standard normal distribution, and n is the sample size."
+      },
+      {
+        "q": "What is the difference between using the Z-distribution and the t-distribution for",
+        "a": "Use the Z-distribution when the population standard deviation σ is known (or n is large). Use the t-distribution when σ is unknown and must be estimated from the sample, especially for small sample sizes."
+      },
+      {
+        "q": "What does a '95% confidence level' actually mean?",
+        "a": "It means that if we were to take many random samples and construct a confidence interval from each, approximately 95% of those intervals would contain the true population parameter (it is not the probability that this specific interval contains the parameter)."
+      },
+      {
+        "q": "How does increasing the confidence level (e.g., from 95% to 99%) affect the width of a",
+        "a": "Increasing the confidence level increases the critical value (Zα/2 or tα/2), which widens the confidence interval, since more certainty requires a broader range of plausible values."
+      },
+      {
+        "q": "How does increasing the sample size affect the width of a confidence interval?",
+        "a": "Increasing the sample size decreases the standard error (σ/√n), which narrows the confidence interval, producing a more precise estimate."
+      },
+      {
+        "q": "Give the formula for a confidence interval for the population mean using the t-distribution.",
+        "a": "CI = x■ ± tα/2,(n−1) · (s/√n), where s is the sample standard deviation and tα/2,(n−1) is the critical t-value with (n−1) degrees of freedom."
+      },
+      {
+        "q": "Give the general formula for the margin of error in a confidence interval.",
+        "a": "Margin of Error = Critical value × Standard error, e.g., E = Zα/2·(σ/√n) for a mean using the Z-distribution."
+      },
+      {
+        "q": "What is a confidence interval for a population proportion?",
+        "a": "CI = p■ ± Zα/2 · √[p■(1−p■)/n], where p■ is the sample proportion and n is the sample size."
+      }
+    ],
+    "Hypothesis Testing": [
+      {
+        "q": "A sample of 25 items has mean 50 and standard deviation 5. Construct a 95% CI for the",
+        "a": "SE = 5/√25 = 1. Margin of Error = 1.96×1 = 1.96. CI = 50 ± 1.96 = (48.04, 51.96)."
+      }
+    ],
+    "evidence suggests otherwise. The Alternative Hypothesis (H1) is the statement we seek evidence for,": [
+      {
+        "q": "What is the Null Hypothesis (H0) and Alternative Hypothesis (H1)?",
+        "a": "The Null Hypothesis (H0) is a statement of no effect or no difference, assumed true until contradicting H0."
+      },
+      {
+        "q": "Describe the general steps involved in hypothesis testing.",
+        "a": "1) State H0 and H1. 2) Choose significance level α. 3) Select an appropriate test statistic. 4) Compute the test statistic from sample data. 5) Determine the p-value or critical value. 6) Compare and decide to reject or fail to reject H0."
+      },
+      {
+        "q": "Differentiate between a one-tailed test and a two-tailed test.",
+        "a": "A one-tailed test checks for an effect in only one direction (e.g., H1: µ > µ0), with the rejection region in one tail. A two-tailed test checks for an effect in either direction (e.g., H1: µ ≠ µ0), splitting the rejection region across both tails."
+      }
+    ],
+    "true (the threshold for Type I error), commonly set at 0.05 or 0.01.": [
+      {
+        "q": "What is the significance level (α) in hypothesis testing?",
+        "a": "The significance level α is the probability of rejecting the null hypothesis when it is actually"
+      },
+      {
+        "q": "What is a test statistic?",
+        "a": "A test statistic is a standardized value calculated from sample data (e.g., Z, t, chi-square, F) used to determine whether to reject the null hypothesis, by comparing it to a critical value or converting it to a p-value."
+      },
+      {
+        "q": "What is the decision rule based on the p-value?",
+        "a": "If the p-value is less than or equal to the significance level α, reject H0 (result is statistically significant); if the p-value is greater than α, fail to reject H0."
+      },
+      {
+        "q": "What does 'fail to reject the null hypothesis' mean (as opposed to 'accepting' it)?",
+        "a": "It means there is insufficient evidence from the sample to conclude the alternative hypothesis is true; it does not prove H0 is true, only that the data does not provide strong enough evidence against it."
+      }
+    ],
+    "is the Type II error probability); higher power means a better ability to detect a true effect.": [
+      {
+        "q": "What is statistical power of a test?",
+        "a": "Statistical power is the probability of correctly rejecting a false null hypothesis (1 − β, where β"
+      },
+      {
+        "q": "What factors affect the power of a hypothesis test?",
+        "a": "Sample size (larger increases power), significance level α (larger increases power), effect size (larger increases power), and population variability (smaller variance increases power)."
+      }
+    ],
+    "Type I and Type II Errors": [
+      {
+        "q": "Explain the logic of hypothesis testing as a 'proof by contradiction' approach.",
+        "a": "We assume H0 is true, then examine whether the observed sample data would be very unlikely under this assumption; if the data is sufficiently improbable under H0 (low p-value), we reject H0 in favor of H1."
+      },
+      {
+        "q": "Define Type I error.",
+        "a": "A Type I error occurs when the null hypothesis is rejected even though it is actually true (a 'false positive'); its probability equals the significance level α."
+      },
+      {
+        "q": "Define Type II error.",
+        "a": "A Type II error occurs when the null hypothesis is not rejected even though it is actually false (a 'false negative'); its probability is denoted β."
+      },
+      {
+        "q": "What is the relationship between Type I error (α) and Type II error (β)?",
+        "a": "For a fixed sample size, decreasing α (making the test stricter) generally increases β, and vice versa — there is a trade-off between the two error types."
+      },
+      {
+        "q": "How can both Type I and Type II errors be reduced simultaneously?",
+        "a": "Increasing the sample size can reduce both types of errors simultaneously, since a larger sample provides more precise information about the population."
+      }
+    ],
+    "positive); Type II error is diagnosing a sick person as healthy (false negative, missing the disease).": [
+      {
+        "q": "Give a real-world example illustrating Type I and Type II errors (e.g., in medical testing).",
+        "a": "In a medical test for a disease: Type I error is diagnosing a healthy person as sick (false"
+      }
+    ],
+    "error), so higher power corresponds to a lower probability of Type II error.": [
+      {
+        "q": "What is the relationship between statistical power and Type II error?",
+        "a": "Power = 1 − β; power is the probability of correctly detecting a true effect (avoiding a Type II"
+      }
+    ],
+    "avoiding Type I error (convicting an innocent person) is prioritized, while in disease screening avoiding": [],
+    "Type II error (missing a real case) may be prioritized.": [
+      {
+        "q": "Which error is generally considered more serious, and does it depend on context?",
+        "a": "There is no universally 'more serious' error — it depends on context; e.g., in criminal trials"
+      }
+    ],
+    "and Type II errors?": [],
+    "Type II error, since it becomes harder to reject H0 even when it is false.": [
+      {
+        "q": "How does choosing a stricter significance level (e.g., α=0.01 instead of 0.05) affect Type I",
+        "a": "A stricter (smaller) α reduces the probability of Type I error but increases the probability of"
+      }
+    ],
+    "to Reject: Type II Error (β). H0 False & Reject: Correct decision (Power).": [
+      {
+        "q": "Construct a 2x2 decision table summarizing the outcomes of hypothesis testing.",
+        "a": "H0 True & Fail to Reject: Correct decision. H0 True & Reject: Type I Error (α). H0 False & Fail"
+      }
+    ],
+    "is always inherent sampling variability, meaning some probability of Type I or Type II error always": [],
+    "p-values": [
+      {
+        "q": "Why can we never be 100% certain of a hypothesis testing decision?",
+        "a": "Because hypothesis testing is based on sample data rather than the entire population, there remains."
+      },
+      {
+        "q": "Define the p-value in hypothesis testing.",
+        "a": "The p-value is the probability of obtaining a test statistic at least as extreme as the one observed, assuming the null hypothesis is true."
+      },
+      {
+        "q": "How is a decision made using the p-value compared to the significance level α?",
+        "a": "If p-value ≤ α, reject the null hypothesis (statistically significant result). If p-value > α, fail to reject the null hypothesis (result not statistically significant)."
+      },
+      {
+        "q": "What does a very small p-value (e.g., 0.001) indicate?",
+        "a": "It indicates that the observed data would be extremely unlikely if the null hypothesis were true, providing strong evidence against H0."
+      },
+      {
+        "q": "Is a p-value the probability that the null hypothesis is true? Explain the common",
+        "a": "No. The p-value is the probability of observing data this extreme given that H0 is true — it is NOT the probability that H0 itself is true or false; this is a common and important misconception."
+      },
+      {
+        "q": "Does a large p-value prove that the null hypothesis is true?",
+        "a": "No. A large p-value only indicates insufficient evidence to reject H0; it does not prove H0 is true, since failure to find evidence against a claim is not the same as proving the claim."
+      },
+      {
+        "q": "How does sample size affect the p-value for a given effect size?",
+        "a": "For a fixed effect size, larger sample sizes tend to produce smaller p-values, since larger samples provide more precise estimates and make it easier to detect statistically significant differences."
+      },
+      {
+        "q": "How do you compute a p-value for a two-tailed test using the Z-statistic?",
+        "a": "p-value = 2 × P(Z > |z_observed|), doubling the one-tailed area beyond the observed absolute Z-value to account for both tails of the distribution."
+      },
+      {
+        "q": "What is the difference between statistical significance and practical significance?",
+        "a": "Statistical significance (small p-value) indicates an effect is unlikely due to chance, but practical significance refers to whether the effect size is large enough to matter in real-world terms — a result can be statistically significant but practically negligible."
+      },
+      {
+        "q": "What are common criticisms of relying solely on p-values in research?",
+        "a": "Overreliance on an arbitrary threshold (like 0.05) can lead to p-hacking, ignores effect size and practical importance, and can create a false binary of 'significant vs not significant' rather than a nuanced interpretation."
+      }
+    ],
+    "Z-Test": [
+      {
+        "q": "If a p-value equals exactly the significance level α, what decision is made by convention?",
+        "a": "By convention, if p-value = α, the null hypothesis is typically rejected (since the standard decision rule is p ≤ α leads to rejection), though this is a borderline case researchers often note explicitly."
+      },
+      {
+        "q": "When is a Z-test appropriate to use?",
+        "a": "A Z-test is appropriate when the population standard deviation σ is known and/or the sample size is large (typically n ≥ 30), assuming the sampling distribution of the statistic is approximately normal."
+      },
+      {
+        "q": "Give the formula for the Z-test statistic for a single population mean.",
+        "a": "Z = (x■ − µ0) / (σ/√n), where x■ is the sample mean, µ0 is the hypothesized population mean, σ is the population standard deviation, and n is the sample size."
+      },
+      {
+        "q": "Give the formula for the Z-test statistic for the difference between two population means",
+        "a": "Z = (x■1 − x■2) / √(σ1²/n1 + σ2²/n2), comparing the two sample means adjusted for their combined standard error."
+      },
+      {
+        "q": "What is the Z-test used for testing a single population proportion?",
+        "a": "Z = (p■ − p0) / √[p0(1−p0)/n], where p■ is the sample proportion, p0 is the hypothesized population proportion, and n is the sample size."
+      },
+      {
+        "q": "What are the critical Z-values for a two-tailed test at α = 0.05?",
+        "a": "The critical values are ±1.96, meaning H0 is rejected if the computed Z-statistic falls outside the range −1.96 to +1.96."
+      },
+      {
+        "q": "What are the critical Z-values for a one-tailed test at α = 0.05?",
+        "a": "The critical value is 1.645 (for a right-tailed test, reject if Z > 1.645) or −1.645 (for a left-tailed test, reject if Z < −1.645)."
+      },
+      {
+        "q": "A sample of n=36 has mean 82, population mean under H0 is 80, and population σ=6.",
+        "a": "Z = (82 − 80) / (6/√36) = 2 / 1 = 2.0."
+      },
+      {
+        "q": "Using the previous result (Z=2.0), decide whether to reject H0 at α=0.05 for a two-tailed",
+        "a": "Since |2.0| > 1.96 (the critical value), we reject the null hypothesis at the 5% significance level."
+      },
+      {
+        "q": "What assumptions underlie the Z-test?",
+        "a": "The population standard deviation is known (or sample size is large enough to approximate it), the sample is randomly selected, and the sampling distribution of the statistic is approximately normally distributed (via CLT for large n)."
+      }
+    ],
+    "T-Test": [
+      {
+        "q": "What happens to the appropriateness of a Z-test if the population standard deviation is",
+        "a": "In that case, a t-test should be used instead of a Z-test, since the sample standard deviation introduces additional uncertainty better captured by the t-distribution's heavier tails, especially for small n."
+      },
+      {
+        "q": "When should a t-test be used instead of a Z-test?",
+        "a": "A t-test is used when the population standard deviation is unknown and must be estimated from the sample, particularly important for small sample sizes (n < 30)."
+      },
+      {
+        "q": "Give the formula for the one-sample t-test statistic.",
+        "a": "t = (x■ − µ0) / (s/√n), where s is the sample standard deviation, with (n−1) degrees of freedom."
+      },
+      {
+        "q": "What is meant by 'degrees of freedom' in a t-test, and how are they calculated for a",
+        "a": "Degrees of freedom represent the number of independent values free to vary in the calculation of a statistic; for a one-sample t-test, df = n − 1."
+      },
+      {
+        "q": "Differentiate between an independent (two-sample) t-test and a paired t-test.",
+        "a": "An independent t-test compares means from two separate, unrelated groups. A paired t-test compares means from two related/matched samples (e.g., before-and-after measurements on the same subjects), analyzing the differences within pairs."
+      },
+      {
+        "q": "Give the formula for the paired t-test statistic.",
+        "a": "t = d■ / (s_d/√n), where d■ is the mean of the differences between paired observations, s_d is the standard deviation of those differences, and n is the number of pairs; df = n − 1."
+      },
+      {
+        "q": "What is pooled variance and when is it used in a two-sample t-test?",
+        "a": "Pooled variance combines the variances of two independent samples into a single estimate, used in the independent t-test when the two population variances are assumed to be equal (homogeneity of variance)."
+      },
+      {
+        "q": "What assumptions are required for a valid t-test?",
+        "a": "The data should be approximately normally distributed (especially important for small samples), observations should be independent (or properly paired), and, for the standard two-sample t-test, variances of the two groups should be approximately equal (unless using Welch's correction)."
+      },
+      {
+        "q": "As sample size increases, how does the t-distribution compare to the normal (Z)",
+        "a": "As sample size (and degrees of freedom) increases, the t-distribution's tails become thinner and it converges toward the standard normal distribution, becoming nearly identical for large n (typically n > 30)."
+      },
+      {
+        "q": "A sample of n=16 has mean 25, hypothesized mean 22, and sample standard deviation 6.",
+        "a": "t = (25 − 22) / (6/√16) = 3 / 1.5 = 2.0, with df = 15."
+      }
+    ],
+    "Chi-Square Test": [
+      {
+        "q": "What is Welch's t-test used for?",
+        "a": "Welch's t-test is a variation of the independent two-sample t-test used when the two groups have unequal variances (heteroscedasticity), adjusting the degrees of freedom accordingly instead of assuming pooled/equal variance."
+      },
+      {
+        "q": "What is the Chi-Square (χ²) test primarily used for?",
+        "a": "The Chi-Square test is used for categorical data to test goodness-of-fit (whether observed frequencies match expected frequencies) and to test independence/association between two categorical variables."
+      },
+      {
+        "q": "Give the general formula for the Chi-Square test statistic.",
+        "a": "χ² = Σ [(O■ − E■)² / E■], summed over all categories/cells, where O■ is the observed frequency and E■ is the expected frequency."
+      },
+      {
+        "q": "What is the Chi-Square Goodness-of-Fit test used for?",
+        "a": "It tests whether an observed frequency distribution of a single categorical variable matches (fits) a hypothesized or theoretical distribution."
+      },
+      {
+        "q": "What is the Chi-Square Test of Independence used for?",
+        "a": "It tests whether two categorical variables are statistically independent (unrelated) or associated, typically using data organized in a contingency table."
+      },
+      {
+        "q": "How is the expected frequency calculated for a cell in a contingency table for the test of",
+        "a": "Expected frequency E = (Row Total × Column Total) / Grand Total, for each cell in the contingency table."
+      },
+      {
+        "q": "How are degrees of freedom calculated for a Chi-Square test of independence with an r×c",
+        "a": "df = (r − 1) × (c − 1), where r is the number of rows and c is the number of columns in the table."
+      },
+      {
+        "q": "What are the key assumptions for a valid Chi-Square test?",
+        "a": "Data should consist of frequency counts (not percentages/proportions), observations should be independent, categories should be mutually exclusive, and expected frequencies should generally be at least 5 in each cell."
+      },
+      {
+        "q": "A goodness-of-fit test has observed frequencies 10,15,25 and expected frequencies",
+        "a": "χ² = (10−15)²/15 + (15−15)²/15 + (25−20)²/20 = 25/15 + 0 + 25/20 = 1.667 + 0 + 1.25 = 2.917."
+      },
+      {
+        "q": "What does it mean if the calculated χ² statistic exceeds the critical value from the",
+        "a": "It means the null hypothesis (of good fit or independence) is rejected, indicating a statistically significant difference between observed and expected frequencies, or a significant association between variables."
+      }
+    ],
+    "ANOVA": [
+      {
+        "q": "What correction is often applied to a 2x2 contingency table's Chi-Square test, and why?",
+        "a": "Yates' Continuity Correction is applied to 2x2 tables to adjust for the discrete nature of the data approximating a continuous chi-square distribution, reducing the risk of overestimating statistical significance in small samples."
+      },
+      {
+        "q": "What does ANOVA stand for and what is its purpose?",
+        "a": "ANOVA stands for Analysis of Variance. It is used to test whether there are statistically significant differences among the means of three or more independent groups."
+      }
+    ],
+    "individual test carries its own α risk; ANOVA controls this by testing all group means simultaneously in": [
+      {
+        "q": "Why not just perform multiple pairwise t-tests instead of ANOVA when comparing several",
+        "a": "Performing multiple t-tests increases the overall (family-wise) Type I error rate, since each a single test."
+      },
+      {
+        "q": "State the null and alternative hypotheses for a one-way ANOVA.",
+        "a": "H0: µ1 = µ2 = µ3 = ... = µk (all population means are equal). H1: at least one population mean differs from the others."
+      },
+      {
+        "q": "What is the F-statistic in ANOVA and how is it computed conceptually?",
+        "a": "The F-statistic is the ratio of variance between groups to variance within groups: F = MSB (Mean Square Between) / MSW (Mean Square Within); a large F suggests group means differ more than expected by chance."
+      },
+      {
+        "q": "Differentiate between 'variance between groups' and 'variance within groups' in ANOVA.",
+        "a": "Variance between groups measures how much the group means differ from the overall grand mean. Variance within groups measures the variability of individual observations around their own group mean (random/error variation)."
+      },
+      {
+        "q": "What are the degrees of freedom associated with the F-statistic in a one-way ANOVA with",
+        "a": "Between-groups df = k − 1. Within-groups (error) df = N − k."
+      }
+    ],
+    "from the others; however, ANOVA alone does not identify which specific groups differ.": [
+      {
+        "q": "What decision is made if the F-statistic from ANOVA is statistically significant (p ≤ α)?",
+        "a": "We reject the null hypothesis, concluding that at least one group mean is significantly different"
+      }
+    ],
+    "controlling for the increased Type I error from multiple comparisons.": [
+      {
+        "q": "What are post-hoc tests, and why are they needed after a significant ANOVA result?",
+        "a": "Post-hoc tests (e.g., Tukey's HSD, Bonferroni) are used after a significant ANOVA to perform pairwise comparisons between specific group means, identifying exactly which groups differ while"
+      },
+      {
+        "q": "What are the key assumptions underlying one-way ANOVA?",
+        "a": "Independence of observations, normality of the response variable within each group, and homogeneity (equality) of variances across groups (homoscedasticity)."
+      }
+    ],
+    "a continuous dependent variable. Two-way ANOVA examines the effects of two independent": [
+      {
+        "q": "Differentiate between one-way ANOVA and two-way ANOVA.",
+        "a": "One-way ANOVA examines the effect of a single categorical independent variable (factor) on categorical variables simultaneously, including their interaction effect, on the dependent variable."
+      }
+    ]
+  }
+}
