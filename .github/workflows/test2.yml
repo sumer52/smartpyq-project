@@ -10,11 +10,3 @@ jobs:
           python-version: '3.12'
       - run: pip install -r requirements.txt
       - run: python -m pytest tests/ -v --tb=short
-        env:
-          ENV: test
-          DATABASE_URL: sqlite+aiosqlite:///:memory:
-          JWT_SECRET: test-secret-key-for-ci-only-32chars!!
-          SUPABASE_URL: https://test.supabase.co
-          SUPABASE_ANON_KEY: test-anon-key
-          SUPABASE_SERVICE_ROLE_KEY: test-service-role-key
-          USE_SUPABASE_STORAGE: "false"
