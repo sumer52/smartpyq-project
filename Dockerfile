@@ -8,7 +8,7 @@ FROM python:3.12-slim as builder
 
 WORKDIR /app
 
-# Install system dependencies for PDF processing
+# Install system dependencies needed to build any package without a wheel
 RUN apt-get update && apt-get install -y --no-install-recommends \
     build-essential \
     libpq-dev \
@@ -20,6 +20,13 @@ RUN pip install --no-cache-dir --prefix=/install -r requirements.txt
 
 # Stage 2: Production image
 FROM python:3.12-slim as production
+
+# System deps used at runtime (PDF/image processing fallbacks)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    tesseract-ocr \
+    libmagic1 \
+    poppler-utils \
+    && rm -rf /var/lib/apt/lists/*
 
 # Security: run as non-root user
 RUN groupadd -r smartpyq && useradd -r -g smartpyq smartpyq
@@ -47,11 +54,9 @@ ENV ENV=production \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-EXPOSE 8000
-
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=10s --retries=3 \
-    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
+    CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8000\")}/health')" || exit 1
 
-# Production command
-CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "4", "--access-log"]
+# Run migrations, then start the API on the port Render assigns ($PORT)
+CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4 --access-log"]

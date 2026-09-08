@@ -1,9 +1,10 @@
 services:
   - type: web
     name: smartpyq-backend
-    runtime: python
-    buildCommand: pip install -r requirements.txt && alembic upgrade head
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: free
+    healthCheckPath: /health
     envVars:
       - key: ENV
         value: production
@@ -27,7 +28,6 @@ services:
         value: json
       - key: DEV_EMAIL_LOG_OTP
         value: false
-    healthCheckPath: /health
 
 databases:
   - name: smartpyq-db
