@@ -9,7 +9,7 @@ from typing import List, Optional
 
 from pydantic import validator
 from dotenv import load_dotenv
-load_dotenv(override=False)
+load_dotenv(override=True)
 from pydantic_settings import BaseSettings
 
 

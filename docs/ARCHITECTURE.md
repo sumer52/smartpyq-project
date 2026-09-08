@@ -151,12 +151,16 @@ Local Machine
 ### Production
 
 ```
-Render native Python runtime (Python 3.12)
-├── Backend (FastAPI + Uvicorn, 0.0.0.0:$PORT)
-├── Existing managed PostgreSQL (DATABASE_URL)
-├── Existing Redis service (REDIS_URL / CELERY_BROKER_URL)
-├── Existing external file storage or Render persistent disk
-└── Configuration and secrets in Render environment variables
+Docker Compose
+├── Backend (FastAPI + Gunicorn)
+│   └── 4 workers
+├── PostgreSQL 16
+├── Redis 7
+└── Volumes
+    ├── postgres_data
+    ├── redis_data
+    ├── uploads_data
+    └── logs_data
 ```
 
 ## Performance Considerations
@@ -225,4 +229,4 @@ Render native Python runtime (Python 3.12)
 | Storage | Supabase Storage |
 | Auth | JWT, Argon2 |
 | AI | Gemini, OpenAI |
-| Deploy | Render native Python runtime, requirements.txt, Uvicorn |
+| Deploy | Docker, Docker Compose |

@@ -165,13 +165,13 @@ npm run preview      # optionally serve the build locally to verify
 
 ### Backend (hosting the FastAPI API)
 
-The FastAPI backend is **not** part of the Vercel static deployment. Deploy it on Render using the **Python** runtime and the repository root. `.python-version` selects Python 3.12, matching CI. Install dependencies and apply the existing migrations with `python -m pip install -r requirements.txt && python -m alembic upgrade head`, then start with `python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Render supplies `PORT`; configure all other production values in the service's **Environment** tab and keep the existing database, storage, email, and AI credentials. See [DEPLOY_BACKEND.md](DEPLOY_BACKEND.md) for setup and existing-service instructions.
+The FastAPI backend is **not** part of the Vercel static deployment. Host it on a service that runs Python (e.g. Render, Railway, a VPS with the included `Dockerfile`, or Vercel Serverless Functions if you adapt the app). It needs the environment variables below plus migrations applied.
 
 ## Environment Variables
 
 Names only — set real values in your host's environment, never in the repo.
 
-**Backend (Render environment variables in production; `.env` for local development):**
+**Backend (`.env`):**
 
 - `ENV`, `DEBUG`, `PORT`, `HOST`, `APP_NAME`, `APP_VERSION`, `API_PREFIX`
 - `DATABASE_URL` (Supabase Postgres in production)
