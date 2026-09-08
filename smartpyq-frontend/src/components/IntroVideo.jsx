@@ -76,7 +76,7 @@ const IntroVideo = () => {
         {liveMessage}
       </div>
 
-      <div className="relative w-full max-w-3xl aspect-video">
+      <div className="relative w-full max-w-3xl aspect-video max-h-[80vh] sm:max-h-[90vh]">
         <video
           ref={videoRef}
           className="w-full h-full object-contain rounded-xl shadow-2xl border border-white/10"
