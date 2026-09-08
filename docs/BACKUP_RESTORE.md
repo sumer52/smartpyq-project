@@ -57,18 +57,17 @@ tar -xzf uploads_20240101.tar.gz
 # Backup environment configuration (without secrets)
 cp .env.example .env.backup.$(date +%Y%m%d)
 
-# Backup Docker Compose
-cp docker-compose.yml docker-compose.yml.backup
+# Backup the Render service definition
+cp render.yaml render.yaml.backup
+cp requirements.txt requirements.txt.backup
+cp .python-version .python-version.backup
 ```
 
 ## Restore Procedure
 
 ### Full Restore
 
-1. **Stop the application**
-   ```bash
-   docker-compose down
-   ```
+1. **Suspend the application** in the Render dashboard before restoring data. Suspend any associated background workers as well. Keep a secure record of the service's Render environment variables separately; the repository contains no production secrets.
 
 2. **Restore database**
    ```bash
@@ -80,9 +79,9 @@ cp docker-compose.yml docker-compose.yml.backup
    tar -xzf uploads_backup.tar.gz
    ```
 
-4. **Start the application**
+4. **Resume the application** and any workers in the Render dashboard using the same database and storage environment variables. The web service's native Python start command is:
    ```bash
-   docker-compose up -d
+   python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT
    ```
 
 5. **Verify**
