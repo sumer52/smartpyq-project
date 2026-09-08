@@ -1124,7 +1124,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   animation: ctaGlow 4s ease-in-out infinite;
 }
 @keyframes ctaGlow {
-  0%, 100% { opacity: 0.08; transform: translate(-50%,-50%) scale(1); }
+  0%, 100% { opacity: 0.15; transform: translate(-50%,-50%) scale(1); }
   50% { opacity: 0.15; transform: translate(-50%,-50%) scale(1.1); }
 }
 
@@ -1342,7 +1342,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   filter: blur(100px);
   pointer-events: none;
   z-index: 0;
-  opacity: 0.08;
+  opacity: 0.15;
   /* Prevent overflow on any viewport */
   max-width: 100vw;
   max-height: 100vh;

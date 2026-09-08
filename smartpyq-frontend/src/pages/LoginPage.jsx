@@ -17,7 +17,7 @@ const LoginPage = () => {
   const [rememberMe, setRememberMe] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { login, isAuthenticated } = useAuth();
+  const { login, loginDemo, isAuthenticated } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/dashboard';
@@ -58,6 +58,13 @@ const LoginPage = () => {
     setIsSubmitting(true);
     setErrors({});
     try {
+      // Try demo login first (client-side only, no network)
+      const demoResult = loginDemo(trimmedEmail, trimmedPassword);
+      if (demoResult.success) {
+        navigate(from, { replace: true });
+        return;
+      }
+      // Fall back to real backend login
       const result = await login(trimmedEmail, trimmedPassword);
       if (result.success) {
         navigate(from, { replace: true });
@@ -114,12 +121,12 @@ const LoginPage = () => {
         {/* Deep gradient base */}
         <div className="absolute inset-0 bg-gradient-to-br from-[#0a0618] via-[#120d2e] to-[#0a0618]" />
         {/* Animated aurora blobs */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-purple-600/25 to-blue-600/15 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-gradient-to-br from-indigo-600/20 to-cyan-600/10 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-pink-600/15 to-purple-600/10 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '4s' }} />
-        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 bg-gradient-to-br from-blue-500/15 to-indigo-500/10 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-purple-600/40 to-blue-600/25 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-gradient-to-br from-indigo-600/35 to-cyan-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-pink-600/30 to-purple-600/20 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 bg-gradient-to-br from-blue-500/30 to-indigo-500/20 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '1s' }} />
         {/* Subtle grid pattern */}
-        <div className="absolute inset-0 opacity-[0.04]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
+        <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         {/* Radial vignette */}
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(10,6,24,0.6)_100%)]" />
       </div>
@@ -160,13 +167,13 @@ const LoginPage = () => {
                   <h4 className="text-sm font-semibold text-white/80 mb-1">Demo Credentials</h4>
                   <p className="text-xs text-gray-400 mb-2">Use these credentials to test the login:</p>
                   <div className="text-xs text-gray-300 space-y-1">
-                    <div><strong>Email:</strong> sumer@edu.in</div>
+                    <div><strong>Email:</strong> demo@smartpyq.com</div>
                     <div><strong>Password:</strong> demo123</div>
                   </div>
                   <button
                     type="button"
                     onClick={() => {
-                      setFormData({ email: 'sumer@edu.in', password: 'demo123' });
+                      setFormData({ email: 'demo@smartpyq.com', password: 'demo123' });
                       setErrors({});
                     }}
                     className="mt-2 text-xs text-blue-300 hover:text-blue-200 underline transition-colors"

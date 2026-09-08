@@ -2,6 +2,24 @@ import React, { createContext, useContext, useState, useEffect, useMemo, useCall
 
 const AuthContext = createContext();
 
+// Hardcoded demo credentials - frontend-only, zero backend dependency
+const DEMO_EMAIL = 'demo@smartpyq.com';
+const DEMO_PASSWORD = 'demo123';
+const DEMO_SESSION_KEY = 'demo_session';
+const DEMO_USER = {
+  id: 'demo-001',
+  name: 'Demo Student',
+  email: DEMO_EMAIL,
+  avatar: null,
+  role: 'demo',
+  course: 'B.Sc Computer Science',
+  semester: 'sem5',
+  specialization: 'Computer Science',
+  academic_year: '3rd Year',
+  onboarding_completed: true,
+  stats: { papersDownloaded: 47, studyStreak: 12 }
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
@@ -39,9 +57,23 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
-    // Check for existing session
     const checkAuthStatus = () => {
-      // Support both token key names for compatibility
+      // 1. Check for demo session first
+      const demoSession = localStorage.getItem(DEMO_SESSION_KEY);
+      if (demoSession) {
+        try {
+          const parsed = JSON.parse(demoSession);
+          if (parsed && parsed.email === DEMO_EMAIL) {
+            setUser(DEMO_USER);
+            setIsAuthenticated(true);
+            setIsLoading(false);
+            return;
+          }
+        } catch {}
+        localStorage.removeItem(DEMO_SESSION_KEY);
+      }
+
+      // 2. Check for real token-based session
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       const userData = localStorage.getItem('userData') || localStorage.getItem('user');
       
@@ -75,6 +107,17 @@ export const AuthProvider = ({ children }) => {
     };
 
     checkAuthStatus();
+  }, []);
+
+  // Frontend-only demo login
+  const loginDemo = useCallback((email, password) => {
+    if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify({ email: DEMO_EMAIL, ts: Date.now() }));
+      setUser(DEMO_USER);
+      setIsAuthenticated(true);
+      return { success: true };
+    }
+    return { success: false, error: 'Invalid demo credentials.' };
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -137,6 +180,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
+    const isDemo = localStorage.getItem(DEMO_SESSION_KEY);
+    if (isDemo) {
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      setUser(null);
+      setIsAuthenticated(false);
+      return;
+    }
     // Try to call backend logout to invalidate tokens
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
@@ -153,7 +203,8 @@ export const AuthProvider = ({ children }) => {
     } catch (e) {
       // Ignore errors on logout
     }
-    // Clear all token keys
+    // Clear all stored data
+    localStorage.removeItem(DEMO_SESSION_KEY);
     localStorage.removeItem('auth_token');
     localStorage.removeItem('authToken');
     localStorage.removeItem('userData');
@@ -164,6 +215,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const refreshAccessToken = useCallback(async () => {
+    if (localStorage.getItem(DEMO_SESSION_KEY)) return true;
     try {
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) return false;
@@ -234,12 +286,14 @@ export const AuthProvider = ({ children }) => {
   }, [isAuthenticated]);
 
   const updateUser = useCallback((updatedData) => {
+    if (localStorage.getItem(DEMO_SESSION_KEY)) return;
     const updatedUser = { ...user, ...updatedData };
     setUser(updatedUser);
     localStorage.setItem('userData', JSON.stringify(updatedUser));
   }, []);
 
   const fetchProfile = useCallback(async () => {
+    if (localStorage.getItem(DEMO_SESSION_KEY)) return;
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       if (!token) return;
@@ -273,6 +327,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const completeOnboarding = useCallback(async (onboardingData) => {
+    if (localStorage.getItem(DEMO_SESSION_KEY)) return { success: true };
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
@@ -294,6 +349,7 @@ export const AuthProvider = ({ children }) => {
   }, [fetchProfile]);
 
   const updateAcademicProfile = useCallback(async (academicData) => {
+    if (localStorage.getItem(DEMO_SESSION_KEY)) return { success: true };
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
@@ -314,6 +370,12 @@ export const AuthProvider = ({ children }) => {
   }, [fetchProfile]);
 
   const deleteAccount = useCallback(async (password) => {
+    if (localStorage.getItem(DEMO_SESSION_KEY)) {
+      localStorage.removeItem(DEMO_SESSION_KEY);
+      setUser(null);
+      setIsAuthenticated(false);
+      return { success: true };
+    }
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
@@ -350,7 +412,7 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Demo user detection
-  const isDemoUser = user?.role === 'demo' || user?.email === 'sumer@edu.in';
+  const isDemoUser = user?.role === 'demo' || localStorage.getItem(DEMO_SESSION_KEY) !== null;
 
   // Memoize context value to prevent unnecessary re-renders of consumers
   const value = useMemo(() => ({
@@ -359,6 +421,7 @@ export const AuthProvider = ({ children }) => {
     isLoading,
     isDemoUser,
     login,
+    loginDemo,
     register,
     logout,
     updateUser,
