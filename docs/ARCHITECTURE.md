@@ -151,16 +151,10 @@ Local Machine
 ### Production
 
 ```
-Docker Compose
-├── Backend (FastAPI + Gunicorn)
-│   └── 4 workers
-├── PostgreSQL 16
-├── Redis 7
-└── Volumes
-    ├── postgres_data
-    ├── redis_data
-    ├── uploads_data
-    └── logs_data
+Render (Python runtime)
+├── Backend (FastAPI + Uvicorn)
+│   └── binds 0.0.0.0:$PORT
+└── PostgreSQL (Render managed)
 ```
 
 ## Performance Considerations
@@ -229,4 +223,4 @@ Docker Compose
 | Storage | Supabase Storage |
 | Auth | JWT, Argon2 |
 | AI | Gemini, OpenAI |
-| Deploy | Docker, Docker Compose |
+| Deploy | Render (Python), Vercel (frontend) |
