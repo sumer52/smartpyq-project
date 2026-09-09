@@ -5,7 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import api from '../lib/api';
 import { BookOpenIcon, CloudArrowUpIcon, FireIcon, HeartIcon } from '@heroicons/react/24/outline';
 import { stagger, cardUp, fadeUp, hoverLift, EASE } from '../lib/motion';
-import { Counter, SkeletonCard } from '../components/ui/Loaders';
+import { Counter, SkeletonCard, Skeleton } from '../components/ui/Loaders';
 
 const DashboardPage = () => {
   const { user } = useAuth();

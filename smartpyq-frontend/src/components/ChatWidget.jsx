@@ -30,7 +30,7 @@ const ChatWidget = ({ className = "" }) => {
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
-  const eventSourceRef = useRef(null);
+  const chatAbortRef = useRef(null);
   const chatContainerRef = useRef(null);
   // Auto-scroll to bottom when new messages arrive
   const scrollToBottom = () => {
@@ -54,8 +54,8 @@ const ChatWidget = ({ className = "" }) => {
   // Cleanup SSE connection on unmount
   useEffect(() => {
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
+      if (chatAbortRef.current) {
+        chatAbortRef.current.abort();
       }
     };
   }, []);
@@ -89,69 +89,93 @@ const ChatWidget = ({ className = "" }) => {
 
   // Handle SSE connection for streaming responses
   const handleSSEResponse = (userMessage) => {
-    // TODO: Replace with actual SSE endpoint
-    const sseUrl = `${BACKEND_URL}/api/v1/chat/stream?session_id=${sessionId}`;
-    try {
-      // Close existing connection
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-      }
-      const eventSource = new EventSource(sseUrl);
-      eventSourceRef.current = eventSource;
-      let botMessageId = Date.now();
-      let accumulatedContent = '';
-      eventSource.onopen = () => {
-        console.log('SSE connection opened');
-        setError(null);
-      };
-      eventSource.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          if (data.type === 'content') {
-            accumulatedContent += data.content;
-            setMessages(prev => {
-              const existing = prev.find(msg => msg.id === botMessageId);
-              if (existing) {
-                return prev.map(msg => 
-                  msg.id === botMessageId 
-                    ? { ...msg, content: accumulatedContent }
-                    : msg
-                );
-              } else {
-                return [...prev, {
-                  id: botMessageId,
-                  type: 'bot',
-                  content: accumulatedContent,
-                  timestamp: new Date(),
-                  streaming: true
-                }];
-              }
-            });
-          } else if (data.type === 'done') {
-            setMessages(prev => 
-              prev.map(msg => 
-                msg.id === botMessageId 
-                  ? { ...msg, streaming: false }
-                  : msg
-              )
-            );
-            setIsLoading(false);
-            eventSource.close();
-          }
-        } catch (error) {
-          console.error('Error parsing SSE data:', error);
+    // The backend stream endpoint is POST /api/v1/chat/stream with a JSON body
+    // and Bearer auth — EventSource cannot send either, so we read the SSE
+    // response body with fetch + ReadableStream instead.
+    const controller = new AbortController();
+    chatAbortRef.current = controller;
+    let botMessageId = Date.now();
+    let accumulatedContent = '';
+
+    const appendContent = (content) => {
+      accumulatedContent += content;
+      setMessages(prev => {
+        const existing = prev.find(msg => msg.id === botMessageId);
+        if (existing) {
+          return prev.map(msg =>
+            msg.id === botMessageId
+              ? { ...msg, content: accumulatedContent }
+              : msg
+          );
         }
-      };
-      eventSource.onerror = (error) => {
-        console.error('SSE error:', error);
-        eventSource.close();
-        // Fallback to regular fetch
+        return [...prev, {
+          id: botMessageId,
+          type: 'bot',
+          content: accumulatedContent,
+          timestamp: new Date(),
+          streaming: true
+        }];
+      });
+    };
+
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
+    const headers = { 'Content-Type': 'application/json' };
+    if (token) headers.Authorization = `Bearer ${token}`;
+
+    fetch(`${BACKEND_URL}/api/v1/chat/stream`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({ message: userMessage, prompt: userMessage, session_id: sessionId, stream: true }),
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        if (!response.ok || !response.body) {
+          throw new Error(`Stream unavailable (HTTP ${response.status})`);
+        }
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+        for (;;) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buffer += decoder.decode(value, { stream: true });
+          // SSE frames are separated by blank lines; each line is "data: {...}"
+          const frames = buffer.split('\n\n');
+          buffer = frames.pop() || '';
+          for (const frame of frames) {
+            for (const line of frame.split('\n')) {
+              if (!line.startsWith('data:')) continue;
+              try {
+                const data = JSON.parse(line.slice(5).trim());
+                if (data.type === 'content' || data.type === 'chunk') {
+                  appendContent(data.content || data.text || '');
+                } else if (data.type === 'done' || data.type === 'end') {
+                  setMessages(prev => prev.map(msg =>
+                    msg.id === botMessageId ? { ...msg, streaming: false } : msg
+                  ));
+                  setIsLoading(false);
+                  reader.cancel().catch(() => {});
+                  return;
+                } else if (data.type === 'error') {
+                  throw new Error(data.message || 'Stream error');
+                }
+              } catch (parseErr) {
+                // Ignore malformed frames; never kill the stream for one bad line
+              }
+            }
+          }
+        }
+        // Stream ended without an explicit done frame
+        setMessages(prev => prev.map(msg =>
+          msg.id === botMessageId ? { ...msg, streaming: false } : msg
+        ));
+        setIsLoading(false);
+      })
+      .catch((err) => {
+        if (err.name === 'AbortError') return;
+        console.warn('Streaming chat unavailable, falling back:', err.message);
         handleFallbackResponse(userMessage);
-      };
-    } catch (error) {
-      console.error('Failed to establish SSE connection:', error);
-      handleFallbackResponse(userMessage);
-    }
+      });
   };
   // Smart local response generator
   const getLocalResponse = (msg) => {

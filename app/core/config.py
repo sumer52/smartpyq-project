@@ -88,6 +88,11 @@ class Settings(BaseSettings):
     # Dev mode: log OTP to console instead of sending email
     DEV_EMAIL_LOG_OTP: bool = True
     
+    # Demo account: seeded and enabled in development by default. In
+    # production it must be turned on explicitly (ENABLE_DEMO_ACCOUNT=true).
+    # None = auto (ON in development, OFF in production); see demo_account_enabled.
+    ENABLE_DEMO_ACCOUNT: Optional[bool] = None
+    
     # Monitoring
     SENTRY_DSN: Optional[str] = None
     
@@ -139,6 +144,17 @@ class Settings(BaseSettings):
 
 # Global settings instance
 settings = Settings()
+
+
+def demo_account_enabled() -> bool:
+    """Whether the demo account may be seeded and used.
+    
+    Defaults: ON in development, OFF in production. Override in production
+    with ENABLE_DEMO_ACCOUNT=true.
+    """
+    if settings.ENABLE_DEMO_ACCOUNT is None:
+        return settings.ENV != "production"
+    return bool(settings.ENABLE_DEMO_ACCOUNT)
 
 
 def validate_production_settings():

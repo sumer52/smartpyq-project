@@ -296,11 +296,34 @@ class PaperService:
         if file_ext not in allowed_extensions:
             raise ValidationError(f"Unsupported file type. Allowed: {', '.join(sorted(allowed_extensions))}")
         
+        # Sanitize filename: strip any path components and control characters.
+        # The original name is only stored as metadata (storage keys use the
+        # content hash), so this is defense-in-depth against traversal.
+        filename = os.path.basename(filename.replace("\\", "/")).strip()
+        filename = "".join(ch for ch in filename if ch.isprintable())[:255] or f"upload{file_ext}"
+        
         if len(file_data) > settings.MAX_FILE_SIZE:
             raise ValidationError(f"File size exceeds {settings.MAX_FILE_SIZE} bytes")
         
+        # Determine declared MIME type from extension
+        mime_type_map = {
+            '.pdf': 'application/pdf',
+            '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+            '.png': 'image/png', '.webp': 'image/webp',
+        }
+        content_mime = mime_type_map.get(file_ext, 'application/octet-stream')
+        
+        # Sniff the real MIME type from magic bytes — reject content that does
+        # not match its declared extension (blocks disguised uploads).
+        sniffed_mime = self._sniff_mime(file_data)
+        if sniffed_mime != content_mime:
+            raise ValidationError(
+                f"File content ({sniffed_mime or 'unknown'}) does not match its extension ({content_mime})"
+            )
+        
         # Generate file hash
         file_hash = hashlib.sha256(file_data).hexdigest()
+        file_extension = Path(filename).suffix
         
         # Check for duplicate files by hash (warn but allow re-upload)
         existing_version = await self.paper_repo.get_version_by_checksum(file_hash)
@@ -310,26 +333,19 @@ class PaperService:
         # Create paper record first
         paper = await self.create_paper(paper_data, uploader, ip_address)
         
-        # Generate storage key
-        file_extension = Path(filename).suffix
+        # Canonical LOCAL staging key (also used for the version record).
+        # Supabase stores under its own per-user key (below) — the download
+        # endpoint resolves both shapes from paper.file_url.
         staging_key = f"papers/{paper.id}/{file_hash}{file_extension}"
-        
-        # Determine MIME type from extension (BEFORE upload)
-        mime_type_map = {
-            '.pdf': 'application/pdf',
-            '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
-            '.png': 'image/png', '.webp': 'image/webp',
-        }
-        content_mime = mime_type_map.get(file_ext, 'application/octet-stream')
         
         try:
             file_url = None
+            storage_path = None  # local filesystem path to the stored bytes
             
             # Try Supabase Storage first, fallback to local filesystem
             from app.utils.supabase_client import is_supabase_storage_enabled, get_supabase_admin
             
             if is_supabase_storage_enabled():
-                # Upload to Supabase Storage (with graceful fallback)
                 admin = get_supabase_admin()
                 if admin:
                     try:
@@ -343,30 +359,76 @@ class PaperService:
                             file_options={"content-type": content_mime}
                         )
                         file_url = storage_path  # Store path only; download endpoint generates signed URL
-                        staging_key = storage_path
                         logger.info(f"File uploaded to Supabase Storage: {storage_path}")
                     except Exception as supabase_err:
+                        if settings.ENV == "production":
+                            # Never silently drop user files on Render's
+                            # ephemeral filesystem — fail loudly and roll back.
+                            raise ValidationError(
+                                "File storage is temporarily unavailable. "
+                                "Please try again in a few minutes."
+                            )
                         logger.warning(f"Supabase Storage upload failed, falling back to local: {supabase_err}")
                         file_url = None  # Will trigger local fallback below
                 else:
-                    logger.warning("Supabase admin client unavailable, falling back to local storage")            # Fallback: Save to local filesystem
+                    if settings.ENV == "production":
+                        raise ValidationError(
+                            "File storage is not configured. Please contact support."
+                        )
+                    logger.warning("Supabase admin client unavailable, falling back to local storage")
+            elif settings.ENV == "production":
+                # Production without Supabase configured: local disk is
+                # ephemeral on Render, so refuse rather than lose files.
+                raise ValidationError(
+                    "File storage is not configured. Please contact support."
+                )
+            
+            # Local fallback: development only.
             if not file_url:
                 storage_base = settings.LOCAL_STORAGE_PATH or "./storage"
                 local_path = os.path.join(storage_base, staging_key)
                 os.makedirs(os.path.dirname(local_path), exist_ok=True)
                 with open(local_path, 'wb') as f:
                     f.write(file_data)
+                storage_path = local_path
                 file_url = f"{settings.LOCAL_STORAGE_URL or 'http://localhost:8000/files'}/{staging_key}"
 
-            # Extract text from file for search indexing
+            # Extract text for search indexing. analyze_document needs a real
+            # local file: for Supabase uploads, analyze the in-memory bytes via
+            # a secure temp file (always deleted in finally). For local
+            # development uploads, analyze the file we just wrote.
             extracted_text = ""
-            try:
-                from app.services.document_analyzer import analyze_document
-                analysis = analyze_document(storage_path, filename)
-                if analysis.success:
-                    extracted_text = analysis.raw_text[:10000] if analysis.raw_text else ""
-            except Exception as e:
-                logger.warning(f"Text extraction failed: {e}")
+            import tempfile
+            if storage_path and os.path.isfile(storage_path):
+                analysis_target = storage_path
+                tmp_fd = None
+                try:
+                    if not file_url.startswith(settings.LOCAL_STORAGE_URL or 'http://localhost:8000/files'):
+                        # Remote object: write bytes to a temp file for analysis
+                        tmp_fd, analysis_target = tempfile.mkstemp(
+                            suffix=file_extension or ".bin"
+                        )
+                        with os.fdopen(tmp_fd, "wb") as tf:
+                            tf.write(file_data)
+                        tmp_fd = None  # ownership transferred to analysis_target
+                    from app.services.document_analyzer import analyze_document
+                    analysis = analyze_document(analysis_target, filename)
+                    if analysis.success:
+                        extracted_text = analysis.raw_text[:10000] if analysis.raw_text else ""
+                except Exception as e:
+                    logger.warning(f"Text extraction failed: {e}")
+                finally:
+                    if tmp_fd is not None:
+                        os.close(tmp_fd)
+                    try:
+                        if analysis_target != storage_path:
+                            os.remove(analysis_target)
+                    except (OSError, UnboundLocalError):
+                        pass
+            else:
+                logger.warning(
+                    f"Paper {paper.id}: no local file available for text extraction"
+                )
 
             # Update paper with file info and auto-approve
             await self.paper_repo.update(
@@ -427,6 +489,21 @@ class PaperService:
             except:
                 pass
             raise ValidationError(f"Upload failed: {str(e)}")
+
+    @staticmethod
+    def _sniff_mime(data: bytes) -> Optional[str]:
+        """Detect real MIME type from magic bytes (dev-friendly: unknown -> None)."""
+        if not data or len(data) < 12:
+            return None
+        if data[:5] == b"%PDF-":
+            return "application/pdf"
+        if data[:3] == b"\xff\xd8\xff":
+            return "image/jpeg"
+        if data[:8] == b"\x89PNG\r\n\x1a\n":
+            return "image/png"
+        if data[:4] == b"RIFF" and data[8:12] == b"WEBP":
+            return "image/webp"
+        return None
 
     async def approve_paper(
         self,
