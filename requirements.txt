@@ -31,12 +31,21 @@ httpx>=0.26,<0.28
 # websockets>=13 required by realtime (supabase dep): its websockets.asyncio
 # package only exists in websockets 13+ (12.x lacks it).
 websockets>=13.1,<14
-aiohttp==3.9.1
+# aiohttp: nothing in app/ imports it directly; realtime 2.4.x (supabase 2.15.3
+# dep) needs >=3.11.12, so bump the pin accordingly.
+aiohttp==3.11.14
+
+# AI/ML Libraries (app/utils/ai.py imports google.generativeai + openai)
+google-generativeai==0.3.2
+openai>=1.55.3
 
 # Cloud Storage (Supabase - private file storage, service-role key server-side only)
-# 2.4.0 was broken: its gotrue dep needs httpx>=0.26 and client init crashed
-# with Client.__init__() got an unexpected keyword argument 'proxy'.
-supabase==2.31.0
+# 2.31.0 pulls realtime 2.31.0 which needs pydantic>=2.11.7 (conflicts with the
+# pinned pydantic==2.5.0). 2.15.3 is the newest supabase whose deps resolve
+# with pydantic 2.5.0 (its realtime 2.4.0 has no pydantic floor) AND whose
+# gotrue 2.11.0 works with httpx>=0.26 (2.4.0 + httpx 0.25.x crashed
+# create_client with TypeError: unexpected keyword argument 'proxy').
+supabase==2.15.3
 
 # TF-IDF similarity for question grouping (Py3.12 wheels available)
 scikit-learn==1.4.2
