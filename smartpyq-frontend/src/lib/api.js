@@ -2,6 +2,8 @@
 // TODO: Replace with actual backend URL in production
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
 
+import { isDemoSessionActive, attachDemoBackendSession } from './demoSession';
+
 // Custom error classes for better error handling
 class ApiError extends Error {
   constructor(message, status, data = null) {
@@ -75,6 +77,21 @@ class ApiClient {
       ...options,
     };
 
+    // A demo session silently attaches the real backend demo account so feature
+    // pages (PYQ Hub, Upload, Analysis, Practice) can load actual data. This is a
+    // no-op when no demo session is active or the backend is unreachable.
+    if (isDemoSessionActive() && !localStorage.getItem('auth_token') && !localStorage.getItem('authToken')) {
+      await attachDemoBackendSession();
+      const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
+      if (options.headers) {
+        config.headers = token && !options.headers.Authorization
+          ? { ...options.headers, Authorization: `Bearer ${token}` }
+          : options.headers;
+      } else {
+        config.headers = this.getAuthHeaders();
+      }
+    }
+
     try {
       const response = await fetch(url, config);
       
@@ -115,6 +132,11 @@ class ApiClient {
               } catch (refreshError) {
                 // Refresh failed
               }
+            }
+            // Demo sessions are never force-logged-out here: when the backend is
+            // unreachable (or rejects the demo account) the caller handles it.
+            if (isDemoSessionActive()) {
+              throw new UnauthorizedError(errorMessage, errorData);
             }
             // If refresh failed or no refresh token, clear auth
             this.clearAuth();

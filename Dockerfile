@@ -58,5 +58,5 @@ ENV ENV=production \
 HEALTHCHECK --interval=30s --timeout=10s --start-period=15s --retries=3 \
     CMD python -c "import os, urllib.request; urllib.request.urlopen(f'http://127.0.0.1:{os.environ.get(\"PORT\", \"8000\")}/health')" || exit 1
 
-# Run migrations, then start the API on the port Render assigns ($PORT)
-CMD ["sh", "-c", "alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4 --access-log"]
+# Run migrations, seed demo accounts, then start the API on the port Render assigns ($PORT)
+CMD ["sh", "-c", "alembic upgrade head && python -m app.scripts.seed_demo_user && uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 4 --access-log"]

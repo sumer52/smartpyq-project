@@ -1,11 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
+import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_SESSION_KEY, attachDemoBackendSession, clearDemoSession } from '../lib/demoSession';
 
 const AuthContext = createContext();
-
-// Hardcoded demo credentials - frontend-only, zero backend dependency
-const DEMO_EMAIL = 'demo@smartpyq.com';
-const DEMO_PASSWORD = 'demo123';
-const DEMO_SESSION_KEY = 'demo_session';
 const DEMO_USER = {
   id: 'demo-001',
   name: 'Demo Student',
@@ -67,6 +63,8 @@ export const AuthProvider = ({ children }) => {
             setUser(DEMO_USER);
             setIsAuthenticated(true);
             setIsLoading(false);
+            // Silently connect the demo session to the backend demo account (no-op when unreachable)
+            attachDemoBackendSession().catch(() => {});
             return;
           }
         } catch {}
@@ -115,6 +113,8 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify({ email: DEMO_EMAIL, ts: Date.now() }));
       setUser(DEMO_USER);
       setIsAuthenticated(true);
+      // Silently connect the demo session to the backend demo account (no-op when unreachable)
+      attachDemoBackendSession().catch(() => {});
       return { success: true };
     }
     return { success: false, error: 'Invalid demo credentials.' };
@@ -180,9 +180,14 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
-    const isDemo = localStorage.getItem(DEMO_SESSION_KEY);
-    if (isDemo) {
-      localStorage.removeItem(DEMO_SESSION_KEY);
+    if (localStorage.getItem(DEMO_SESSION_KEY)) {
+      // Demo session: also drop any backend token the demo attach created
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('user');
+      clearDemoSession();
       setUser(null);
       setIsAuthenticated(false);
       return;
@@ -371,7 +376,12 @@ export const AuthProvider = ({ children }) => {
 
   const deleteAccount = useCallback(async (password) => {
     if (localStorage.getItem(DEMO_SESSION_KEY)) {
-      localStorage.removeItem(DEMO_SESSION_KEY);
+      localStorage.removeItem('auth_token');
+      localStorage.removeItem('authToken');
+      localStorage.removeItem('refresh_token');
+      localStorage.removeItem('userData');
+      localStorage.removeItem('user');
+      clearDemoSession();
       setUser(null);
       setIsAuthenticated(false);
       return { success: true };
