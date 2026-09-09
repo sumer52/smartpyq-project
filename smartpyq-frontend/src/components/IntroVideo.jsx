@@ -80,6 +80,7 @@ const IntroVideo = () => {
         <video
           ref={videoRef}
           className="w-full h-full object-contain rounded-xl shadow-2xl border border-white/10"
+          poster="/intro-poster.jpg"
           muted
           playsInline
           preload="auto"
