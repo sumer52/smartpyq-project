@@ -121,23 +121,37 @@ import { useIntroVideo } from '../contexts/IntroVideoContext';const FuturisticHe
           )}
         </div>
       </div>
-      {/* Mobile menu dropdown */}
-      {showMobileMenu && (
-        <div className='fh__mobile-menu' onClick={(e) => { if (e.target.closest('a')) setShowMobileMenu(false); }}>
-          {navItems.map((item, index) => {
-            const Icon = item.icon;
-            const active = isActive(item, index);
-            return (
-              <a key={item.name} href={item.href}
-                onClick={item.name === 'Home' ? handleHomeClick : undefined}
-                className={'fh__mobile-item' + (active ? ' fh__mobile-item--active' : '')}>
-                <Icon className='fh__mobile-icon' />
-                <span>{item.name}</span>
-              </a>
-            );
-          })}
-        </div>
-      )}
+      {/* Mobile menu dropdown — animated open/close.
+          Parent-only framer animation (children stagger via CSS); a
+          parent/child variant chain can freeze mid-flight if rAF is
+          throttled, leaving the menu stuck invisible. */}
+      <AnimatePresence>
+        {showMobileMenu && (
+          <motion.div
+            className='fh__mobile-menu'
+            onClick={(e) => { if (e.target.closest('a')) setShowMobileMenu(false); }}
+            initial={{ opacity: 0, y: -12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+          >
+            {navItems.map((item, index) => {
+              const Icon = item.icon;
+              const active = isActive(item, index);
+              return (
+                <a key={item.name} href={item.href}
+                  onClick={item.name === 'Home' ? handleHomeClick : undefined}
+                  className={'fh__mobile-item fh__mobile-item--in' + (active ? ' fh__mobile-item--active' : '')}
+                  style={{ animationDelay: index * 0.03 + 's' }}
+                >
+                  <Icon className='fh__mobile-icon' />
+                  <span>{item.name}</span>
+                </a>
+              );
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
       {showUserMenu && <div className='fixed inset-0 z-40' onClick={() => setShowUserMenu(false)} />}
     </header>
   );

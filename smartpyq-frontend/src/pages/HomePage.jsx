@@ -157,7 +157,7 @@ const demoTrendingTopics = [
 const testimonials = [
   { name: 'Priya Sharma', course: 'B.Com General, 3rd Year', text: 'SmartPYQ helped me identify the most repeated questions in Accounting. I scored 85% in my finals by focusing on just the high-priority topics it suggested.', rating: 5 },
   { name: 'Rahul Verma', course: 'B.Sc Computer Science, 2nd Year', text: 'The AI analysis showed me that 40% of Data Structures questions repeat every year. I stopped wasting time on low-priority topics and my preparation became 3x more efficient.', rating: 5 },
-  { name: 'Ananya Reddy', course: 'BCA, 4th Semester', text: 'I used to browse random PDFs for exam prep. SmartPYQ changed everything — the pattern analysis told me exactly what to study. Got the highest marks in my batch!', rating: 5 },
+  { name: 'Ananya Reddy', course: 'BCA, 4th Semester', text: 'I used to browse random PDFs for exam prep. SmartPYQ changed everything ï¿½ the pattern analysis told me exactly what to study. Got the highest marks in my batch!', rating: 5 },
   { name: 'Vikram Patel', course: 'BBA, 2nd Year', text: 'The repeated questions feature is a game-changer. I could see which topics appeared in 4 out of 5 papers. My exam preparation is now data-driven, not guesswork.', rating: 5 },
   { name: 'Sneha Kumari', course: 'B.Sc Mathematics, 3rd Year', text: 'SmartPYQ AI assistant explained complex calculus concepts when I was stuck at 2 AM. Having both PYQ access and AI help in one platform is incredible.', rating: 5 },
   { name: 'Arjun Nair', course: 'B.Com Honors, 1st Year', text: 'As a first-year student, I had no idea what to expect. SmartPYQ showed me the exact exam pattern and important topics. I walked into my exams feeling confident.', rating: 4 },
@@ -391,10 +391,11 @@ const HomePage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold text-white mb-3">
+            <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline><TextScramble text="Choose Your Preparation Mode" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>
             </h2>
-            <p className="text-gray-400">Five ways to prepare smarter â€” not just harder</p>
+            <span className="section-accent" aria-hidden="true" />
+            <p className="text-gray-400 mt-3">Five ways to prepare smarter â€” not just harder</p>
           </motion.div>
           <motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {prepModes.map((mode, i) => (
@@ -442,10 +443,11 @@ const HomePage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold text-white mb-3">
+            <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline>Browse by Course</AnimatedUnderline>
             </h2>
-            <p className="text-gray-400">Select your course to explore available question papers</p>
+            <span className="section-accent" aria-hidden="true" />
+            <p className="text-gray-400 mt-3">Select your course to explore available question papers</p>
           </motion.div>
           <motion.div className="grid grid-cols-2 sm:grid-cols-4 gap-4" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
             {streamEntries.map((s) => (
@@ -486,10 +488,11 @@ const HomePage = () => {
               <Flame className="h-3.5 w-3.5 text-orange-400" />
               <span className="text-xs font-medium text-orange-300">Live Demo</span>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-3">
+            <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline><TextScramble text="SmartPYQ AI Analysis" className="text-3xl font-bold text-white" delay={300} /></AnimatedUnderline>
             </h2>
-            <p className="text-gray-400">Upload a paper â€” AI reveals repeated questions, topic frequency, and exam patterns</p>
+            <span className="section-accent" aria-hidden="true" />
+            <p className="text-gray-400 mt-3">Upload a paper â€” AI reveals repeated questions, topic frequency, and exam patterns</p>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -623,10 +626,11 @@ const HomePage = () => {
               <TrendingUp className="h-3.5 w-3.5 text-red-400" />
               <span className="text-xs font-medium text-red-300">Trending Now</span>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-3">
+            <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline><TextScramble text="Most Repeated Topics" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>
             </h2>
-            <p className="text-gray-400">Based on analysis of question papers across multiple years</p>
+            <span className="section-accent" aria-hidden="true" />
+            <p className="text-gray-400 mt-3">Based on analysis of question papers across multiple years</p>
           </motion.div>
 
           <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
@@ -673,10 +677,11 @@ const HomePage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <h2 className="text-3xl font-bold text-white mb-3">
+            <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline><TextScramble text="How SmartPYQ Works" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>
             </h2>
-            <p className="text-gray-400">From paper to preparation in four steps</p>
+            <span className="section-accent" aria-hidden="true" />
+            <p className="text-gray-400 mt-3">From paper to preparation in four steps</p>
           </motion.div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 relative">
             <div className="hidden lg:block absolute top-12 left-[12%] right-[12%]">
@@ -816,21 +821,22 @@ const HomePage = () => {
               <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
               <span className="text-xs font-medium text-yellow-300">Student Stories</span>
             </div>
-            <h2 className="text-3xl font-bold text-white mb-3">
+            <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline><TextScramble text="What Students Say" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>
             </h2>
-            <p className="text-gray-400">Real students. Real results. Real preparation.</p>
+            <span className="section-accent" aria-hidden="true" />
+            <p className="text-gray-400 mt-3">Real students. Real results. Real preparation.</p>
           </motion.div>
         </div>
 
-        {/* Row 1 — scrolling left */}
+        {/* Row 1 ï¿½ scrolling left */}
         <Marquee speed={35} direction="left" className="mb-4">
           {testimonials.map((t, i) => (
             <TestimonialCard key={i} t={t} />
           ))}
         </Marquee>
 
-        {/* Row 2 — scrolling right (reverse) */}
+        {/* Row 2 ï¿½ scrolling right (reverse) */}
         <Marquee speed={40} direction="right">
           {[...testimonials].reverse().map((t, i) => (
             <TestimonialCard key={i} t={t} />
@@ -857,6 +863,7 @@ const HomePage = () => {
             transition={{ duration: 0.5 }}
           >
             <TextScramble text="Start Preparing" className="text-3xl sm:text-4xl font-bold text-white" delay={100} /> <GradientText className="text-3xl sm:text-4xl font-bold"><TextScramble text="Smarter" delay={400} /></GradientText> <TextScramble text="Today" className="text-3xl sm:text-4xl font-bold text-white" delay={500} />
+            <span className="section-accent" aria-hidden="true" />
           </motion.h2>
           <motion.p
             className="text-lg text-gray-400 mb-8"

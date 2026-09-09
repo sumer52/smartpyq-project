@@ -41,7 +41,7 @@ const UploadPage = () => {
             <ArrowUpTrayIcon className="h-4 w-4" />
             Community Upload
           </motion.div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">Share a Question Paper</h1>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">Share a <span className="text-brand-gradient">Question Paper</span></h1>
           <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">Upload your previous year question paper and help thousands of students prepare smarter. Every paper you contribute makes SmartPYQ better for everyone.</p>
 
         </div>

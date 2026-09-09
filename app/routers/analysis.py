@@ -5,7 +5,6 @@ import os
 import re
 from typing import List, Optional
 
-import asyncio
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -196,7 +195,7 @@ async def start_analysis(
             subj_r = await db.execute(select(Question.subject).filter(Question.paper_id.in_(paper_ids)).distinct())
             subjects = [s for (s,) in subj_r.all() if s]
             for subj in subjects:
-                tfidf_groups = await asyncio.to_thread(group_similar, db, subj, 0.65)
+                tfidf_groups = await group_similar(db, subj, 0.65)
                 total_groups += tfidf_groups
         except Exception as tfidf_err:
             logger.warning(f"TF-IDF grouping skipped: {tfidf_err}")

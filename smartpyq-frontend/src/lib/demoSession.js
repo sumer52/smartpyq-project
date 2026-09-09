@@ -1,4 +1,5 @@
 // Demo login session helpers.
+import { BACKEND_URL } from './backendUrl';
 // The demo login itself is frontend-only and instant (zero backend dependency).
 // When the real backend is reachable, these helpers silently attach a real demo
 // account session so feature pages (PYQ Hub, Upload, Analysis, Practice) can
@@ -37,8 +38,6 @@ export const attachDemoBackendSession = () => {
     return Promise.resolve(true);
   }
   if (connecting) return connecting;
-
-  const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
   connecting = fetch(`${BACKEND_URL}/api/v1/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },

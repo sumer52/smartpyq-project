@@ -7,6 +7,9 @@ import { apiClient } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import SpotlightCard from './ui/SpotlightCard';
 import MagneticButton from './ui/MagneticButton';
+import { Skeleton, SkeletonCard } from './ui/Loaders';
+import { backdrop, modalPanel, sheetPanel } from '../lib/motion';
+import { BACKEND_URL } from '../lib/backendUrl';
 
 const PYQNavigator = () => {
   const [currentLevel, setCurrentLevel] = useState('streams');
@@ -83,7 +86,7 @@ const PYQNavigator = () => {
     let cancelled = false;
     const fetchPreview = async () => {
       try {
-        const url = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000') + '/api/v1/papers/' + previewPaper.id + '/download';
+        const url = (BACKEND_URL) + '/api/v1/papers/' + previewPaper.id + '/download';
         const headers = {};
         const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
         if (token) headers['Authorization'] = 'Bearer ' + token;
@@ -171,7 +174,7 @@ const PYQNavigator = () => {
   };
 
   const renderPapers = () => {
-    if (isLoadingPapers) return (<div className="flex justify-center items-center py-16"><div className="animate-spin rounded-full h-10 w-10 border-b-2 border-brand-500"></div><span className="ml-4 text-gray-400">Loading papers...</span></div>);
+    if (isLoadingPapers) return (<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" aria-busy="true" aria-label="Loading papers">{[1,2,3,4,5,6].map((i) => <SkeletonCard key={i} lines={3} />)}</div>);
     return (
       <motion.div className="space-y-6" variants={container} initial="hidden" animate="visible" exit="exit">
         <motion.div variants={card} className="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl p-6 text-white">
@@ -236,14 +239,30 @@ const PYQNavigator = () => {
           {currentLevel === 'papers' && renderPapers()}
         </AnimatePresence>
       </div>
-      {previewPaper && (
-        <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4" onClick={() => setPreviewPaper(null)}>
-          <div className="relative bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-white/20 shadow-2xl w-full max-w-4xl h-[85vh] sm:h-[85vh] mx-0 sm:mx-4 flex flex-col" onClick={(e) => e.stopPropagation()}>
-            <div className="flex items-center justify-between px-6 py-4 border-b border-white/10"><h3 className="text-white font-semibold text-lg truncate">{previewPaper.title}</h3><button onClick={() => setPreviewPaper(null)} className="text-gray-400 hover:text-white text-2xl leading-none px-2">&times;</button></div>
-            <div className="flex-1 overflow-hidden rounded-b-2xl"><iframe src={previewUrl || ''} className="w-full h-full border-0" title={previewPaper.title} /></div>
-          </div>
-        </div>
-      )}
+      <AnimatePresence>
+        {previewPaper && (
+          <motion.div
+            className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
+            onClick={() => setPreviewPaper(null)}
+            {...backdrop}
+          >
+            <motion.div
+              className="relative bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-white/20 shadow-2xl w-full max-w-4xl h-[85vh] mx-0 sm:mx-4 flex flex-col"
+              onClick={(e) => e.stopPropagation()}
+              {...(typeof window !== 'undefined' && window.innerWidth < 640 ? sheetPanel : modalPanel)}
+            >
+              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10"><h3 className="text-white font-semibold text-lg truncate">{previewPaper.title}</h3><button onClick={() => setPreviewPaper(null)} className="text-gray-400 hover:text-white text-2xl leading-none px-2" aria-label="Close preview">&times;</button></div>
+              <div className="flex-1 overflow-hidden rounded-b-2xl">
+                {previewUrl ? <iframe src={previewUrl} className="w-full h-full border-0" title={previewPaper.title} /> : (
+                  <div className="p-6 space-y-4" aria-busy="true">
+                    <Skeleton className="h-full w-full min-h-[50vh]" />
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

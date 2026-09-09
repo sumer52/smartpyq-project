@@ -185,12 +185,16 @@ async def readiness_check():
     # Check Supabase Storage (optional)
     if settings.USE_SUPABASE_STORAGE and settings.SUPABASE_URL:
         try:
-            from app.utils.supabase_client import get_supabase_admin_client
-            client = get_supabase_admin_client()
-            # Simple bucket check
-            checks["storage"] = {"status": "configured", "provider": "supabase"}
+            from app.utils.supabase_client import get_supabase_admin
+            client = get_supabase_admin()
+            if client is not None:
+                # Verify the bucket is actually reachable with the service key
+                client.storage.from_(settings.SUPABASE_STORAGE_BUCKET).list(options={"limit": 1})
+                checks["storage"] = {"status": "healthy", "provider": "supabase", "bucket": settings.SUPABASE_STORAGE_BUCKET}
+            else:
+                checks["storage"] = {"status": "misconfigured", "reason": "service-role/secret key missing"}
         except Exception as e:
-            checks["storage"] = {"status": "degraded", "error": str(e)}
+            checks["storage"] = {"status": "degraded", "error": type(e).__name__}
             # Storage degradation is not critical for readiness
     else:
         checks["storage"] = {"status": "not_configured", "provider": "local"}

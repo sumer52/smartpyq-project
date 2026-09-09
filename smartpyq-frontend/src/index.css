@@ -498,18 +498,24 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   .demo-mode-badge { left: 10px; right: auto; width: max-content; transform: none; }
 }
 
-/* Mobile menu dropdown */
+/* Mobile menu dropdown (entrance/exit animated by framer-motion in FuturisticHeader;
+   items stagger via CSS animation so JS throttling can never freeze them) */
 .fh__mobile-menu {
   position: fixed; top: 60px; left: 8px; right: 8px; z-index: 50;
   background: rgba(15,10,35,0.95); backdrop-filter: blur(24px);
   border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
   box-shadow: 0 16px 48px rgba(0,0,0,0.5);
   padding: 8px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
-  animation: fhMobileIn 0.2s ease-out;
 }
-@keyframes fhMobileIn {
-  from { opacity: 0; transform: translateY(-12px) scale(0.96); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
+.fh__mobile-item--in {
+  animation: fhMobileItemIn 0.22s cubic-bezier(0.22,1,0.36,1) backwards;
+}
+@keyframes fhMobileItemIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .fh__mobile-item--in { animation: none; }
 }
 .fh__mobile-item {
   display: flex; flex-direction: column; align-items: center; gap: 4px;
@@ -685,15 +691,20 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     color: rgba(255,255,255,0.9);
     cursor: pointer; user-select: none;
     outline: none; position: relative;
-    transition: background 0.2s, box-shadow 0.2s, border-color 0.2s;
+    transition: background 0.2s, box-shadow 0.2s, border-color 0.2s, transform 0.15s cubic-bezier(0.22,1,0.36,1), color 0.2s;
   }
   .btn:hover {
     background: rgba(255,255,255,0.1);
     border-color: rgba(108,78,246,0.4);
     box-shadow: 0 0 16px rgba(108,78,246,0.15);
+    transform: translateY(-1px);
   }
   .btn:active {
     background: rgba(255,255,255,0.05);
+    transform: translateY(0) scale(0.98);
+  }
+  .btn:disabled, .btn[aria-disabled='true'] {
+    opacity: 0.45; pointer-events: none; transform: none; box-shadow: none;
   }
   .btn:focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
@@ -846,15 +857,17 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     border: 2px solid transparent;
     box-shadow: 0 10px 20px rgba(0,0,0,0.2);
     cursor: pointer;
-    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s;
+    transition: border-color 0.3s, box-shadow 0.3s, background 0.3s, transform 0.25s cubic-bezier(0.22,1,0.36,1);
   }
   .card-nav:hover {
     border-color: rgba(99,102,241,0.6);
-    box-shadow: 0 0 20px rgba(99,102,241,0.3), 0 0 40px rgba(99,102,241,0.15), inset 0 0 20px rgba(99,102,241,0.05);
+    box-shadow: 0 0 20px rgba(99,102,241,0.3), 0 0 40px rgba(99,102,241,0.15), inset 0 0 20px rgba(99,102,241,0.05), 0 12px 28px rgba(0,0,0,0.35);
     background: rgba(255,255,255,0.08);
+    transform: translateY(-3px);
   }
   .card-nav:active {
     background: rgba(255,255,255,0.06);
+    transform: translateY(-1px) scale(0.99);
   }
 }
 
@@ -1324,6 +1337,69 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 }
 .count-animate {
   animation: countUp 0.6s cubic-bezier(0.22,1,0.36,1) both;
+}
+
+/* ============================================================
+   UNIFIED UI MICRO-SYSTEM (skeletons, shimmer text, animated
+   gradient text, section accent lines) — used across all pages
+   ============================================================ */
+
+/* Shimmer skeleton block — pair with bg-white/5 rounded containers */
+.skeleton {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255,255,255,0.06);
+  border-radius: 0.5rem;
+}
+.skeleton::after {
+  content: '';
+  position: absolute; inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent);
+  animation: skeleton-sweep 1.4s ease-in-out infinite;
+}
+@keyframes skeleton-sweep {
+  100% { transform: translateX(100%); }
+}
+
+/* Animated brand gradient text (hero keywords, stat numbers, page titles).
+   Static gradient by default; sweeps continuously only when .animate is set. */
+.text-brand-gradient {
+  background: linear-gradient(90deg, #c4b5fd, #8b5cf6, #67e8f9, #8b5cf6, #c4b5fd);
+  background-size: 200% auto;
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent; color: transparent;
+}
+.text-brand-gradient.animate {
+  animation: gradient-pan 6s linear infinite;
+}
+@keyframes gradient-pan {
+  to { background-position: 200% center; }
+}
+
+/* Section heading accent line — gradient bar that draws in when visible */
+.section-accent {
+  display: block;
+  width: 64px; height: 3px; border-radius: 9999px;
+  margin: 0.75rem auto 0;
+  background: linear-gradient(90deg, var(--brand-500), var(--accent-500), transparent);
+  transform-origin: center;
+  animation: accent-grow 0.7s cubic-bezier(0.22,1,0.36,1) both;
+}
+@keyframes accent-grow {
+  from { transform: scaleX(0); opacity: 0; }
+  to { transform: scaleX(1); opacity: 1; }
+}
+
+/* Numeric stat pop — for animated counters */
+.stat-number {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton::after { animation: none; }
+  .text-brand-gradient.animate { animation: none; }
+  .section-accent { animation: none; transform: none; }
 }
 
 /* Progress bar animation */

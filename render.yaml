@@ -30,6 +30,19 @@ services:
         sync: false
       - key: CORS_ORIGINS
         sync: false
+      - key: FRONTEND_URL
+        sync: false
+      # Supabase (private file storage) — all values set in Render dashboard
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: question-papers
+      - key: USE_SUPABASE_STORAGE
+        value: "false"
       - key: LOG_LEVEL
         value: INFO
       - key: LOG_FORMAT

@@ -7,9 +7,7 @@ import {
   ExclamationCircleIcon, CheckCircleIcon, AcademicCapIcon, BookOpenIcon,
   CalendarIcon, KeyIcon, ArrowLeftIcon, ArrowRightIcon
 } from '@heroicons/react/24/outline';
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-
+import { BACKEND_URL } from '../lib/backendUrl';
 const STREAMS = [
   { id: 'bsc', name: 'B.Sc', icon: '🎓', unlocked: true },
   { id: 'bcom', name: 'B.Com', icon: '💼', unlocked: true },

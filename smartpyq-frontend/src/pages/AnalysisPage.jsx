@@ -126,7 +126,7 @@ const AnalysisPage = () => {
     <div className="min-h-screen">
       <main className="max-w-7xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Paper Analysis</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-white mb-2">Paper <span className="text-brand-gradient">Analysis</span></h1>
           <p className="text-gray-400">Select papers to extract questions, detect repeated patterns, and identify the most frequently tested topics.</p>
         </motion.div>
 

@@ -43,7 +43,7 @@ const AnalysisHistoryPage = () => {
     <div className="min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Your Analysis History</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Your Analysis <span className="text-brand-gradient">History</span></h1>
           <p className="text-gray-400">Browse past analyses to review extracted questions, repeated patterns, and exam insights.</p>
         </motion.div>
 

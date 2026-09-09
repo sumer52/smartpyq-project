@@ -7,6 +7,7 @@ import MagneticButton from '../components/ui/MagneticButton';
 import CursorGlow from '../components/ui/CursorGlow';
 import BorderBeam from '../components/ui/BorderBeam';
 import TextScramble from '../components/ui/TextScramble';
+import { BACKEND_URL } from '../lib/backendUrl';
 const AIPage = () => {
   const [messages, setMessages] = useState([
     {
@@ -53,7 +54,7 @@ const AIPage = () => {
     setIsTyping(true);
     try {
       // Use the chat API (simple endpoint works for guests and logged-in users)
-      const response = await fetch(`${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/v1/chat/simple`, {
+      const response = await fetch(`${BACKEND_URL}/api/v1/chat/simple`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +143,7 @@ const AIPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
-                  <Sparkles className="h-6 w-6 text-purple-400" /> <TextScramble text="SmartPYQ AI" delay={100} />
+                  <Sparkles className="h-6 w-6 text-purple-400" /> <TextScramble text="SmartPYQ" delay={100} /> <span className="text-brand-gradient">AI</span>
                 </h1>
                 <p className="text-lg text-gray-400">
                   Ask anything — academics, programming, concepts, study tips, or any question you have.

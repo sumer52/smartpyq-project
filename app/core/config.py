@@ -9,7 +9,9 @@ from typing import List, Optional
 
 from pydantic import validator
 from dotenv import load_dotenv
-load_dotenv(override=True)
+# Production-safe precedence: real environment variables (Render) win over
+# the local .env file. Never override live environment variables.
+load_dotenv(override=False)
 from pydantic_settings import BaseSettings
 
 

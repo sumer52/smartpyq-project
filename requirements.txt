@@ -25,12 +25,16 @@ redis==5.0.1
 celery==5.3.4
 
 # HTTP Client and API Integration
-httpx>=0.28.0
+# httpx pinned to supabase's requirement (<0.26); openai/google clients accept 0.25.x
+httpx>=0.25.2,<0.26
 aiohttp==3.9.1
 
 # AI/ML Libraries
 google-generativeai==0.3.2
 openai>=1.55.3
+
+# TF-IDF similarity for question grouping (Py3.12 wheels available)
+scikit-learn==1.4.2
 
 # File Processing
 PyPDF2==3.0.1
@@ -40,10 +44,8 @@ Pillow==10.1.0
 pytesseract==0.3.10
 python-magic==0.4.27
 
-# Cloud Storage
-# boto3==1.34.0
-# google-cloud-storage==2.10.0
-# firebase-admin==6.2.0
+# Cloud Storage (Supabase - private file storage, service-role key server-side only)
+supabase==2.4.0
 
 # Email
 aiosmtplib==3.0.1

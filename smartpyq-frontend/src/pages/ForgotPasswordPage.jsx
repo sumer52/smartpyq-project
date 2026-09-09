@@ -11,9 +11,7 @@ import {
   ArrowLeftIcon,
   ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
-
+import { BACKEND_URL } from '../lib/backendUrl';
 const ForgotPasswordPage = () => {
   const [step, setStep] = useState('email'); // 'email' | 'otp' | 'reset' | 'success'
   const [email, setEmail] = useState('');

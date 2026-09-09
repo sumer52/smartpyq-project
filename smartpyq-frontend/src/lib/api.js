@@ -1,8 +1,11 @@
 // API Configuration and Utilities
-// TODO: Replace with actual backend URL in production
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
+// Backend origin comes from the single config module (backendUrl.js).
+import { BACKEND_URL, assertBackendConfigured } from './backendUrl';
 
 import { isDemoSessionActive, attachDemoBackendSession } from './demoSession';
+
+// Surface a missing production configuration on the first API call.
+assertBackendConfigured();
 
 // Custom error classes for better error handling
 class ApiError extends Error {

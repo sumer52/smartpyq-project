@@ -41,7 +41,7 @@ const BookmarksPage = () => {
     <div className="min-h-screen">
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Saved Questions</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Saved <span className="text-brand-gradient">Questions</span></h1>
           <p className="text-gray-400">Questions you bookmarked for quick access, organized by subject.</p>
         </motion.div>
 

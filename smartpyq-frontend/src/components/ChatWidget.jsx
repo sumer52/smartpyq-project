@@ -10,6 +10,7 @@ import {
   MinusIcon
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
+import { BACKEND_URL } from '../lib/backendUrl';
 const ChatWidget = ({ className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
@@ -89,7 +90,7 @@ const ChatWidget = ({ className = "" }) => {
   // Handle SSE connection for streaming responses
   const handleSSEResponse = (userMessage) => {
     // TODO: Replace with actual SSE endpoint
-    const sseUrl = `${import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000'}/api/v1/chat/stream?session_id=${sessionId}`;
+    const sseUrl = `${BACKEND_URL}/api/v1/chat/stream?session_id=${sessionId}`;
     try {
       // Close existing connection
       if (eventSourceRef.current) {
@@ -186,7 +187,6 @@ const ChatWidget = ({ className = "" }) => {
     const timeoutId = setTimeout(() => controller.abort(), 15000);
     try {
       showTypingAnimation();
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       let response;
       if (token) {

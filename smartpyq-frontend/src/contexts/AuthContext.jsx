@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_SESSION_KEY, attachDemoBackendSession, clearDemoSession } from '../lib/demoSession';
+import { BACKEND_URL } from '../lib/backendUrl';
 
 const AuthContext = createContext();
 const DEMO_USER = {
@@ -124,7 +125,6 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(true);
     
     try {
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/simple-login`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -196,7 +196,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       if (token) {
-        const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
         await fetch(`${BACKEND_URL}/api/v1/auth/logout`, {
           method: 'POST',
           headers: {
@@ -224,8 +223,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const refreshToken = localStorage.getItem('refresh_token');
       if (!refreshToken) return false;
-      
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/refresh`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -302,7 +299,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       if (!token) return;
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/profile`, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -335,7 +331,6 @@ export const AuthProvider = ({ children }) => {
     if (localStorage.getItem(DEMO_SESSION_KEY)) return { success: true };
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/onboarding`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -357,7 +352,6 @@ export const AuthProvider = ({ children }) => {
     if (localStorage.getItem(DEMO_SESSION_KEY)) return { success: true };
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/profile/academic`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
@@ -389,8 +383,6 @@ export const AuthProvider = ({ children }) => {
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       if (!token) throw new Error('Not authenticated');
-
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/delete-account`, {
         method: 'POST',
         headers: {

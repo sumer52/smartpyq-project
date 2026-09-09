@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import api from '../lib/api';
 import practiceQuestions from '../data/practiceQuestions.json';
+import { Counter } from '../components/ui/Loaders';
+import { stagger, cardUp, EASE } from '../lib/motion';
 
 const PracticePage = () => {
   const [questions, setQuestions] = useState([]);
@@ -108,7 +110,7 @@ const PracticePage = () => {
   };
 
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
+    <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading questions">
       <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
     </div>
   );
@@ -129,20 +131,18 @@ const PracticePage = () => {
         ) : (
           <>
             {/* Stats Bar */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6">
-              <div className="bg-white/5 rounded-xl border border-white/10 p-4 text-center">
-                <p className="text-2xl font-bold text-white">{stats.total}</p>
-                <p className="text-xs text-gray-400">Total Questions</p>
-              </div>
-              <div className="bg-white/5 rounded-xl border border-white/10 p-4 text-center">
-                <p className="text-2xl font-bold text-green-400">{stats.reviewed}</p>
-                <p className="text-xs text-gray-400">Reviewed</p>
-              </div>
-              <div className="bg-white/5 rounded-xl border border-white/10 p-4 text-center">
-                <p className="text-2xl font-bold text-orange-400">{stats.needsPractice}</p>
-                <p className="text-xs text-gray-400">Needs Practice</p>
-              </div>
-            </div>
+            <motion.div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6" variants={stagger(0.06)} initial="hidden" animate="visible">
+              {[ 
+                { val: stats.total, label: 'Total Questions', color: 'text-white' },
+                { val: stats.reviewed, label: 'Reviewed', color: 'text-green-400' },
+                { val: stats.needsPractice, label: 'Needs Practice', color: 'text-orange-400' },
+              ].map((s, i) => (
+                <motion.div key={i} variants={cardUp} className="bg-white/5 rounded-xl border border-white/10 p-4 text-center">
+                  <p className={`text-2xl font-bold ${s.color}`}><Counter value={s.val} /></p>
+                  <p className="text-xs text-gray-400 mt-1">{s.label}</p>
+                </motion.div>
+              ))}
+            </motion.div>
 
             {/* Subject Filter */}
             <div className="flex flex-wrap gap-2 mb-6">
@@ -175,7 +175,8 @@ const PracticePage = () => {
                 </div>
 
                 {current && (
-                  <motion.div key={current.id} initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }}
+                  <AnimatePresence mode="wait">
+                  <motion.div key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25, ease: EASE }}
                     className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 mb-6">
                     <div className="flex items-center gap-2 mb-4">
                       <span className="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-1 rounded">Q{current.question_number || currentIdx + 1}</span>
@@ -210,6 +211,7 @@ const PracticePage = () => {
                       </button>
                     )}
                   </motion.div>
+                  </AnimatePresence>
                 )}
 
                 <div className="flex gap-3 justify-center">

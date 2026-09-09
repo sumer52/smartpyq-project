@@ -93,5 +93,18 @@ def is_supabase_configured() -> bool:
 
 
 def is_supabase_storage_enabled() -> bool:
-    """Check if Supabase Storage should be used for file uploads."""
-    return settings.USE_SUPABASE_STORAGE and is_supabase_configured()
+    """Check if Supabase Storage should be used for file uploads.
+
+    Requires ALL of:
+      - USE_SUPABASE_STORAGE=true
+      - SUPABASE_URL
+      - SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY (server-side only)
+
+    The anon/publishable key alone is NOT sufficient for private-bucket
+    uploads — never claim storage is configured without the service key.
+    """
+    return bool(
+        settings.USE_SUPABASE_STORAGE
+        and settings.SUPABASE_URL
+        and _get_service_key()
+    )

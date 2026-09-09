@@ -19,6 +19,7 @@ import {
   SunIcon,
   TrashIcon
 } from '@heroicons/react/24/outline';
+import { BACKEND_URL } from '../lib/backendUrl';
 const ProfilePage = () => {
   const { user, updateUser, deleteAccount } = useAuth();
   const navigate = useNavigate();
@@ -89,7 +90,6 @@ const ProfilePage = () => {
     // Save academic info to backend
     try {
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
-      const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000';
       await fetch(`${BACKEND_URL}/api/v1/auth/profile/academic`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },

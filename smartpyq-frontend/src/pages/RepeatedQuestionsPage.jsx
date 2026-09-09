@@ -75,7 +75,7 @@ const RepeatedQuestionsPage = () => {
     <div className="min-h-screen">
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">Question Insights</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Question <span className="text-brand-gradient">Insights</span></h1>
           <p className="text-gray-400">Repeated questions across exams and your analysis history.</p>
         </motion.div>
 

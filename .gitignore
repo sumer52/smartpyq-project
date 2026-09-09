@@ -85,3 +85,4 @@ freebuff-visuals/
 
 # Local dev notes (living document, not part of the shipped repo)
 /brain.md
+.venv-audit/
