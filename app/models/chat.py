@@ -52,7 +52,7 @@ class ChatSession(Base):
     
     # Session metadata
     title = Column(String(255), nullable=True)  # Auto-generated or user-set
-    status = Column(SQLEnum(SessionStatus), default=SessionStatus.ACTIVE, nullable=False)
+    status = Column(SQLEnum(SessionStatus, native_enum=False), default=SessionStatus.ACTIVE, nullable=False)
     
     # Context and settings
     context = Column(JSON, nullable=True)  # Additional context for the session
@@ -200,7 +200,7 @@ class ChatMessage(Base):
     session_id = Column(Integer, ForeignKey("chat_sessions.id"), nullable=False, index=True)
     
     # Message content
-    role = Column(SQLEnum(MessageRole), nullable=False, index=True)
+    role = Column(SQLEnum(MessageRole, native_enum=False), nullable=False, index=True)
     content = Column(Text, nullable=False)
     
     # AI-specific metadata

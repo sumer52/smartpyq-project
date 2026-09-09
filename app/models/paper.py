@@ -81,13 +81,13 @@ class Paper(Base):
     semester_year = Column(String(10), nullable=True)  # e.g., "2023-24"
     
     # Exam details
-    exam_type = Column(SQLEnum(ExamType), nullable=False, index=True)
+    exam_type = Column(SQLEnum(ExamType, native_enum=False), nullable=False, index=True)
     exam_date = Column(DateTime(timezone=True), nullable=True)
     duration_minutes = Column(Integer, nullable=True)
     max_marks = Column(Integer, nullable=True)
     
     # Classification
-    difficulty_level = Column(SQLEnum(DifficultyLevel), nullable=True, index=True)
+    difficulty_level = Column(SQLEnum(DifficultyLevel, native_enum=False), nullable=True, index=True)
     tags = Column(JSON, nullable=False, default=list)  # List of tags
     
     # File information
@@ -102,11 +102,11 @@ class Paper(Base):
     page_count = Column(Integer, nullable=True)
     
     # Processing status for upload pipeline
-    processing_status = Column(SQLEnum(ProcessingStatus), default=ProcessingStatus.UPLOADED, nullable=False, index=True)
+    processing_status = Column(SQLEnum(ProcessingStatus, native_enum=False), default=ProcessingStatus.UPLOADED, nullable=False, index=True)
     processing_error = Column(Text, nullable=True)
     
     # Status and moderation
-    status = Column(SQLEnum(PaperStatus), default=PaperStatus.DRAFT, nullable=False, index=True)
+    status = Column(SQLEnum(PaperStatus, native_enum=False), default=PaperStatus.DRAFT, nullable=False, index=True)
     moderation_notes = Column(Text, nullable=True)
     
     # Relationships

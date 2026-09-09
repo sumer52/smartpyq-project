@@ -83,7 +83,7 @@ class QuestionGroup(Base):
     subject = Column(String(255), nullable=True, index=True)
     topic = Column(String(255), nullable=True, index=True)
     frequency = Column(Integer, default=0, nullable=False)  # computed count
-    similarity_method = Column(SQLEnum(SimilarityMethod), default=SimilarityMethod.EXACT, nullable=False)
+    similarity_method = Column(SQLEnum(SimilarityMethod, native_enum=False), default=SimilarityMethod.EXACT, nullable=False)
     confidence = Column(Float, default=1.0, nullable=False)
     
     # Timestamps
@@ -139,7 +139,7 @@ class AnalysisResult(Base):
     similar_matches = Column(Integer, default=0, nullable=False)
     
     # Status
-    status = Column(SQLEnum(AnalysisStatus), default=AnalysisStatus.PENDING, nullable=False, index=True)
+    status = Column(SQLEnum(AnalysisStatus, native_enum=False), default=AnalysisStatus.PENDING, nullable=False, index=True)
     error_message = Column(Text, nullable=True)
     
     # Timestamps
