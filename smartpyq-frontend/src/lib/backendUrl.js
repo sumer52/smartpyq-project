@@ -25,8 +25,7 @@ export function assertBackendConfigured() {
   }
 }
 
-// Dev-time console warning (tree-shaken out of prod builds by the guard below).
+// Dev-time console warning (only runs in the dev server).
 if (import.meta.env.DEV && !raw) {
-  // eslint-disable-next-line no-console
   console.warn('[backendUrl] VITE_BACKEND_URL not set — falling back to http://localhost:8000');
 }

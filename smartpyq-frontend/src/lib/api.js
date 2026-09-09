@@ -53,6 +53,37 @@ class ApiClient {
     this.onUnauthorized = handler;
   }
 
+  // Shared token refresh — concurrent 401s wait for ONE refresh attempt so
+  // rotating refresh tokens can't invalidate each other.
+  async refreshAccessToken() {
+    if (this._refreshPromise) return this._refreshPromise;
+    const refreshToken = localStorage.getItem('refresh_token');
+    if (!refreshToken) return null;
+    this._refreshPromise = (async () => {
+      try {
+        const refreshResponse = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refresh_token: refreshToken })
+        });
+        if (!refreshResponse.ok) return null;
+        const refreshData = await refreshResponse.json();
+        localStorage.setItem('auth_token', refreshData.access_token);
+        localStorage.setItem('authToken', refreshData.access_token);
+        if (refreshData.refresh_token) {
+          localStorage.setItem('refresh_token', refreshData.refresh_token);
+        }
+        return refreshData.access_token;
+      } catch {
+        return null;
+      } finally {
+        // Clear after a microtask so same-tick 401s share this attempt
+        setTimeout(() => { this._refreshPromise = null; }, 0);
+      }
+    })();
+    return this._refreshPromise;
+  }
+
   // Get authentication headers
   getAuthHeaders() {
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
@@ -111,30 +142,15 @@ class ApiClient {
 
         switch (response.status) {
           case 401: {
-            // Try to refresh token before giving up
-            const refreshToken = localStorage.getItem('refresh_token');
-            if (refreshToken && !url.includes('/auth/refresh')) {
-              try {
-                const refreshResponse = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ refresh_token: refreshToken })
-                });
-                if (refreshResponse.ok) {
-                  const refreshData = await refreshResponse.json();
-                  localStorage.setItem('auth_token', refreshData.access_token);
-                  localStorage.setItem('authToken', refreshData.access_token);
-                  if (refreshData.refresh_token) {
-                    localStorage.setItem('refresh_token', refreshData.refresh_token);
-                  }
-                  // Retry original request with new token
-                  config.headers = { ...config.headers, Authorization: `Bearer ${refreshData.access_token}` };
-                  const retryResponse = await fetch(url, config);
-                  if (retryResponse.ok) return await retryResponse.json();
-                }
-              } catch (refreshError) {
-                // Refresh failed
-              }
+            // Try ONE shared refresh before giving up
+            const newToken = (!url.includes('/auth/refresh') && !url.includes('/auth/login'))
+              ? await this.refreshAccessToken()
+              : null;
+            if (newToken) {
+              // Retry original request with the new token
+              config.headers = { ...config.headers, Authorization: `Bearer ${newToken}` };
+              const retryResponse = await fetch(url, config);
+              if (retryResponse.ok) return await retryResponse.json();
             }
             // Demo sessions are never force-logged-out here: when the backend is
             // unreachable (or rejects the demo account) the caller handles it.
@@ -225,7 +241,7 @@ class ApiClient {
     const blob = await response.blob();
     const disposition = response.headers.get('content-disposition') || '';
     let filename = 'paper_' + id + '.pdf';
-    const match = disposition.match(/filename[^;=]*=[\"]*([^\"]+)/i);
+    const match = disposition.match(/filename[^;=]*="?([^"]+)/i);
     if (match) filename = match[1].trim();
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);

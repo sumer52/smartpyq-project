@@ -4,6 +4,7 @@ import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { EyeIcon, EyeSlashIcon, EnvelopeIcon, LockClosedIcon, ExclamationCircleIcon, SparklesIcon, BookOpenIcon, ChatBubbleLeftRightIcon } from '@heroicons/react/24/outline';
 import BorderBeam from '../components/ui/BorderBeam';
+import { DEMO_UI_ENABLED } from '../lib/demoSession';
 import SpotlightCard from '../components/ui/SpotlightCard';
 import GlowEffect from '../components/ui/GlowEffect';
 import CursorGlow from '../components/ui/CursorGlow';
@@ -158,8 +159,8 @@ const LoginPage = () => {
           className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl border border-white/15 p-5 sm:p-8"
         >
           <form className="space-y-6" onSubmit={handleSubmit}>
-            {/* Demo Credentials Info with CursorGlow */}
-            <motion.div variants={itemVariants}>
+            {/* Demo Credentials Info with CursorGlow (hidden in production unless VITE_ENABLE_DEMO=true) */}
+            {DEMO_UI_ENABLED && <motion.div variants={itemVariants}>
             <CursorGlow className="bg-white/5 border border-white/10 rounded-xl p-3 sm:p-4 backdrop-blur-sm" glowColor="rgba(99,102,241,0.08)">
               <div className="flex items-start space-x-3">
                 <div className="text-blue-300 text-xl">💡</div>
@@ -183,7 +184,7 @@ const LoginPage = () => {
                 </div>
               </div>
             </CursorGlow>
-            </motion.div>
+            </motion.div>}
             {/* General Error */}
             <AnimatePresence>
               {errors.general && (

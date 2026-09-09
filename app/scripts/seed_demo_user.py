@@ -20,6 +20,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 
 from sqlalchemy import select
 from app.core.database import AsyncSessionLocal
+from app.core.config import demo_account_enabled
 from app.models.user import User, UserRole, UserStatus
 from app.core.auth import AuthManager
 
@@ -103,6 +104,9 @@ async def seed_demo_users():
 
 
 async def main():
+    if not demo_account_enabled():
+        print("[SKIP] ENABLE_DEMO_ACCOUNT is off - demo seeding skipped (production default)")
+        return
     try:
         await seed_demo_users()
     except Exception as e:
