@@ -10,11 +10,10 @@ export const DEMO_PASSWORD = 'demo123';
 export const DEMO_SESSION_KEY = 'demo_session';
 export const DEMO_OFFLINE_KEY = 'demo_offline';
 
-// Show the demo-credentials panel in development builds by default; in
-// production it appears only when VITE_ENABLE_DEMO=true is set at build
-// time. The offline demo-login mechanism itself always works if invoked.
-export const DEMO_UI_ENABLED =
-  !import.meta.env.PROD || import.meta.env.VITE_ENABLE_DEMO === 'true';
+// Show the demo-credentials panel by default (it's the product's guided
+// demo). Hide it by setting VITE_ENABLE_DEMO=false at build time. The
+// offline demo-login mechanism itself always works if invoked.
+export const DEMO_UI_ENABLED = import.meta.env.VITE_ENABLE_DEMO !== 'false';
 
 export const isDemoSessionActive = () => {
   try {
