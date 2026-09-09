@@ -2,32 +2,10 @@
 
 ## Prerequisites
 
-- Docker and Docker Compose
-- PostgreSQL (if not using Docker)
+- Python 3.12+
+- PostgreSQL (production)
 - Redis (optional, for caching)
 - Supabase account (for file storage)
-
-## Quick Start with Docker
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/your-org/smartpyq.git
-cd smartpyq
-
-# 2. Create environment file
-cp .env.example .env
-
-# 3. Edit .env with your settings (at minimum set JWT_SECRET)
-# Generate a strong secret:
-# python -c "import secrets; print(secrets.token_urlsafe(64))"
-
-# 4. Start all services
-docker-compose up -d
-
-# 5. Check health
-curl http://localhost:8000/health
-curl http://localhost:8000/ready
-```
 
 ## Manual Deployment
 
@@ -68,8 +46,32 @@ DATABASE_URL=sqlite+aiosqlite:///./smartpyq.db
 uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
 
 # Production
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --workers 4
+uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 4
 ```
+
+## Deploy on Render (Python Runtime)
+
+The repo includes a `render.yaml` blueprint that deploys the backend with the
+native **Python runtime** (no containers):
+
+1. Render Dashboard → **New +** → **Blueprint** → pick this repository.
+2. Render reads `render.yaml` and creates `smartpyq-backend` + `smartpyq-db`.
+3. Set `ALLOWED_ORIGINS` / `CORS_ORIGINS` to your frontend URL (e.g. `https://smartpyq-project.vercel.app`).
+4. Deploy. The start command runs migrations and seeds the demo account automatically.
+
+Key settings (already in `render.yaml`):
+
+| Setting | Value |
+|---------|-------|
+| Runtime | `python` |
+| Python version | `3.12.7` (via `PYTHON_VERSION`) |
+| Build command | `pip install --upgrade pip && pip install -r requirements.txt` |
+| Start command | `alembic upgrade head && python -m app.scripts.seed_demo_user && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1` |
+| Health check | `/health` |
+
+> Python is pinned to 3.12 because prebuilt wheels exist for every dependency
+> (PyMuPDF, asyncpg, cryptography, Pillow, aiohttp). Newer Pythons force
+> compiling PyMuPDF from C++ source and fail the build.
 
 ## Environment Variables
 
@@ -116,14 +118,10 @@ See `.env.example` for all available configuration options.
 ### Application Rollback
 
 ```bash
-# Stop current version
-docker-compose down
-
 # Checkout previous version
 git checkout <previous-tag>
 
-# Rebuild and restart
-docker-compose up -d --build
+# Restart the service (Render: Manual Deploy → Deploy latest commit)
 ```
 
 ### Database Rollback

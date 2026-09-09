@@ -1,11 +1,19 @@
 services:
   - type: web
     name: smartpyq-backend
-    runtime: docker
-    dockerfilePath: ./Dockerfile
+    runtime: python
     plan: free
     healthCheckPath: /health
+    # Pin Python 3.12: prebuilt wheels exist for every dependency in requirements.txt
+    # (PyMuPDF, asyncpg, cryptography, Pillow, aiohttp). Newer Pythons force
+    # source compilation of PyMuPDF and fail the build.
+    autoDeploy: true
+    buildCommand: pip install --upgrade pip && pip install -r requirements.txt
+    # Migrations + demo-account seed, then bind 0.0.0.0:$PORT for Render
+    startCommand: alembic upgrade head && python -m app.scripts.seed_demo_user && uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1
     envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
       - key: ENV
         value: production
       - key: DEBUG

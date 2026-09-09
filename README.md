@@ -165,7 +165,7 @@ npm run preview      # optionally serve the build locally to verify
 
 ### Backend (hosting the FastAPI API)
 
-The FastAPI backend is **not** part of the Vercel static deployment. Host it on a service that runs Python (e.g. Render, Railway, a VPS with the included `Dockerfile`, or Vercel Serverless Functions if you adapt the app). It needs the environment variables below plus migrations applied.
+The FastAPI backend is **not** part of the Vercel static deployment. Host it on a service that runs Python natively (e.g. Render's Python runtime via the included `render.yaml`, Railway, or a VPS). It needs the environment variables below plus migrations applied.
 
 ## Environment Variables
 

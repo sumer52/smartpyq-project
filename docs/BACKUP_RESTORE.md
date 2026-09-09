@@ -56,9 +56,6 @@ tar -xzf uploads_20240101.tar.gz
 ```bash
 # Backup environment configuration (without secrets)
 cp .env.example .env.backup.$(date +%Y%m%d)
-
-# Backup Docker Compose
-cp docker-compose.yml docker-compose.yml.backup
 ```
 
 ## Restore Procedure
@@ -67,7 +64,7 @@ cp docker-compose.yml docker-compose.yml.backup
 
 1. **Stop the application**
    ```bash
-   docker-compose down
+   # Stop the uvicorn process / pause deploys on your host
    ```
 
 2. **Restore database**
@@ -82,7 +79,7 @@ cp docker-compose.yml docker-compose.yml.backup
 
 4. **Start the application**
    ```bash
-   docker-compose up -d
+   uvicorn app.main:app --host 0.0.0.0 --port 8000
    ```
 
 5. **Verify**
