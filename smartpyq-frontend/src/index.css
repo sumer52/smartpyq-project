@@ -1193,10 +1193,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   }
   .overflow-x-auto::-webkit-scrollbar { display: none; }
   
-  /* Fix modals for mobile */
-  .fixed.inset-0 {
+  /* Fix bottom-sheet modals for mobile (those that request items-end).
+     Do NOT touch centered overlays like the intro video (items-center). */
+  .fixed.inset-0.items-end {
     padding: 8px;
-    align-items: flex-end;
   }
   
   /* Fix command bar mobile */
