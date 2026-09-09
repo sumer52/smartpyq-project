@@ -32,6 +32,7 @@ engine_kwargs = {
 if "sqlite" in db_url:
     # SQLite-specific settings (development/testing)
     engine_kwargs["connect_args"] = {"timeout": 10, "check_same_thread": False}
+    engine_kwargs.pop("pool_timeout", None)  # not valid for SQLite/NullPool
 elif "postgresql" in db_url:
     # PostgreSQL-specific settings (production)
     engine_kwargs["pool_size"] = 20
