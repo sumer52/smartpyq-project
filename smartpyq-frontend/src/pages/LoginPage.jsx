@@ -116,15 +116,15 @@ const LoginPage = () => {
   };
   return (
     <div className="min-h-[100dvh] flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{paddingTop: "max(2rem, env(safe-area-inset-top))", paddingBottom: "max(2rem, env(safe-area-inset-bottom))"}}>
-      {/* Premium Background */}
-      <div className="absolute inset-0 overflow-hidden">
+      {/* Premium Background — semi-transparent so the app-wide video background shows through */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
         {/* Deep gradient base */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0618] via-[#120d2e] to-[#0a0618]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#0a0618]/70 via-[#120d2e]/60 to-[#0a0618]/70" />
         {/* Animated aurora blobs */}
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-purple-600/40 to-blue-600/25 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-gradient-to-br from-indigo-600/35 to-cyan-600/20 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
-        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-pink-600/30 to-purple-600/20 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '4s' }} />
-        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 bg-gradient-to-br from-blue-500/30 to-indigo-500/20 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '1s' }} />
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-gradient-to-br from-purple-600/50 to-blue-600/35 rounded-full blur-[120px] animate-pulse" />
+        <div className="absolute -bottom-32 -right-32 w-80 h-80 bg-gradient-to-br from-indigo-600/45 to-cyan-600/30 rounded-full blur-[100px] animate-pulse" style={{ animationDelay: '2s' }} />
+        <div className="absolute top-1/3 right-1/4 w-64 h-64 bg-gradient-to-br from-pink-600/40 to-purple-600/30 rounded-full blur-[80px] animate-pulse" style={{ animationDelay: '4s' }} />
+        <div className="absolute bottom-1/3 left-1/4 w-48 h-48 bg-gradient-to-br from-blue-500/40 to-indigo-500/30 rounded-full blur-[60px] animate-pulse" style={{ animationDelay: '1s' }} />
         {/* Subtle grid pattern */}
         <div className="absolute inset-0 opacity-[0.08]" style={{ backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)', backgroundSize: '60px 60px' }} />
         {/* Radial vignette */}

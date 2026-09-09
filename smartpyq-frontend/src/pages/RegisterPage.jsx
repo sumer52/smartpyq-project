@@ -437,9 +437,9 @@ const RegisterPage = () => {
 
   return (
     <div className="min-h-[100dvh] flex items-center justify-center py-8 px-4 sm:px-6 lg:px-8 relative overflow-hidden" style={{paddingTop: "max(2rem, env(safe-area-inset-top))", paddingBottom: "max(2rem, env(safe-area-inset-bottom))"}}>
-      <div className="absolute inset-0">
-        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-green-600/20 to-blue-600/20 rounded-full mix-blend-multiply filter blur-xl animate-pulse" />
-        <div className="absolute bottom-20 right-20 w-48 h-48 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 rounded-full mix-blend-multiply filter blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-r from-green-600/40 to-blue-600/40 rounded-full blur-xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-gradient-to-r from-purple-600/40 to-indigo-600/40 rounded-full blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
       <motion.div className="relative z-10 max-w-lg w-full space-y-6" variants={ci} initial="hidden" animate="visible">
