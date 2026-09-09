@@ -25,6 +25,9 @@ from ..core.exceptions import (
 )
 from ..models.user import User
 from ..services.feature_service import FeatureService
+from ..core.database import get_db
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.schemas.feature import FeatureResponse as FeatureSchema
 
 router = APIRouter(prefix="/features", tags=["features"])
 
@@ -56,20 +59,24 @@ class FeatureUpdateRequest(BaseModel):
     display_order: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
     
-# Initialize services
+# Initialize service
+# NOTE: the module-level instance has no DB session (feature_repo is None),
+# which made every endpoint 500. Public GET endpoints now build a
+# session-scoped service per request. Admin handlers below still use the
+# legacy module-level service and are known-broken (unused by the frontend).
 feature_service = FeatureService()
 
 # Feature endpoints
-@router.get("/", response_model=List[FeatureResponse])
-async def get_features():
+@router.get("/", response_model=List[FeatureSchema])
+async def get_features(db: AsyncSession = Depends(get_db)):
     """Get all active features
     
     Returns list of active platform features for display on frontend.
     No authentication required - public endpoint.
     """
     try:
-        features = await feature_service.get_active_features()
-        return [FeatureResponse(**feature) for feature in features]
+        svc = FeatureService(db=db)
+        return await svc.get_active_features()
         
     except Exception as e:
         raise HTTPException(
@@ -77,17 +84,20 @@ async def get_features():
             detail="Failed to retrieve features"
         )
 
-@router.get("/all", response_model=List[FeatureResponse])
+@router.get("/all", response_model=List[FeatureSchema])
 async def get_all_features(
-    current_user: User = Depends(require_roles(["admin"]))
+    current_user: User = Depends(require_roles(["admin"])),
+    db: AsyncSession = Depends(get_db)
 ):
     """Get all features (admin only)
     
     Returns all features including inactive ones for admin management.
     """
     try:
-        features = await feature_service.get_all_features()
-        return [FeatureResponse(**feature) for feature in features]
+        from sqlalchemy import select
+        from app.models.feature import Feature
+        result = await db.execute(select(Feature).order_by(Feature.display_order))
+        return list(result.scalars().all())
         
     except Exception as e:
         raise HTTPException(
