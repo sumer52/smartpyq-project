@@ -25,13 +25,18 @@ redis==5.0.1
 celery==5.3.4
 
 # HTTP Client and API Integration
-# httpx pinned to supabase's requirement (<0.26); openai/google clients accept 0.25.x
-httpx>=0.25.2,<0.26
+# httpx window: >=0.26 required by gotrue (proxy= kwarg), <0.28 required by
+# starlette 0.27's TestClient (app= kwarg removed in httpx 0.28).
+httpx>=0.26,<0.28
+# websockets>=13 required by realtime (supabase dep): its websockets.asyncio
+# package only exists in websockets 13+ (12.x lacks it).
+websockets>=13.1,<14
 aiohttp==3.9.1
 
-# AI/ML Libraries
-google-generativeai==0.3.2
-openai>=1.55.3
+# Cloud Storage (Supabase - private file storage, service-role key server-side only)
+# 2.4.0 was broken: its gotrue dep needs httpx>=0.26 and client init crashed
+# with Client.__init__() got an unexpected keyword argument 'proxy'.
+supabase==2.31.0
 
 # TF-IDF similarity for question grouping (Py3.12 wheels available)
 scikit-learn==1.4.2
@@ -43,9 +48,6 @@ pdfplumber==0.10.3
 Pillow==10.1.0
 pytesseract==0.3.10
 python-magic==0.4.27
-
-# Cloud Storage (Supabase - private file storage, service-role key server-side only)
-supabase==2.4.0
 
 # Email
 aiosmtplib==3.0.1

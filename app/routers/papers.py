@@ -636,7 +636,9 @@ async def download_paper(
                         await db.commit()
                         return RedirectResponse(url=signed['signedURL'], status_code=307)
                 except Exception as e:
-                    logger.warning(f"Supabase signed URL failed, falling back to local: {e}")
+                    # Log type only — never the exception detail (it can embed
+                    # bucket names or signed-URL fragments).
+                    logger.warning(f"Supabase signed URL generation failed ({type(e).__name__}), falling back to local")
     
     # Locate file using PaperVersion storage_key (DB-driven, not filesystem scan)
     # Cache resolved path to avoid repeated filesystem scans

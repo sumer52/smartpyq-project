@@ -394,41 +394,44 @@ class PaperService:
                 file_url = f"{settings.LOCAL_STORAGE_URL or 'http://localhost:8000/files'}/{staging_key}"
 
             # Extract text for search indexing. analyze_document needs a real
-            # local file: for Supabase uploads, analyze the in-memory bytes via
-            # a secure temp file (always deleted in finally). For local
-            # development uploads, analyze the file we just wrote.
+            # local file: for Supabase uploads (storage_path is a REMOTE object
+            # key, not a local path), analyze the in-memory bytes via a secure
+            # temp file; for local development uploads, analyze the stored file
+            # in place. Temp files are always deleted in finally.
             extracted_text = ""
             import tempfile
-            if storage_path and os.path.isfile(storage_path):
-                analysis_target = storage_path
+            if file_data:
+                analysis_target = None
                 tmp_fd = None
+                made_temp = False
                 try:
-                    if not file_url.startswith(settings.LOCAL_STORAGE_URL or 'http://localhost:8000/files'):
-                        # Remote object: write bytes to a temp file for analysis
+                    if storage_path and os.path.isfile(storage_path):
+                        analysis_target = storage_path  # local file: analyze in place
+                    else:
+                        # Remote object or bytes-only: stage to a temp file
                         tmp_fd, analysis_target = tempfile.mkstemp(
                             suffix=file_extension or ".bin"
                         )
                         with os.fdopen(tmp_fd, "wb") as tf:
                             tf.write(file_data)
                         tmp_fd = None  # ownership transferred to analysis_target
+                        made_temp = True
                     from app.services.document_analyzer import analyze_document
                     analysis = analyze_document(analysis_target, filename)
                     if analysis.success:
                         extracted_text = analysis.raw_text[:10000] if analysis.raw_text else ""
                 except Exception as e:
-                    logger.warning(f"Text extraction failed: {e}")
+                    logger.warning(f"Text extraction failed ({type(e).__name__}) for paper {paper.id}")
                 finally:
                     if tmp_fd is not None:
                         os.close(tmp_fd)
-                    try:
-                        if analysis_target != storage_path:
+                    if made_temp and analysis_target:
+                        try:
                             os.remove(analysis_target)
-                    except (OSError, UnboundLocalError):
-                        pass
+                        except OSError:
+                            pass
             else:
-                logger.warning(
-                    f"Paper {paper.id}: no local file available for text extraction"
-                )
+                logger.warning(f"Paper {paper.id}: no file data available for text extraction")
 
             # Update paper with file info and auto-approve
             await self.paper_repo.update(
@@ -789,17 +792,32 @@ class PaperService:
         # Delete associated files from storage
         versions = await self.paper_repo.get_paper_versions(paper_id)
         
-        # Try Supabase Storage cleanup
+        # Try Supabase Storage cleanup. The Supabase object key is
+        # "{user_id}/{hash}.ext" (recorded in paper.file_url at upload time);
+        # version.s3_key holds the LOCAL staging key ("papers/{id}/{hash}.ext")
+        # and must NOT be used as a Supabase object path.
         from app.utils.supabase_client import is_supabase_storage_enabled, get_supabase_admin
         if is_supabase_storage_enabled():
             admin = get_supabase_admin()
             if admin:
+                object_keys = set()
+                if paper.file_url and not paper.file_url.startswith(("http://", "https://")):
+                    object_keys.add(paper.file_url)
+                elif paper.file_url and "/question-papers/" in paper.file_url:
+                    object_keys.add(paper.file_url.split("/question-papers/", 1)[-1])
                 for version in versions:
-                    if version.s3_key:
-                        try:
-                            admin.storage.from_(settings.SUPABASE_STORAGE_BUCKET).remove([version.s3_key])
-                        except Exception:
-                            pass
+                    if version.s3_key and "/" in version.s3_key and not version.s3_key.startswith("papers/"):
+                        object_keys.add(version.s3_key)
+                for object_key in object_keys:
+                    try:
+                        admin.storage.from_(settings.SUPABASE_STORAGE_BUCKET).remove([object_key])
+                        logger.info(f"Deleted Supabase object for paper {paper_id}")
+                    except Exception as remove_err:
+                        # Missing objects are fine (idempotent delete); log path only, never keys/URLs
+                        logger.warning(
+                            f"Supabase object cleanup failed for paper {paper_id} "
+                            f"({type(remove_err).__name__}) — continuing"
+                        )
         
         if self.storage_service:
             for version in versions:
@@ -811,7 +829,6 @@ class PaperService:
         else:
             # Local filesystem cleanup fallback
             import shutil
-            from app.core.config import settings
             storage_base = settings.LOCAL_STORAGE_PATH or "./uploads"
             paper_dir = os.path.join(storage_base, "papers", str(paper_id))
             if os.path.isdir(paper_dir):

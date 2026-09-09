@@ -190,7 +190,7 @@ async def readiness_check():
             if client is not None:
                 # Verify the bucket is actually reachable with the service key
                 client.storage.from_(settings.SUPABASE_STORAGE_BUCKET).list(options={"limit": 1})
-                checks["storage"] = {"status": "healthy", "provider": "supabase", "bucket": settings.SUPABASE_STORAGE_BUCKET}
+                checks["storage"] = {"status": "configured", "provider": "supabase", "bucket": settings.SUPABASE_STORAGE_BUCKET}
             else:
                 checks["storage"] = {"status": "misconfigured", "reason": "service-role/secret key missing"}
         except Exception as e:
@@ -244,18 +244,24 @@ import os
 
 @app.get("/files/{file_path:path}")
 async def serve_file(file_path: str):
-    """Serve uploaded files (PDF and images)"""
+    """Serve uploaded files (PDF and images) from local storage (development)."""
     import mimetypes
-    # Check multiple storage paths
-    storage_paths = [
-        os.path.join(settings.LOCAL_STORAGE_PATH or "./storage", file_path),
-        os.path.join("./uploads", file_path),
-        os.path.join("./storage", file_path),
+    # Path-traversal guard: each candidate must resolve inside its storage root.
+    # os.path.abspath collapses ".." lexically, so a startswith(base + sep)
+    # check blocks escape attempts like ../../etc/passwd.
+    bases = [
+        settings.LOCAL_STORAGE_PATH or "./storage",
+        "./uploads",
+        "./storage",
     ]
-    for path in storage_paths:
-        if os.path.exists(path):
-            content_type, _ = mimetypes.guess_type(path)
-            return FileResponse(path, media_type=content_type or "application/octet-stream")
+    for base in bases:
+        base_abs = os.path.abspath(base)
+        candidate = os.path.abspath(os.path.join(base_abs, file_path))
+        if not candidate.startswith(base_abs + os.sep):
+            continue  # traversal attempt — skip
+        if os.path.isfile(candidate):
+            content_type, _ = mimetypes.guess_type(candidate)
+            return FileResponse(candidate, media_type=content_type or "application/octet-stream")
     return {"error": "File not found"}
 
 
