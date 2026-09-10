@@ -116,10 +116,26 @@ app.add_middleware(SecurityHeadersMiddleware)
 app.add_middleware(ErrorHandlerMiddleware)
 
 # Add CORS middleware
-# Ensure allow_origins is a list (not a comma-separated string)
-cors_origins = settings.ALLOWED_ORIGINS
-if isinstance(cors_origins, str):
-    cors_origins = [o.strip() for o in cors_origins.split(",") if o.strip()]
+# Effective origins = ALLOWED_ORIGINS + CORS_ORIGINS + FRONTEND_URL (merged,
+# deduplicated). All three are accepted as comma-separated strings or lists;
+# this makes a missing/partial CORS_ORIGINS config non-fatal in production.
+def _as_origin_list(value) -> list:
+    if value is None:
+        return []
+    if isinstance(value, str):
+        return [o.strip().rstrip("/") for o in value.split(",") if o.strip()]
+    if isinstance(value, (list, tuple, set)):
+        return [str(o).strip().rstrip("/") for o in value if str(o).strip()]
+    return []
+
+cors_origins = []
+for _src in (settings.ALLOWED_ORIGINS, settings.CORS_ORIGINS, settings.FRONTEND_URL):
+    for _o in _as_origin_list(_src):
+        if _o not in cors_origins:
+            cors_origins.append(_o)
+
+logger.info(f"CORS allow-list: {cors_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,

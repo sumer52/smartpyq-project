@@ -26,12 +26,18 @@ services:
         generateValue: true
       - key: ALLOWED_HOSTS
         value: .onrender.com
+      # CORS: production frontend origin (public URL, safe to commit).
+      # main.py merges ALLOWED_ORIGINS + CORS_ORIGINS + FRONTEND_URL, so any
+      # one of these being present is enough to un-block the browser.
       - key: ALLOWED_ORIGINS
-        sync: false
+        value: https://smartpyq-project.vercel.app
       - key: CORS_ORIGINS
-        sync: false
+        value: https://smartpyq-project.vercel.app
       - key: FRONTEND_URL
-        sync: false
+        value: https://smartpyq-project.vercel.app
+      # Public demo login (demo@smartpyq.com / demo123); set to false to disable
+      - key: ENABLE_DEMO_ACCOUNT
+        value: "true"
       # Supabase (private file storage) — all values set in Render dashboard
       - key: SUPABASE_URL
         sync: false

@@ -27,7 +27,11 @@ from ..models.user import User
 from ..services.feature_service import FeatureService
 from ..core.database import get_db
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.schemas.feature import FeatureResponse as FeatureSchema
+from app.schemas.feature import (
+    FeatureResponse as FeatureSchema,
+    FeatureCreateRequest as FeatureCreateSchema,
+    FeatureUpdateRequest as FeatureUpdateSchema,
+)
 
 router = APIRouter(prefix="/features", tags=["features"])
 
@@ -59,12 +63,9 @@ class FeatureUpdateRequest(BaseModel):
     display_order: Optional[int] = Field(None, ge=0)
     is_active: Optional[bool] = None
     
-# Initialize service
-# NOTE: the module-level instance has no DB session (feature_repo is None),
-# which made every endpoint 500. Public GET endpoints now build a
-# session-scoped service per request. Admin handlers below still use the
-# legacy module-level service and are known-broken (unused by the frontend).
-feature_service = FeatureService()
+# NOTE: services are constructed per-request with a DB session.
+# The old module-level FeatureService() had feature_repo=None, which made
+# every endpoint in this router 500.
 
 # Feature endpoints
 @router.get("/", response_model=List[FeatureSchema])
@@ -105,28 +106,24 @@ async def get_all_features(
             detail="Failed to retrieve features"
         )
 
-@router.post("/", response_model=FeatureResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=FeatureSchema, status_code=status.HTTP_201_CREATED)
 async def create_feature(
-    request: FeatureCreateRequest,
+    request: FeatureCreateSchema,
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
 ):
     """Create new feature (admin only)
     
     Creates a new platform feature with specified details.
     """
     try:
-        feature = await feature_service.create_feature(
-            title=request.title,
-            description=request.description,
-            icon_url=request.icon_url,
-            display_order=request.display_order,
-            is_active=request.is_active,
-            creator_id=current_user.id,
-            client_ip=client_ip
+        svc = FeatureService(db=db)
+        return await svc.create_feature(
+            feature_data=request,
+            creator=current_user,
+            ip_address=client_ip
         )
-        
-        return FeatureResponse(**feature)
         
     except ValidationError as e:
         raise HTTPException(
@@ -139,35 +136,26 @@ async def create_feature(
             detail="Failed to create feature"
         )
 
-@router.put("/{feature_id}", response_model=FeatureResponse)
+@router.put("/{feature_id}", response_model=FeatureSchema)
 async def update_feature(
     feature_id: int,
-    request: FeatureUpdateRequest,
+    request: FeatureUpdateSchema,
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
 ):
     """Update feature (admin only)
     
     Updates existing feature with new details.
     """
     try:
-        # Filter out None values
-        update_data = {k: v for k, v in request.dict().items() if v is not None}
-        
-        feature = await feature_service.update_feature(
+        svc = FeatureService(db=db)
+        return await svc.update_feature(
             feature_id=feature_id,
-            update_data=update_data,
-            updater_id=current_user.id,
-            client_ip=client_ip
+            feature_data=request,
+            updater=current_user,
+            ip_address=client_ip
         )
-        
-        if not feature:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Feature not found"
-            )
-            
-        return FeatureResponse(**feature)
         
     except NotFoundError:
         raise HTTPException(
@@ -189,28 +177,24 @@ async def update_feature(
 async def toggle_feature(
     feature_id: int,
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
 ):
     """Toggle feature active status (admin only)
     
-    Toggles the is_active status of a feature.
+    Toggles the is_enabled status of a feature.
     """
     try:
-        result = await feature_service.toggle_feature(
+        svc = FeatureService(db=db)
+        feature = await svc.toggle_feature(
             feature_id=feature_id,
-            toggler_id=current_user.id,
-            client_ip=client_ip
+            updater=current_user,
+            ip_address=client_ip
         )
         
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Feature not found"
-            )
-            
         return {
-            "message": f"Feature {'activated' if result['is_active'] else 'deactivated'} successfully",
-            "is_active": result["is_active"]
+            "message": f"Feature {'enabled' if feature.is_enabled else 'disabled'} successfully",
+            "is_active": feature.is_enabled
         }
         
     except NotFoundError:
@@ -228,17 +212,19 @@ async def toggle_feature(
 async def delete_feature(
     feature_id: int,
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
 ):
     """Delete feature (admin only)
     
     Permanently removes a feature from the system.
     """
     try:
-        await feature_service.delete_feature(
+        svc = FeatureService(db=db)
+        await svc.delete_feature(
             feature_id=feature_id,
-            deleter_id=current_user.id,
-            client_ip=client_ip
+            deleter=current_user,
+            ip_address=client_ip
         )
         
         return {"message": "Feature deleted successfully"}

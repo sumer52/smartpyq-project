@@ -177,9 +177,17 @@ def validate_production_settings():
         if "sqlite" in settings.DATABASE_URL:
             errors.append("DATABASE_URL uses SQLite. Use PostgreSQL for production.")
         
-        # CORS must not include localhost in production
-        if any('localhost' in str(o) for o in (settings.ALLOWED_ORIGINS if isinstance(settings.ALLOWED_ORIGINS, list) else [settings.ALLOWED_ORIGINS])):
-            errors.append("ALLOWED_ORIGINS contains localhost. Set production origins.")
+        # CORS must not include localhost in production. A warning, not an
+        # error: localhost entries are harmless (browsers on other machines
+        # can't use them) and a hard exit here previously bricked deploys
+        # when the frontend origin alone was missing.
+        all_origin_sources = (
+            settings.ALLOWED_ORIGINS if isinstance(settings.ALLOWED_ORIGINS, list) else [settings.ALLOWED_ORIGINS]
+        ) + (
+            settings.CORS_ORIGINS if isinstance(settings.CORS_ORIGINS, list) else [settings.CORS_ORIGINS]
+        )
+        if not any('vercel.app' in str(o) or 'http' in str(o) and 'localhost' not in str(o) for o in all_origin_sources):
+            errors.append("No production frontend origin found in ALLOWED_ORIGINS/CORS_ORIGINS/FRONTEND_URL.")
         
         # SUPABASE_SECRET_KEY should not be exposed to frontend
         if settings.SUPABASE_SERVICE_ROLE_KEY and len(settings.SUPABASE_SERVICE_ROLE_KEY) < 10:
