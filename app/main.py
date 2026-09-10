@@ -136,9 +136,14 @@ for _src in (settings.ALLOWED_ORIGINS, settings.CORS_ORIGINS, settings.FRONTEND_
 
 logger.info(f"CORS allow-list: {cors_origins}")
 
+# Vercel preview deployments get a unique subdomain per build (e.g.
+# project-abc123-team.vercel.app); an exact-match list can never cover
+# them. This scoped regex accepts *.vercel.app WITHOUT the overly broad
+# "*". Trailing-slash mistakes in env vars are already stripped above.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=cors_origins,
+    allow_origin_regex=r"https://[a-z0-9-]+\.vercel\.app",
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH"],
     allow_headers=["*"],
