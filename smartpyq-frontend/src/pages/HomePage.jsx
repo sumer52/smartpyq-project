@@ -71,7 +71,7 @@ const AnnotatedPaper = () => {
             <li><span className="font-semibold">3.</span> What is a view in SQL? <span className="italic text-[#231f18]/55">(4 marks)</span></li>
           </ol>
           {/* PART B — long answers, where the analysis happens */}
-          <div className="pt-1 font-semibold tracking-wide text-[12px] sm:text-[13px]">PART B — Answer all questions. 4 × 12 = 48 marks</div>
+          <div className="pt-1 font-semibold tracking-wide text-[12px] sm:text-[13px]">PART B — Answer all questions. 6 × 8 = 48 marks</div>
           <ol className="space-y-2.5">
             {/* Q9 — the repeated one: highlight + stamps + chip */}
             <li className="relative">
@@ -84,7 +84,7 @@ const AnnotatedPaper = () => {
               />
               <span className="relative z-10">
                 <span className="font-semibold">9.</span> Explain normalization in DBMS with suitable examples.
-                <span className="italic text-[#231f18]/55"> (12 marks)</span>
+                <span className="italic text-[#231f18]/55"> (8 marks)</span>
               </span>
               <motion.span
                 className="absolute right-0 -top-4 font-serif text-[10px] tracking-wider text-[#b3261e]"
@@ -101,7 +101,7 @@ const AnnotatedPaper = () => {
             </li>
             <li className="text-[#231f18]/85">
               <span className="font-semibold">10.</span> What is a transaction? Explain ACID properties with examples.
-              <span className="italic text-[#231f18]/55"> (12 marks)</span>
+              <span className="italic text-[#231f18]/55"> (8 marks)</span>
               <span className="ml-2 font-serif text-[10px] tracking-wider text-[#b3261e]/80">'23 '25</span>
             </li>
           </ol>
@@ -115,7 +115,7 @@ const AnnotatedPaper = () => {
           transition={{ duration: D(0.4), delay: D(2.35) }}
         >
           <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#231f18]/50">Analyzed by SmartPYQ</span>
-          <span className="font-serif text-[11px] italic text-[#231f18]/55">12 questions · 3 papers · 80 marks</span>
+          <span className="font-serif text-[11px] italic text-[#231f18]/55">14 questions · 3 papers · 80 marks</span>
         </motion.div>
       </motion.div>
     </div>

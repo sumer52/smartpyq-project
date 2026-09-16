@@ -2,8 +2,8 @@
 """Seed demo PYQ papers following the standard university paper pattern.
 
 Pattern (applies to every subject):
-    PART A — 8 short questions ×  4 marks = 32 marks
-    PART B — 4 long questions  × 12 marks = 48 marks
+    PART A — 8 short questions × 4 marks = 32 marks
+    PART B — 6 long questions  × 8 marks = 48 marks
     Total: 80 marks
 
 Creates three approved demo papers (2023 / 2024 / 2025) for Computer Science,
@@ -37,15 +37,15 @@ SEMESTER = "sem5"
 YEAR_LABELS = {2023: "2022-23", 2024: "2023-24", 2025: "2024-25"}
 
 # Standard university question-paper pattern:
-#   PART A — 8 short questions  ×  4 marks  = 32 marks
-#   PART B — 4 long questions   × 12 marks  = 48 marks
+#   PART A — 8 short questions × 4 marks = 32 marks
+#   PART B — 6 long questions  × 8 marks = 48 marks
 #   Total: 80 marks
 PART_A_COUNT, PART_A_MARKS = 8, 4
-PART_B_COUNT, PART_B_MARKS = 4, 12
+PART_B_COUNT, PART_B_MARKS = 6, 8
 MAX_MARKS = PART_A_COUNT * PART_A_MARKS + PART_B_COUNT * PART_B_MARKS  # 80
 
 # (text, repeated_in, variant_of) — marks come from the part the question sits in.
-# Part A = questions 1-8 (4 marks each), Part B = questions 9-12 (12 marks each).
+# Part A = questions 1-8 (4 marks each), Part B = questions 9-14 (8 marks each).
 # repeated_in: which years carry the question VERBATIM.
 # variant_of: a reworded twin of the same concept (TF-IDF should group).
 PAPER_QUESTIONS = {
@@ -64,6 +64,8 @@ PAPER_QUESTIONS = {
         ("What is a transaction? Explain ACID properties with examples.", [2023, 2024, 2025], None),
         ("Explain ER diagram design with an example.", [2023, 2025], None),
         ("Write SQL queries to create, insert and join tables.", [2023, 2024], None),
+        ("Describe the three-level architecture of a database system.", [2023], None),
+        ("Explain file organization methods used in DBMS.", [2023], None),
     ],
     2024: [
         # ── PART A ──
@@ -80,6 +82,8 @@ PAPER_QUESTIONS = {
         ("What is a transaction? Explain ACID properties with examples.", [2023, 2024, 2025], None),
         ("Write SQL queries to create, insert and join tables.", [2023, 2024], None),
         ("Explain indexing in databases and when it improves query performance.", [2024, 2025], None),
+        ("Explain the three-level architecture of a DBMS with a diagram.", [2024], None),
+        ("Compare hierarchical, network and relational data models.", [2024], None),
     ],
     2025: [
         # ── PART A ──
@@ -97,6 +101,8 @@ PAPER_QUESTIONS = {
         ("What is a transaction? Explain ACID properties with examples.", [2023, 2024, 2025], None),
         ("Explain ER diagram design with an example.", [2023, 2025], None),
         ("Explain indexing in databases and its impact on query performance.", [2024, 2025], None),
+        ("Explain the responsibilities of a database administrator.", [2025], None),
+        ("Discuss integrity constraints and their importance in DBMS.", [2025], None),
     ],
 }
 

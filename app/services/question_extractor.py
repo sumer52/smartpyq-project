@@ -200,7 +200,9 @@ def extract_questions_from_text(text: str) -> List[ExtractedQuestion]:
         line = line_m.group(0)
         sec = SECTION_RE.match(line.strip())
         if sec:
-            current_section = "Section " + sec.group(1).upper()
+            # Preserve the paper's own wording ("Part A" vs "Section A")
+            keyword = "Part" if line.strip().lower().startswith("part") else "Section"
+            current_section = f"{keyword} {sec.group(1).upper()}"
             continue
         qm = q_start.match(line.strip())
         if qm and len(line.strip()) >= 10:
