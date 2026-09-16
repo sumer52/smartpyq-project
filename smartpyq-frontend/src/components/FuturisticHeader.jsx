@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, HeartIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 const FuturisticHeader = memo(() => {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -62,8 +62,6 @@ const FuturisticHeader = memo(() => {
         { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
         { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
         { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
-        { name: 'Analyze', href: '/analyze', icon: FireIcon },
-        { name: 'Bookmarks', href: '/bookmarks', icon: HeartIcon },
         { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
         { name: 'Upload', href: '/upload', icon: CloudArrowUpIcon, adminOnly: true },
       ].filter(item => !item.adminOnly || isAdmin);

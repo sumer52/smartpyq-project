@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { CheckCircleIcon, XCircleIcon } from "@heroicons/react/24/outline";
 
-const permitted=["Upload previous year question papers you have the right to share","Use AI assistance for study preparation","Search and download papers for personal study","Bookmark and organize questions","Share SmartPYQ resources with fellow students","Report content issues or suggest improvements"];
+const permitted=["Upload previous year question papers you have the right to share","Use AI assistance for study preparation","Search and download papers for personal study","Search and organize your study materials","Share SmartPYQ resources with fellow students","Report content issues or suggest improvements"];
 const prohibited=[{t:"Copyright Infringement",d:"Upload content you do not have the right to distribute"},{t:"Malicious Content",d:"Upload files containing malware or harmful code"},{t:"Academic Dishonesty",d:"Use the platform to facilitate cheating"},{t:"Harassment",d:"Use the platform to harass or bully others"},{t:"System Abuse",d:"Exploit or compromise platform security"},{t:"Spam",d:"Use automated tools to scrape or spam features"},{t:"Impersonation",d:"Create accounts under false identities"},{t:"Commercial Exploitation",d:"Use for unauthorized commercial purposes"}];
 export default function AcceptableUsePage(){return(<div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8"><div className="max-w-4xl mx-auto"><motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.6}}>
 <h1 className="text-4xl font-bold text-white mb-2"><span className="bg-gradient-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent">Acceptable Use Policy</span></h1>

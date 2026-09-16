@@ -297,26 +297,6 @@ class ApiClient {
     });
   }
 
-  // Bookmarks API
-  async getBookmarks() {
-    return this.request('/api/v1/bookmarks/');
-  }
-
-  async toggleBookmark(paperId) {
-    return this.request(`/api/v1/bookmarks/${paperId}`, {
-      method: 'POST'
-    });
-  }
-
-  async removeBookmark(paperId) {
-    return this.request(`/api/v1/bookmarks/${paperId}`, {
-      method: 'DELETE'
-    });
-  }
-
-  async checkBookmark(paperId) {
-    return this.request(`/api/v1/bookmarks/check/${paperId}`);
-  }
 
 
   // Analysis API
@@ -397,20 +377,6 @@ class ApiClient {
     return this.request('/api/v1/analysis/dashboard');
   }
 
-  async createBookmark(questionId, bookmarkType) {
-    const params = new URLSearchParams();
-    if (questionId) params.set('question_id', questionId);
-    if (bookmarkType) params.set('bookmark_type', bookmarkType);
-    return this.request('/api/v1/analysis/bookmarks?' + params.toString(), { method: 'POST' });
-  }
-
-  async getBookmarksList() {
-    return this.request('/api/v1/analysis/bookmarks');
-  }
-
-  async deleteBookmark(id) {
-    return this.request('/api/v1/analysis/bookmarks/' + id, { method: 'DELETE' });
-  }
 
   async startPractice(questionId) {
     const params = new URLSearchParams({ question_id: questionId });

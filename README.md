@@ -8,7 +8,7 @@
 
 **Smart PYQ** is an intelligent previous-year question paper (PYQ) platform for Osmania University. Students browse, upload, search, and download past exam papers organized by course, semester, and subject — and then go further: an AI engine extracts the actual questions from each paper, classifies them by topic and type, finds questions that repeat across years, ranks the most important topics, and helps students practice what matters.
 
-The student platform is **public and account-free**: no login is needed to browse, analyze, practice, or bookmark. Authentication exists only for admins (paper approval, question answers, moderation).
+The student platform is **public and account-free**: no login is needed to browse, analyze, and practice. Authentication exists only for admins (paper approval, question answers, moderation).
 
 ## Supported Courses
 
@@ -22,7 +22,7 @@ The student platform is **public and account-free**: no login is needed to brows
 ```mermaid
 flowchart TD
     U[Visitor] --> LP[Landing / Home Page]
-    LP --> NAV[Navigation: Home, PYQ Hub, Analyze, Search, Practice, AI, Bookmarks]
+    LP --> NAV[Navigation: Home, PYQ Hub, Search, Practice, AI]
     NAV --> PYQ[PYQ Hub]
     PYQ --> DRILL[Stream → Specialization → Semester → Subject → Year]
     DRILL --> PAPER[Papers: View, Download, Analyze]
@@ -30,7 +30,6 @@ flowchart TD
     ANALYZE --> PRACTICE[Exam Practice Mode: questions with teacher answers]
     U --> UPLOAD[Student Upload → Admin Verification → Published to Hub]
     U --> SEARCH[Search papers & extracted questions]
-    U --> BOOK[Bookmarks - saved locally, no account needed]
     ADMIN[Admin] --> ALOGIN[Admin Login]
     ALOGIN --> APANEL[Admin Panel: approve/reject papers, review queue, question answers]
 ```
@@ -45,7 +44,6 @@ flowchart TD
 - **Repeated Questions** — See which questions and topics recur across exam years, with per-year evidence.
 - **AI Study Assistant** — Chat assistant for concepts, programming, and exam strategy.
 - **Search** — Full-text search across papers and extracted questions.
-- **Bookmarks** — Save questions/papers for later review, stored client-side (no account required).
 - **Admin Panel** — Admin-only: verify/reject student submissions, approve uploads, manage teacher answers per question.
 - **Demo Mode** — Optional seeded demo data (papers, questions, teacher answers) for development and demos, controlled by `ENABLE_DEMO_ACCOUNT`.
 
@@ -65,7 +63,7 @@ flowchart TD
 ```
 smartpyq/
 ├── app/                       # FastAPI backend
-│   ├── routers/               # auth, papers, analysis, answers, bookmarks, admin, ...
+│   ├── routers/               # auth, papers, analysis, answers, admin, ...
 │   ├── services/              # business logic (document analyzer, insights, paper service, ...)
 │   ├── models/                # SQLAlchemy models
 │   ├── schemas/               # Pydantic schemas
@@ -76,7 +74,7 @@ smartpyq/
 │   │   ├── pages/             # Home, PYQ, Analyze, Practice, Search, MySubmissions, admin/...
 │   │   ├── components/        # Header, Footer, PYQNavigator, UploadStepper, AnswerView, ui kit
 │   │   ├── contexts/          # Auth (public + admin sessions)
-│   │   ├── lib/               # API client, local bookmarks, cn() utility
+│   │   ├── lib/               # API client, cn() utility
 │   │   └── data/              # Course/subject catalogs
 │   ├── components.json        # shadcn/ui configuration
 │   └── public/                # Logo, icons
@@ -142,7 +140,7 @@ python -m pytest -q
 cd smartpyq-frontend && npm run build
 ```
 
-Verified main flows (live UI): PYQ Hub drill-down to papers, multi-year paper analysis (priority tiers, repeated questions, question explorer), exam practice with text/image/PDF answers, student upload → admin verification, search, bookmarks, and AI chat.
+Verified main flows (live UI): PYQ Hub drill-down to papers, multi-year paper analysis (priority tiers, repeated questions, question explorer), exam practice with text/image/PDF answers, student upload → admin verification, search, and AI chat.
 
 **Current result:** `384 passed, 4 skipped` (backend), frontend `npm run build` succeeds.
 

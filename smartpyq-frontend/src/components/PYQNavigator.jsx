@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Heart, Flame, CheckSquare, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Flame, CheckSquare, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getStreams, getSpecializations, getSemesters, getSubjects, getPyqYears, getSemesterOptions } from '../data/pyqData';
 import { apiClient } from '../lib/api';
@@ -24,7 +24,6 @@ const PYQNavigator = () => {
   const [paperError, setPaperError] = useState(null);
   const [previewPaper, setPreviewPaper] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
-  const [bookmarkedPapers, setBookmarkedPapers] = useState(new Set());
   // Multi-year analysis selection (PYQ Hub -> select years -> analyze)
   const [selectedYears, setSelectedYears] = useState([]);
   const [yearCounts, setYearCounts] = useState({});
@@ -170,27 +169,6 @@ const PYQNavigator = () => {
     return () => { cancelled = true; };
   }, [previewPaper]);
 
-  const handleToggleBookmark = async (paperId) => {
-    const isCurrentlyBookmarked = bookmarkedPapers.has(paperId);
-    setBookmarkedPapers(prev => {
-      const next = new Set(prev);
-      if (isCurrentlyBookmarked) next.delete(paperId);
-      else next.add(paperId);
-      return next;
-    });
-    try {
-      await apiClient.toggleBookmark(paperId);
-    } catch (e) {
-      // Revert on error
-      setBookmarkedPapers(prev => {
-        const next = new Set(prev);
-        if (isCurrentlyBookmarked) next.add(paperId);
-        else next.delete(paperId);
-        return next;
-      });
-    }
-  };
-
   const renderStreams = () => {
     const s = getStreams();
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" variants={container} initial="hidden" animate="visible" exit="exit">
@@ -310,7 +288,6 @@ const PYQNavigator = () => {
                     <MagneticButton className="btn btn-sm btn-primary flex-1 justify-center" onClick={(e) => { e.stopPropagation(); handleDownload(p); }}><Download className="h-4 w-4" /> <span>Download</span></MagneticButton>
                     <button className="btn btn-sm btn-secondary flex-1 justify-center" onClick={(e) => { e.stopPropagation(); navigate('/analyze?paper=' + p.id); }}><Flame className="h-4 w-4" /> <span>Analyze</span></button>
                     <button className="btn btn-icon btn-sm btn-secondary" onClick={(e) => { e.stopPropagation(); setPreviewPaper(p); }}><Eye className="h-4 w-4" /></button>
-                    <button className={`btn btn-icon btn-sm ${bookmarkedPapers.has(p.id) ? 'text-red-400' : 'btn-ghost'}`} onClick={(e) => { e.stopPropagation(); handleToggleBookmark(p.id); }} aria-label={bookmarkedPapers.has(p.id) ? 'Remove bookmark' : 'Add bookmark'}><Heart className={`h-4 w-4 ${bookmarkedPapers.has(p.id) ? 'fill-current' : ''}`} /></button>
                   </div>
                 </motion.div>
               </SpotlightCard>

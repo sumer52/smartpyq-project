@@ -26,7 +26,6 @@ const AnalysisPage = lazy(() => import('./pages/AnalysisPage'));
 const PracticePage = lazy(() => import('./pages/PracticePage'));
 const SearchPage = lazy(() => import('./pages/SearchPage'));
 const AnalysisHistoryPage = lazy(() => import('./pages/AnalysisHistoryPage'));
-const BookmarksPage = lazy(() => import('./pages/BookmarksPage'));
 const NotFoundPage = lazy(() => import('./pages/NotFoundPage'));
 const CookiePolicyPage = lazy(() => import('./pages/CookiePolicyPage'));
 const ErrorPage = lazy(() => import('./pages/ErrorPage'));
@@ -190,14 +189,6 @@ const AppContent = function AppContent() {
                    element={
                      <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
                        <AnalysisHistoryPage />
-                     </motion.div>
-                   }
-                 />
-                 <Route 
-                   path="/bookmarks" 
-                   element={
-                     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                       <BookmarksPage />
                      </motion.div>
                    }
                  />
