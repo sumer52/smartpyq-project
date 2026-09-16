@@ -34,6 +34,7 @@ from .routers import (
 from .routers.bookmarks import router as bookmarks_router
 from .routers.metrics import router as metrics_router
 from .routers.analysis import router as analysis_router
+from .routers.answers import router as answers_router
 
 # Setup logging
 setup_logging()
@@ -167,6 +168,7 @@ app.include_router(features_router, prefix="/api/v1")
 app.include_router(bookmarks_router, prefix="/api/v1")
 app.include_router(admin_router, prefix="/api/v1")
 app.include_router(metrics_router, prefix="/api/v1")
+app.include_router(answers_router, prefix="/api/v1")
 app.include_router(analysis_router, prefix="/api/v1/analysis")
 
 # Health check endpoint (liveness)

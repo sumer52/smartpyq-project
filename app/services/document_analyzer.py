@@ -44,6 +44,8 @@ class DetectedMetadata:
     exam_type: str = ""
     max_marks: Optional[int] = None
     duration_minutes: Optional[int] = None
+    # Standard part pattern when declared, e.g. "Part A 8x4=32, Part B 4x12=48"
+    part_pattern: Optional[str] = None
     confidence: float = 0.0
 
     def to_dict(self) -> Dict[str, Any]:
@@ -161,6 +163,15 @@ TITLE_RE = re.compile(
 SECTION_RE = re.compile(
     r'(?i)(?:section|part)\s*[-–]?\s*([a-zA-Z\d]+)',
     re.IGNORECASE
+)
+# Standard university paper pattern stated in part headers, e.g.:
+#   "PART A — Answer ALL questions. 8 x 4 = 32 marks"
+#   "PART B ... 4 × 12 = 48 marks"
+PART_SCHEME_RE = re.compile(
+    r'(?i)(\d{1,2})\s*[x×]\s*(\d{1,3})\s*=\s*(\d{1,4})\s*marks?'
+)
+PART_HEADER_RE = re.compile(
+    r'(?im)^\s*part\s*[-–—:.]?\s*([a-z0-9]{1,3})\b([^\n]*)'
 )
 
 
@@ -463,6 +474,31 @@ def detect_marks(text: str) -> Optional[int]:
     return None
 
 
+def detect_part_scheme(text: str) -> List[Tuple[str, int, int, int]]:
+    """Detect the standard part pattern from part headers.
+
+    Looks for headers like "PART A ... 8 x 4 = 32 marks" and returns
+    (part_label, count, marks_per_question, part_total) tuples in order
+    of appearance. This is the common university pattern, e.g.
+    Part A 8x4=32 + Part B 4x12=48 (total 80).
+    """
+    scheme: List[Tuple[str, int, int, int]] = []
+    seen_labels = set()
+    for m in PART_HEADER_RE.finditer(text):
+        label = m.group(1).upper()
+        if label in seen_labels:
+            continue
+        # The scheme usually sits in the header line itself or just after it.
+        tail = text[m.start():m.end() + 150]
+        sm = PART_SCHEME_RE.search(tail)
+        if sm:
+            count, marks, total = int(sm.group(1)), int(sm.group(2)), int(sm.group(3))
+            if 1 <= count <= 30 and 1 <= marks <= 100 and total == count * marks:
+                scheme.append((label, count, marks, total))
+                seen_labels.add(label)
+    return scheme
+
+
 def detect_duration(text: str) -> Optional[int]:
     """Detect exam duration in minutes from text."""
     m = DURATION_RE.search(text)
@@ -487,7 +523,19 @@ def extract_metadata(text: str) -> DetectedMetadata:
     metadata.title = detect_title(cleaned)
     metadata.exam_type = detect_exam_type(cleaned)
     metadata.max_marks = detect_marks(cleaned)
+    if metadata.max_marks is None:
+        # Fall back to the sum of declared part totals (e.g. Part A 32 + Part B 48 = 80).
+        scheme = detect_part_scheme(cleaned)
+        if scheme:
+            metadata.max_marks = sum(total for _, _, _, total in scheme)
     metadata.duration_minutes = detect_duration(cleaned)
+
+    # Standard part pattern (Part A / Part B with per-part marks scheme)
+    scheme = detect_part_scheme(cleaned)
+    if scheme:
+        metadata.part_pattern = ", ".join(
+            f"Part {lbl} {c}x{m}={t}" for lbl, c, m, t in scheme
+        )
 
     # If no title was detected, construct one from available metadata
     if not metadata.title:
@@ -513,13 +561,32 @@ def extract_metadata(text: str) -> DetectedMetadata:
 # ─── Question Extraction ─────────────────────────────────────────────────────
 
 def detect_sections(text: str) -> List[str]:
-    """Detect section names from text."""
+    """Detect section names from text (preserving Part/Section wording)."""
     sections = []
     for m in SECTION_RE.finditer(text):
-        section_name = f"Section {m.group(1).strip()}"
+        keyword = "Part" if m.group(0).strip().lower().startswith("part") else "Section"
+        section_name = f"{keyword} {m.group(1).strip()}"
         if section_name not in sections:
             sections.append(section_name)
     return sections
+
+
+def _apply_part_scheme(questions: List[DetectedQuestion], text: str) -> None:
+    """Infer missing per-question marks from the declared part pattern.
+
+    Sections themselves come from part-header positions in the text. The
+    scheme (e.g. Part A 8x4, Part B 4x12) only fills in marks for
+    questions whose own text doesn't state them. Explicit marks win.
+    """
+    scheme = detect_part_scheme(text)
+    if not scheme:
+        return
+    marks_by_label = {lbl: marks for lbl, _, marks, _ in scheme}
+    for q in questions:
+        if q.marks is None and q.section:
+            m = re.match(r'(?i)(?:part|section)\s*[-–—:.]?\s*([a-z0-9]{1,3})', q.section)
+            if m and m.group(1).upper() in marks_by_label:
+                q.marks = marks_by_label[m.group(1).upper()]
 
 
 def extract_questions(text: str) -> List[DetectedQuestion]:
@@ -534,7 +601,8 @@ def extract_questions(text: str) -> List[DetectedQuestion]:
     # Detect sections
     section_positions = []
     for m in SECTION_RE.finditer(cleaned):
-        section_positions.append((m.start(), f"Section {m.group(1).strip()}"))
+        keyword = "Part" if m.group(0).strip().lower().startswith("part") else "Section"
+        section_positions.append((m.start(), f"{keyword} {m.group(1).strip()}"))
 
     def get_section_for_position(pos: int) -> str:
         section = ""
@@ -565,6 +633,7 @@ def extract_questions(text: str) -> List[DetectedQuestion]:
                 marks=marks,
                 question_type=_detect_question_type(q_text),
             ))
+        _apply_part_scheme(questions, cleaned)
         return questions
 
     # Pattern 2: 1. / 1) / 1: format
@@ -588,6 +657,7 @@ def extract_questions(text: str) -> List[DetectedQuestion]:
         ))
 
     if questions:
+        _apply_part_scheme(questions, cleaned)
         return questions
 
     # Pattern 3: Paragraph-based fallback
@@ -607,6 +677,7 @@ def extract_questions(text: str) -> List[DetectedQuestion]:
             question_type=_detect_question_type(p),
         ))
 
+    _apply_part_scheme(questions, cleaned)
     return questions
 
 

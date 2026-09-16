@@ -5,12 +5,14 @@ import os
 import re
 from typing import List, Optional
 
-from fastapi import APIRouter, Depends, HTTPException
+from collections import defaultdict
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy import select, func, desc
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
-from app.core.dependencies import get_current_active_user
+from app.core.dependencies import get_current_active_user, require_roles
 from app.models.user import User
 from app.models.paper import Paper
 from app.models.question import (
@@ -24,12 +26,45 @@ from app.utils.cache import app_cache
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+# Dedicated limiter for the public analysis endpoint. The RateLimitExceeded
+# exception is handled globally by main.py's registered handler.
+from slowapi import Limiter
+from slowapi.util import get_remote_address as _get_remote_address
+limiter = Limiter(key_func=_get_remote_address)
+
+# Internal attribution account for anonymous public analyses (AnalysisResult.
+# user_id is NOT NULL + FK). Created lazily once; never used for login.
+SYSTEM_ANALYSIS_EMAIL = "analysis-system@smartpyq.internal"
+
+
+async def _get_system_user_id(db: AsyncSession) -> int:
+    from app.models.user import User, UserRole, UserStatus
+    r = await db.execute(select(User).filter(User.email == SYSTEM_ANALYSIS_EMAIL))
+    u = r.scalar_one_or_none()
+    if u:
+        return u.id
+    u = User(
+        email=SYSTEM_ANALYSIS_EMAIL,
+        username="analysis-system",
+        full_name="Analysis System",
+        password_hash="",  # never used for authentication
+        role=UserRole.STUDENT,
+        status=UserStatus.ACTIVE,
+        tenant_id=1,
+        is_email_verified=True,
+        preferences={},
+    )
+    db.add(u)
+    await db.commit()
+    await db.refresh(u)
+    return u.id
+
 
 @router.post("/analyze")
 async def start_analysis(
     paper_ids: List[int],
     db: AsyncSession = Depends(get_db),
-    current_user: User = Depends(get_current_active_user),
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
 ):
     result = await db.execute(select(Paper).filter(Paper.id.in_(paper_ids)))
     papers = result.scalars().all()
@@ -217,6 +252,69 @@ async def start_analysis(
         "questions_extracted": ar.questions_extracted, "repeated_groups": ar.repeated_groups,
         "error_message": ar.error_message}
 
+# ---------------------------------------------------------------------------
+# Public, rate-limited analysis for the PYQ Hub multi-year flow
+# ---------------------------------------------------------------------------
+
+@router.post("/analyze-public")
+@limiter.limit("10/hour")
+async def analyze_public(
+    request: Request,
+    body: dict,
+    db: AsyncSession = Depends(get_db),
+):
+    """Run PYQ analysis for user-selected papers (public, rate-limited).
+
+    Constraints:
+    - 1..6 papers per request (CPU-heavy extraction) and every paper must
+      exist and be APPROVED.
+    - Reuses an existing COMPLETED analysis for the identical paper set
+      (spec section 19) instead of reprocessing.
+    - Degrades gracefully: unreadable papers are skipped; an error is only
+      raised when zero questions could be extracted from everything.
+    Returns {analysis_id, reused, insights} in one response.
+    """
+    from app.services.analysis_service import (
+        run_analysis_for_papers, AnalysisError, canonical_paper_set,
+    )
+    from app.services.insights_service import build_insights
+    from app.models.paper import PaperStatus
+
+    raw_ids = (body or {}).get("paper_ids") or []
+    if not isinstance(raw_ids, list) or not raw_ids:
+        raise HTTPException(status_code=422, detail="paper_ids must be a non-empty list")
+    try:
+        paper_ids = canonical_paper_set(raw_ids)
+    except (TypeError, ValueError):
+        raise HTTPException(status_code=422, detail="paper_ids must be a list of integers")
+    if len(paper_ids) > 6:
+        raise HTTPException(status_code=422, detail="Analyze at most 6 papers at a time")
+
+    papers = (await db.execute(select(Paper).filter(Paper.id.in_(paper_ids)))).scalars().all()
+    found_ids = {p.id for p in papers}
+    missing = [pid for pid in paper_ids if pid not in found_ids]
+    if missing:
+        raise HTTPException(status_code=404, detail=f"Paper(s) not found: {missing}")
+    not_approved = [p.id for p in papers if p.status != PaperStatus.APPROVED]
+    if not_approved:
+        raise HTTPException(status_code=422, detail=f"Paper(s) are not available for analysis: {not_approved}")
+
+    system_user_id = await _get_system_user_id(db)
+    try:
+        ar, reused = await run_analysis_for_papers(db, paper_ids, user_id=system_user_id)
+    except AnalysisError as e:
+        raise HTTPException(status_code=422, detail=str(e))
+
+    insights = await build_insights(db, paper_ids, analysis_id=ar.id)
+    return {
+        "analysis_id": ar.id,
+        "reused": reused,
+        "status": ar.status.value if hasattr(ar.status, "value") else str(ar.status),
+        "insights": insights,
+        "paper_ids": paper_ids,
+    }
+
+
 @router.get("/analyses")
 async def list_analyses(db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     r = await db.execute(select(AnalysisResult).filter(AnalysisResult.user_id == cu.id).order_by(desc(AnalysisResult.created_at)))
@@ -230,8 +328,15 @@ async def get_analysis(aid: int, db: AsyncSession = Depends(get_db), cu: User = 
     return {"id": ar.id, "subject": ar.subject, "paper_ids": ar.paper_ids, "questions_extracted": ar.questions_extracted, "repeated_groups": ar.repeated_groups, "status": ar.status.value, "error_message": ar.error_message}
 
 @router.get("/analyses/{aid}/insights")
-async def get_analysis_insights(aid: int, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
-    r = await db.execute(select(AnalysisResult).filter(AnalysisResult.id == aid, AnalysisResult.user_id == cu.id))
+async def get_analysis_insights(aid: int, db: AsyncSession = Depends(get_db)):
+    """Insights for an analysis (public read).
+
+    Exposes only aggregate analysis data over already-public papers — the
+    same class of data as the public GET /questions and /repeated-questions
+    endpoints. User-specific endpoints (practice history, bookmarks) remain
+    authenticated.
+    """
+    r = await db.execute(select(AnalysisResult).filter(AnalysisResult.id == aid))
     ar = r.scalar_one_or_none()
     if not ar: raise HTTPException(404, "Analysis not found")
     from app.services.insights_service import build_insights
@@ -246,15 +351,252 @@ async def delete_analysis(aid: int, db: AsyncSession = Depends(get_db), cu: User
     return {"message": "Analysis deleted"}
 
 @router.get("/questions")
-async def list_questions(subject: Optional[str] = None, paper_id: Optional[int] = None, skip: int = 0, limit: int = 50, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
+async def list_questions(
+    subject: Optional[str] = None,
+    paper_id: Optional[int] = None,
+    paper_ids: Optional[str] = None,   # comma-separated list (explorer)
+    topic: Optional[str] = None,
+    question_type: Optional[str] = None,
+    search: Optional[str] = None,
+    skip: int = 0,
+    limit: int = 50,
+    db: AsyncSession = Depends(get_db),
+):
+    """Question explorer (public): filter by papers/topic/type/search.
+
+    Each row carries its group-recurrence evidence when the question belongs
+    to a repeated-question group: frequency, years asked, group priority.
+    The priority denominator is the analyzed paper set when ``paper_ids`` is
+    given, else the count of approved papers for that subject ("appeared in
+    X of Y available papers").
+    """
+    from app.models.paper import Paper as PaperModel, PaperStatus
+    from app.services.insights_service import PRIORITY_LABELS, history_priority
+
     q = select(Question)
     if subject: q = q.filter(Question.subject == subject)
     if paper_id: q = q.filter(Question.paper_id == paper_id)
-    r = await db.execute(q.order_by(Question.id).offset(skip).limit(limit))
-    return [{"id": x.id, "paper_id": x.paper_id, "question_number": x.question_number, "question_text": x.question_text, "section": x.section, "marks": x.marks, "question_type": x.question_type, "subject": x.subject} for x in r.scalars().all()]
+    if paper_ids:
+        try:
+            ids = [int(x) for x in paper_ids.split(",") if x.strip()]
+        except ValueError:
+            raise HTTPException(status_code=422, detail="paper_ids must be comma-separated integers")
+        if ids:
+            q = q.filter(Question.paper_id.in_(ids))
+    if topic: q = q.filter(Question.topic == topic)
+    if question_type: q = q.filter(Question.question_type == question_type)
+    if search:
+        q = q.filter(Question.normalized_question_text.ilike("%" + search + "%"))
+    rows = (await db.execute(q.order_by(Question.id).offset(skip).limit(min(limit, 300)))).scalars().all()
+
+    if not rows:
+        return []
+
+    # Group membership for recurrence evidence.
+    qids = [x.id for x in rows]
+    member_rows = (await db.execute(
+        select(QuestionGroupMember, QuestionGroup)
+        .join(QuestionGroup, QuestionGroupMember.group_id == QuestionGroup.id)
+        .filter(QuestionGroupMember.question_id.in_(qids))
+    )).all()
+    member_by_qid = {m.question_id: (m, g) for m, g in member_rows}
+
+    # Group member -> paper/year mapping for years_asked.
+    all_group_ids = list({g.id for _m, g in member_by_qid.values()})
+    group_members = (await db.execute(
+        select(QuestionGroupMember, Question)
+        .join(Question, QuestionGroupMember.question_id == Question.id)
+        .filter(QuestionGroupMember.group_id.in_(all_group_ids or [0]))
+    )).all()
+    group_year_map = defaultdict(list)
+    group_paper_hit_map = defaultdict(set)
+    paper_years = {}
+    paper_ids_needed = {q.paper_id for _m, q in group_members}
+    if paper_ids_needed:
+        prows = (await db.execute(select(PaperModel).filter(PaperModel.id.in_(paper_ids_needed)))).scalars().all()
+        paper_years = {p.id: p.year for p in prows}
+    for _m, q in group_members:
+        y = paper_years.get(q.paper_id)
+        group_year_map[_m.group_id].append(y)
+        group_paper_hit_map[_m.group_id].add(q.paper_id)
+
+    out = []
+    # Denominator for historical priority: the analyzed set when given,
+    # otherwise all approved papers of the row's subject.
+    analyzed_ids = set()
+    if paper_ids:
+        try:
+            analyzed_ids = {int(x) for x in paper_ids.split(",") if x.strip()}
+        except ValueError:
+            analyzed_ids = set()
+    subject_denominators = {}
+    if not analyzed_ids:
+        for subj in {x.subject for x in rows if x.subject}:
+            subject_denominators[subj] = (await db.execute(
+                select(func.count(PaperModel.id)).filter(
+                    PaperModel.subject == subj,
+                    PaperModel.status == PaperStatus.APPROVED,
+                )
+            )).scalar() or 1
+    for x in rows:
+        item = {
+            "id": x.id, "paper_id": x.paper_id, "question_number": x.question_number,
+            "question_text": x.question_text, "section": x.section, "marks": x.marks,
+            "question_type": x.question_type, "subject": x.subject, "topic": x.topic,
+            "frequency": 1, "years_asked": [], "group_id": None,
+            "priority": None, "priority_label": None,
+        }
+        m = member_by_qid.get(x.id)
+        if m:
+            _mem, g = m
+            hits = group_paper_hit_map.get(g.id, set())
+            freq = len(group_year_map.get(g.id, [])) or g.frequency
+            item["frequency"] = freq
+            item["years_asked"] = sorted({y for y in group_year_map.get(g.id, []) if y})
+            item["group_id"] = g.id
+            denom = len(analyzed_ids) if analyzed_ids else subject_denominators.get(x.subject, 1)
+            priority = history_priority(len(hits) / max(1, denom), freq)
+            item["priority"] = priority
+            item["priority_label"] = PRIORITY_LABELS[priority]
+        # Teacher answer availability (Exam Practice Mode). The answer content
+        # itself is fetched via /questions/{qid}/detail or the answers router.
+        if x.answer_type:
+            item["answer_type"] = x.answer_type
+            item["has_answer"] = True
+        else:
+            item["has_answer"] = False
+        out.append(item)
+    return out
+
+def _answer_block(question, paper) -> dict:
+    """Teacher-answer serialization for question detail responses.
+
+    Text answers return the text; image/pdf answers return a served-file URL
+    only when the parent paper is approved (public visibility rule identical
+    to paper downloads).
+    """
+    approved = paper is not None and str(
+        getattr(paper.status, "value", paper.status) or ""
+    ).lower() == "approved"
+    block = {
+        "answer_type": question.answer_type,
+        "answer_text": None,
+        "answer_file_name": None,
+        "answer_file_size": None,
+        "answer_file_mime": None,
+        "answer_url": None,
+    }
+    if not question.answer_type:
+        return block
+    if question.answer_type == "text":
+        block["answer_text"] = question.answer_text
+    elif question.answer_file_url and approved:
+        block["answer_file_name"] = question.answer_file_name
+        block["answer_file_size"] = question.answer_file_size
+        block["answer_file_mime"] = question.answer_file_mime
+        block["answer_url"] = f"/api/v1/questions/{question.id}/answer-file"
+    return block
+
+
+@router.get("/questions/{qid}/detail")
+async def question_detail(qid: int, papers: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+    """Question detail (public): topic, asked-in years, priority, related.
+
+    ``papers`` (comma-separated analyzed-paper ids) gives the priority
+    denominator; without it the count of approved papers for the question's
+    subject is used.
+    """
+    from app.models.paper import PaperStatus
+    from app.services.insights_service import PRIORITY_LABELS, history_priority
+    x = (await db.execute(select(Question).filter(Question.id == qid))).scalar_one_or_none()
+    if not x:
+        raise HTTPException(status_code=404, detail="Question not found")
+    paper = (await db.execute(select(Paper).filter(Paper.id == x.paper_id))).scalar_one_or_none()
+
+    # A question can theoretically appear in more than one group (e.g. it was
+    # first grouped by TF-IDF and later matched exactly). Prefer the exact
+    # match group, then the earliest — never crash on multiple memberships.
+    mem_row = (await db.execute(
+        select(QuestionGroupMember)
+        .filter(QuestionGroupMember.question_id == x.id)
+        .order_by(QuestionGroupMember.is_exact_match.desc(), QuestionGroupMember.group_id.asc())
+        .limit(1)
+    )).scalar_one_or_none()
+    mem = mem_row
+    related = []
+    frequency = 1
+    years_asked = []
+    group_id = None
+    priority = None
+    priority_label = None
+    group_paper_hits = set()
+    if mem:
+        g = (await db.execute(select(QuestionGroup).filter(QuestionGroup.id == mem.group_id))).scalar_one_or_none()
+        siblings = (await db.execute(
+            select(QuestionGroupMember, Question)
+            .join(Question, QuestionGroupMember.question_id == Question.id)
+            .filter(QuestionGroupMember.group_id == mem.group_id)
+        )).all()
+        paper_rows = (await db.execute(select(Paper).filter(Paper.id.in_({q.paper_id for _m, q in siblings} or {0})))).scalars().all()
+        pmap = {p.id: p for p in paper_rows}
+        for _m, q in siblings:
+            p = pmap.get(q.paper_id)
+            group_paper_hits.add(q.paper_id)
+            if p and p.year:
+                years_asked.append(p.year)
+            related.append({
+                "question_id": q.id,
+                "question_text": q.original_question_text or q.question_text,
+                "year": p.year if p else None,
+                "paper_title": p.title if p else None,
+                "is_exact_match": _m.is_exact_match,
+            })
+        frequency = len(related)
+        years_asked = sorted(set(years_asked))
+        group_id = mem.group_id
+        analyzed_ids = set()
+        if papers:
+            try:
+                analyzed_ids = {int(v) for v in papers.split(",") if v.strip()}
+            except ValueError:
+                analyzed_ids = set()
+        if analyzed_ids:
+            denom = len(analyzed_ids)
+        else:
+            denom = (await db.execute(
+                select(func.count(Paper.id)).filter(
+                    Paper.subject == x.subject,
+                    Paper.status == PaperStatus.APPROVED,
+                )
+            )).scalar() or 1
+        priority = history_priority(len(group_paper_hits) / max(1, denom), frequency)
+        priority_label = PRIORITY_LABELS[priority]
+    related.sort(key=lambda r: (r["year"] is None, r["year"] or 0))
+
+    return {
+        "id": x.id,
+        "question_text": x.original_question_text or x.question_text,
+        "question_number": x.question_number,
+        "topic": x.topic,
+        "subject": x.subject,
+        "marks": x.marks,
+        "question_type": x.question_type,
+        "paper_id": x.paper_id,
+        "paper_year": paper.year if paper else None,
+        "paper_title": paper.title if paper else None,
+        "group_id": group_id,
+        "frequency": frequency,
+        "years_asked": years_asked,
+        "priority": priority,
+        "priority_label": priority_label,
+        "related": related,
+        # Teacher answer (read-only). File answers get a served URL only when
+        # the parent paper is approved — mirrors paper download visibility.
+        **_answer_block(x, paper),
+    }
 
 @router.get("/questions/search")
-async def search_questions(q: str = "", subject: Optional[str] = None, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
+async def search_questions(q: str = "", subject: Optional[str] = None, db: AsyncSession = Depends(get_db)):
     query = select(Question)
     if q: query = query.filter(Question.normalized_question_text.ilike("%" + q + "%"))
     if subject: query = query.filter(Question.subject == subject)
@@ -262,8 +604,8 @@ async def search_questions(q: str = "", subject: Optional[str] = None, db: Async
     return [{"id": x.id, "question_text": x.question_text, "subject": x.subject, "marks": x.marks} for x in r.scalars().all()]
 
 @router.get("/repeated-questions")
-async def get_repeated_questions(subject: Optional[str] = None, min_frequency: int = 2, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
-    cache_key = f"repeated_q:{cu.tenant_id}:{subject}:{min_frequency}"
+async def get_repeated_questions(subject: Optional[str] = None, min_frequency: int = 2, db: AsyncSession = Depends(get_db)):
+    cache_key = f"repeated_q:public:{subject}:{min_frequency}"
     cached = app_cache.get(cache_key)
     if cached is not None:
         return cached
@@ -275,7 +617,7 @@ async def get_repeated_questions(subject: Optional[str] = None, min_frequency: i
     return result
 
 @router.get("/repeated-questions/{gid}")
-async def get_repeated_question_detail(gid: int, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
+async def get_repeated_question_detail(gid: int, db: AsyncSession = Depends(get_db)):
     from sqlalchemy.orm import selectinload
     r = await db.execute(
         select(QuestionGroup)

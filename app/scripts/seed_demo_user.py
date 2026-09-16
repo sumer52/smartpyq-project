@@ -1,11 +1,14 @@
 #!/usr/bin/env python3
-"""Seed the demo account (idempotent, production-safe).
+"""Seed the demo + admin accounts (idempotent, production-safe).
 
 Behaviour:
     - Exits 0 and does nothing when ENABLE_DEMO_ACCOUNT is off
       (production default). Safe to run unconditionally at deploy time.
-    - Creates or upgrades the demo user with the CURRENT User model
-      (no legacy fields).
+    - demo@smartpyq.com  -> STUDENT role (public demo login; must NEVER be
+      an admin — the credentials are public on the login page).
+    - admin@smartpyq.com -> ADMIN role, ONLY when ADMIN_EMAIL +
+      ADMIN_PASSWORD are set in the environment. The password is never
+      logged and must be changed from the default.
     - Never prints passwords or secrets.
     - Rolls back cleanly on failure (exit 1 only when seeding was enabled
       and actually failed).
@@ -28,65 +31,113 @@ from app.core.auth import AuthManager
 
 DEMO_EMAIL = "demo@smartpyq.com"
 DEMO_USERNAME = "demo"
-DEMO_PASSWORD = "demo123"  # only used in-memory / hashed; never logged
+DEMO_PASSWORD = "demo123"  # public credentials; role is STUDENT by design
+
+ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@smartpyq.com").strip().lower()
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "").strip()
+
+# Dev/demo convenience admin (ADMIN_ID "admin" style login). Only seeded when
+# ENABLE_DEMO_ACCOUNT is on AND ADMIN_PASSWORD is not explicitly provided.
+# Production must set ADMIN_PASSWORD; these defaults never apply there.
+DEV_ADMIN_EMAIL = "admin@smartpyq.com"
+DEV_ADMIN_PASSWORD = "smartpyq@admin"
+
+
+async def _upsert_user(db, *, email: str, username: str, full_name: str,
+                       password_hash: str, role: UserRole, course: str,
+                       semester: str, year_of_study: int) -> None:
+    """Create or reconcile one seeded user. Idempotent."""
+    result = await db.execute(select(User).where(User.email == email))
+    existing = result.scalar_one_or_none()
+
+    if existing:
+        changed = False
+        if existing.role != role:
+            existing.role = role
+            changed = True
+        if existing.status != UserStatus.ACTIVE:
+            existing.status = UserStatus.ACTIVE
+            changed = True
+        if not existing.is_email_verified:
+            existing.is_email_verified = True
+            changed = True
+        if not existing.onboarding_completed:
+            existing.onboarding_completed = True
+            changed = True
+        # Refresh the hash so the documented password always works
+        auth_mgr = AuthManager()
+        if not auth_mgr.verify_password(
+            DEMO_PASSWORD if role == UserRole.STUDENT else ADMIN_PASSWORD,
+            existing.password_hash or ""
+        ):
+            existing.password_hash = password_hash
+            changed = True
+        if changed:
+            await db.commit()
+            print(f"[OK] User upgraded: {email} (role={role.value})")
+        else:
+            print(f"[OK] User ready: {email} (role={role.value})")
+        return
+
+    demo_user = User(
+        email=email,
+        username=username,
+        full_name=full_name,
+        password_hash=password_hash,
+        role=role,
+        status=UserStatus.ACTIVE,
+        tenant_id=1,
+        is_email_verified=True,
+        domain_verified=True,
+        failed_login_attempts=0,
+        preferences={},
+        university="Demo University",
+        course=course,
+        academic_year=f"{year_of_study}rd Year" if year_of_study == 3 else None,
+        semester=semester,
+        year_of_study=year_of_study,
+        onboarding_completed=True,
+    )
+    db.add(demo_user)
+    await db.commit()
+    print(f"[OK] User created: {email} (role={role.value})")
 
 
 async def seed_demo_user() -> None:
-    """Create or upgrade the demo user with current-model fields."""
+    """Legacy entry point: demo (student) + admin seeding."""
     auth_mgr = AuthManager()
-    password_hash = auth_mgr.hash_password(DEMO_PASSWORD)
 
     async with AsyncSessionLocal() as db:
-        result = await db.execute(select(User).where(User.email == DEMO_EMAIL))
-        existing = result.scalar_one_or_none()
+        await _upsert_user(
+            db=db,
+            email=DEMO_EMAIL,
+            username=DEMO_USERNAME,
+            full_name="Demo Student",
+            password_hash=auth_mgr.hash_password(DEMO_PASSWORD),
+            role=UserRole.STUDENT,
+            course="B.Sc Computer Science",
+            semester="sem5",
+            year_of_study=3,
+        )
 
-        if existing:
-            changed = False
-            if existing.role != UserRole.SUPER_ADMIN:
-                existing.role = UserRole.SUPER_ADMIN
-                changed = True
-            if existing.status != UserStatus.ACTIVE:
-                existing.status = UserStatus.ACTIVE
-                changed = True
-            if not existing.is_email_verified:
-                existing.is_email_verified = True
-                changed = True
-            if not existing.onboarding_completed:
-                existing.onboarding_completed = True
-                changed = True
-            # Refresh the hash so the documented demo password always works
-            if not auth_mgr.verify_password(DEMO_PASSWORD, existing.password_hash or ""):
-                existing.password_hash = password_hash
-                changed = True
-            if changed:
-                await db.commit()
-                print(f"[OK] Demo user upgraded: {DEMO_EMAIL}")
-            else:
-                print(f"[OK] Demo user ready: {DEMO_EMAIL}")
+        # 2) Admin account — ADMIN_PASSWORD wins; otherwise fall back to the
+        #    documented dev/demo credentials (only reachable when demo mode is
+        #    enabled, since main() gates on demo_account_enabled()).
+        admin_password = ADMIN_PASSWORD or DEV_ADMIN_PASSWORD
+        if len(admin_password) < 8:
+            print("[WARN] Admin password too short (min 8 chars) — admin not seeded")
         else:
-            demo_user = User(
-                email=DEMO_EMAIL,
-                username=DEMO_USERNAME,
-                full_name="Demo Student",
-                password_hash=password_hash,
-                role=UserRole.SUPER_ADMIN,
-                status=UserStatus.ACTIVE,
-                tenant_id=1,
-                is_email_verified=True,
-                domain_verified=True,
-                failed_login_attempts=0,
-                preferences={},
-                university="Demo University",
-                course="B.Sc Computer Science",
-                specialization="mscs",
-                academic_year="3rd Year",
-                semester="sem5",
-                year_of_study=3,
-                onboarding_completed=True,
+            await _upsert_user(
+                db=db,
+                email=ADMIN_EMAIL,
+                username="admin",
+                full_name="SmartPYQ Admin",
+                password_hash=auth_mgr.hash_password(admin_password),
+                role=UserRole.ADMIN,
+                course=None,
+                semester=None,
+                year_of_study=None,
             )
-            db.add(demo_user)
-            await db.commit()
-            print(f"[OK] Demo user created: {DEMO_EMAIL}")
 
 
 async def main() -> None:

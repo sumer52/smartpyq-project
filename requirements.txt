@@ -47,14 +47,17 @@ openai>=1.55.3
 # create_client with TypeError: unexpected keyword argument 'proxy').
 supabase==2.15.3
 
-# TF-IDF similarity for question grouping (Py3.12 wheels available)
-scikit-learn==1.4.2
+# TF-IDF similarity for question grouping.
+# 1.5.2 = first release with wheels for BOTH Python 3.12 (Render) and
+# 3.13 (local dev). 1.4.2 has no cp313 wheel -> source build fails on
+# its historical numpy==2.0.0rc1 build pin. TF-IDF API is unchanged.
+scikit-learn==1.5.2
 
 # File Processing
 PyPDF2==3.0.1
 PyMuPDF==1.24.14
 pdfplumber==0.10.3
-Pillow==10.1.0
+Pillow==10.4.0
 pytesseract==0.3.10
 python-magic==0.4.27
 

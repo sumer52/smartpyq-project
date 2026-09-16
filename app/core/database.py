@@ -31,7 +31,8 @@ engine_kwargs = {
 # Configure based on database type
 if "sqlite" in db_url:
     # SQLite-specific settings (development/testing)
-    engine_kwargs["connect_args"] = {"timeout": 10, "check_same_thread": False}
+    # timeout = busy timeout (seconds) for writers waiting on a locked DB.
+    engine_kwargs["connect_args"] = {"timeout": 30, "check_same_thread": False}
     engine_kwargs.pop("pool_timeout", None)  # not valid for SQLite/NullPool
 elif "postgresql" in db_url:
     # PostgreSQL-specific settings (production)
@@ -56,6 +57,22 @@ try:
 except Exception as e:
     logger.warning(f"Could not create database engine: {e}")
     engine = None
+
+# SQLite: enable WAL journaling so concurrent requests serialize instead of
+# failing with "database is locked" (readers never block the writer, and
+# writers queue on the busy timeout rather than erroring immediately).
+if engine is not None and "sqlite" in db_url:
+    from sqlalchemy import event
+
+    @event.listens_for(engine.sync_engine, "connect")
+    def _sqlite_pragmas(dbapi_connection, connection_record):
+        cursor = dbapi_connection.cursor()
+        try:
+            cursor.execute("PRAGMA journal_mode=WAL")
+            cursor.execute("PRAGMA synchronous=NORMAL")
+            cursor.execute("PRAGMA busy_timeout=30000")
+        finally:
+            cursor.close()
 
 # Session factory
 AsyncSessionLocal = async_sessionmaker(

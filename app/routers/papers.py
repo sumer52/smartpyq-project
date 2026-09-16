@@ -167,7 +167,16 @@ async def get_papers(
     try:
         from sqlalchemy import select, func
         from app.models.paper import Paper as PaperModel
-        
+
+        # SECURITY: only published (APPROVED) content is public. Browsing any
+        # other status (drafts/pending/rejected/archived) requires an admin.
+        # NOTE: role may arrive as a UserRole enum — use .value, since
+        # str(enum) on Python 3.11+ yields "UserRole.ADMIN", not "admin".
+        _raw_role = getattr(current_user, "role", "")
+        requester_role = str(getattr(_raw_role, "value", _raw_role) or "").lower()
+        is_admin = requester_role in ("admin", "tenant_admin", "super_admin")
+        if paper_status != PaperStatus.APPROVED and not is_admin:
+            paper_status = PaperStatus.APPROVED
         conditions = [PaperModel.status == paper_status]
         if subject:
             conditions.append(PaperModel.subject.ilike(f'%{subject}%'))
@@ -222,31 +231,48 @@ async def get_papers(
 
 @router.get("/years")
 async def get_available_years(
-    current_user: User = Depends(get_current_active_user),
+    subject: Optional[str] = Query(None, description="Filter by subject"),
+    stream: Optional[str] = Query(None, description="Filter by stream"),
+    semester: Optional[str] = Query(None, description="Filter by semester"),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get all available exam years from uploaded papers"""
+    """Get available exam years from uploaded papers (public).
+
+    With filters, returns per-year approved-paper counts so the PYQ Hub can
+    show how many papers exist per year for the selected subject.
+    """
     try:
         from sqlalchemy import select, func, distinct
         from app.models.paper import Paper as PaperModel
-        
-        result = await db.execute(
-            select(func.distinct(PaperModel.year))
-            .filter(PaperModel.status == PaperStatus.APPROVED)
+
+        conditions = [PaperModel.status == PaperStatus.APPROVED]
+        if subject:
+            conditions.append(PaperModel.subject.ilike(f"%{subject}%"))
+        if stream:
+            conditions.append(PaperModel.stream.ilike(f"%{stream}%"))
+        if semester:
+            conditions.append(PaperModel.semester == semester)
+
+        # Per-year counts (used by the PYQ Hub year cards).
+        counts_result = await db.execute(
+            select(PaperModel.year, func.count(PaperModel.id))
+            .where(*conditions)
+            .group_by(PaperModel.year)
             .order_by(PaperModel.year)
         )
-        years = [row[0] for row in result.all() if row[0]]
-        return {"years": years}
+        year_counts = [
+            {"year": y, "paper_count": c}
+            for y, c in counts_result.all() if y is not None
+        ]
+        return {
+            "years": [yc["year"] for yc in year_counts],
+            "year_counts": year_counts,
+        }
     except Exception as e:
-        return {"years": [], "error": str(e)}
-    except Exception as e:
-        _plog.getLogger(__name__).debug("Traceback omitted")
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve papers."
-        )
+        return {"years": [], "year_counts": [], "error": str(e)}
 
-@router.post("/analyze", response_model=AnalyzeResponse)
+@router.post("/analyze", response_model=AnalyzeResponse,
+             dependencies=[Depends(require_roles(["admin", "tenant_admin"]))])
 async def analyze_paper(
     file: UploadFile = File(..., description="PDF or image file to analyze"),
     current_user: User = Depends(get_current_active_user),
@@ -316,15 +342,10 @@ async def search_papers(
     stream: Optional[str] = Query(None),
     university: Optional[str] = Query(None),
     year: Optional[int] = Query(None, ge=2000, le=2030),
-    current_user: User = Depends(get_current_active_user),
-    current_tenant: Tenant = Depends(get_current_tenant),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
-    """Full-text search papers
-    
-    Searches paper titles, subjects, and content using PostgreSQL full-text search.
-    Supports additional filtering by subject, university, and year.
-    """
+    """Full-text search papers (public; approved-only for anonymous users)."""
     try:
         filters = {
             "subject": subject,
@@ -342,7 +363,7 @@ async def search_papers(
             stream=stream,
             university=university,
             year=year,
-            tenant_id=current_tenant.id,
+            tenant_id=None,
             page=page,
             limit=per_page
         )
@@ -363,11 +384,222 @@ async def search_papers(
             detail="Search failed."
         )
 
+@router.post("/upload-student", status_code=status.HTTP_201_CREATED)
+async def upload_student_paper(
+    file: UploadFile = File(..., description="PDF or image file"),
+    title: str = Form(..., min_length=3, max_length=200),
+    subject: str = Form(..., min_length=2, max_length=100),
+    stream: str = Form(..., min_length=1, max_length=100),
+    specialization: str = Form("", max_length=100),
+    semester: str = Form(..., min_length=1, max_length=50),
+    exam: str = Form(..., min_length=1, max_length=100),
+    year: int = Form(..., ge=2000, le=2030),
+    university: str = Form("", max_length=100),
+    description: str = Form("", max_length=1000),
+    current_user: User = Depends(get_current_active_user),
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
+):
+    """Student community upload of a PYQ paper.
+
+    The paper is stored with status PENDING and is NOT visible to anyone
+    except its uploader and admins until an admin approves it. Visibility is
+    enforced at the database layer (public queries filter APPROVED only), not
+    in the frontend.
+    """
+    try:
+        filename_lower = file.filename.lower() if file.filename else ""
+        allowed_extensions = {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}
+        file_ext = os.path.splitext(filename_lower)[1]
+        if file_ext not in allowed_extensions:
+            supported = ', '.join(sorted(allowed_extensions))
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail=f"Unsupported file type. Supported formats: {supported}"
+            )
+
+        file_content = await file.read()
+        if len(file_content) == 0:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="The file is empty. Please upload a valid file.")
+        if len(file_content) > 50 * 1024 * 1024:
+            raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File size exceeds 50MB limit. Please upload a smaller file.")
+
+        # Stream authorization: students can only contribute to their enrolled stream.
+        user_stream = (current_user.course or "").lower()
+        paper_stream = stream.lower()
+        stream_map = {
+            'bsc': 'bsc', 'b.sc': 'bsc', 'b.sc computer science': 'bsc',
+            'bcom': 'bcom', 'b.com': 'bcom',
+            'bca': 'bca', 'bba': 'bba'
+        }
+        user_stream_id = stream_map.get(user_stream, user_stream)
+        paper_stream_id = stream_map.get(paper_stream, paper_stream)
+        _raw_role = getattr(current_user, 'role', '')
+        _role_str = str(getattr(_raw_role, 'value', _raw_role) or '').lower()
+        is_admin = _role_str in ['admin', 'tenant_admin', 'super_admin']
+        if not is_admin and user_stream_id and paper_stream_id and user_stream_id != paper_stream_id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"You can only upload papers for your enrolled stream: {current_user.course}"
+            )
+
+        paper_data = PaperCreateRequest(
+            title=title,
+            subject=subject,
+            university=university if university else "Not Specified",
+            stream=stream,
+            specialization=specialization,
+            year=year,
+            semester=semester,
+            exam_type=ExamType.FINAL,
+            tags=[],
+            description=description,
+            tenant_id=current_user.tenant_id or 1
+        )
+
+        svc = PaperService(db=db)
+        result = await svc.upload_paper(
+            file_data=file_content,
+            filename=file.filename,
+            paper_data=paper_data,
+            uploader=current_user,
+            ip_address=client_ip,
+            initial_status=PaperStatus.PENDING,
+        )
+
+        # Best-effort duplicate flagging for the review screen.
+        from sqlalchemy import select as _select
+        from app.models.paper import Paper as PaperModel
+        dup_conditions = [PaperModel.subject == subject, PaperModel.year == year, PaperModel.status == PaperStatus.APPROVED]
+        dup_rows = (await db.execute(_select(PaperModel).filter(*dup_conditions).limit(5))).scalars().all()
+        duplicates = [{"paper_id": p.id, "title": p.title, "match_type": "metadata"} for p in dup_rows]
+
+        return {
+            "id": result["id"],
+            "title": result["title"],
+            "status": "pending",
+            "message": "Paper uploaded successfully. Your PYQ paper has been submitted for verification. It will be visible to other students only after an admin verifies and approves it.",
+            "possible_duplicates": duplicates,
+        }
+
+    except HTTPException:
+        raise
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except ConflictError as e:
+        raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except Exception as e:
+        _plog.getLogger(__name__).error(f"Student upload error: {type(e).__name__}")
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload failed. Please try again.")
+
+@router.get("/mine")
+async def list_my_submissions(
+    current_user: User = Depends(get_current_active_user),
+    db: AsyncSession = Depends(get_db)
+):
+    """The authenticated user's own paper submissions with verification status.
+
+    Includes rejection reason (moderation_notes) so students can see why a
+    paper was rejected. Only the uploader sees these rows.
+    """
+    from sqlalchemy import select as _select, desc as _desc
+    from app.models.paper import Paper as PaperModel
+
+    rows = (await db.execute(
+        _select(PaperModel)
+        .filter(PaperModel.uploader_id == current_user.id)
+        .order_by(_desc(PaperModel.created_at))
+        .limit(100)
+    )).scalars().all()
+
+    return {
+        "papers": [
+            {
+                "id": p.id,
+                "title": p.title,
+                "subject": p.subject,
+                "stream": p.stream,
+                "semester": p.semester,
+                "year": p.year,
+                "status": p.status.value if hasattr(p.status, "value") else str(p.status),
+                "file_name": p.file_name,
+                "rejection_reason": p.moderation_notes if (p.status == PaperStatus.REJECTED) else None,
+                "submitted_at": p.created_at.isoformat() if p.created_at else None,
+            }
+            for p in rows
+        ]
+    }
+
+@router.get("/pending-review")
+async def list_pending_review(
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
+    db: AsyncSession = Depends(get_db)
+):
+    """Admin queue of student-submitted papers awaiting verification.
+
+    Each row carries possible-duplicate evidence (checksum or same
+    subject+year among approved papers) so the reviewer can decide.
+    """
+    from sqlalchemy import select as _select, asc as _asc
+    from app.models.paper import Paper as PaperModel
+    from app.models.user import User as UserModel
+
+    rows = (await db.execute(
+        _select(PaperModel)
+        .filter(PaperModel.status == PaperStatus.PENDING)
+        .order_by(_asc(PaperModel.created_at))
+        .limit(100)
+    )).scalars().all()
+    if not rows:
+        return {"papers": []}
+
+    uploader_ids = {p.uploader_id for p in rows}
+    users = (await db.execute(_select(UserModel).filter(UserModel.id.in_(uploader_ids)))).scalars().all()
+    users_by_id = {u.id: u for u in users}
+
+    out = []
+    for p in rows:
+        duplicates = []
+        if p.checksum:
+            same_file = (await db.execute(
+                _select(PaperModel).filter(
+                    PaperModel.checksum == p.checksum,
+                    PaperModel.status == PaperStatus.APPROVED,
+                ).limit(3)
+            )).scalars().all()
+            duplicates += [{"paper_id": d.id, "title": d.title, "match_type": "exact_file"} for d in same_file]
+        same_meta = (await db.execute(
+            _select(PaperModel).filter(
+                PaperModel.subject == p.subject,
+                PaperModel.year == p.year,
+                PaperModel.status == PaperStatus.APPROVED,
+            ).limit(3)
+        )).scalars().all()
+        seen = {d["paper_id"] for d in duplicates}
+        duplicates += [{"paper_id": d.id, "title": d.title, "match_type": "metadata"} for d in same_meta if d.id not in seen]
+
+        up = users_by_id.get(p.uploader_id)
+        out.append({
+            "id": p.id,
+            "title": p.title,
+            "subject": p.subject,
+            "stream": p.stream,
+            "specialization": p.specialization,
+            "semester": p.semester,
+            "year": p.year,
+            "description": p.description,
+            "file_name": p.file_name,
+            "file_type": p.file_type,
+            "uploaded_by": {"id": up.id, "name": up.full_name or up.username or up.email} if up else None,
+            "submitted_at": p.created_at.isoformat() if p.created_at else None,
+            "possible_duplicates": duplicates,
+        })
+    return {"papers": out}
+
 @router.get("/{paper_id}", response_model=PaperResponse)
 async def get_paper(
     paper_id: int,
-    current_user: User = Depends(get_current_active_user),
-    current_tenant: Tenant = Depends(get_current_tenant),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """Get paper by ID
@@ -408,7 +640,8 @@ async def get_paper(
             detail="Failed to retrieve paper."
         )
 
-@router.post("/upload", response_model=PaperUploadResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/upload", response_model=PaperUploadResponse, status_code=status.HTTP_201_CREATED,
+             dependencies=[Depends(require_roles(["admin", "tenant_admin"]))])
 async def upload_paper(
     file: UploadFile = File(..., description="PDF file to upload"),
     title: str = Form(..., min_length=3, max_length=200),
@@ -421,6 +654,7 @@ async def upload_paper(
     year: int = Form(..., ge=2000, le=2030),
     tags: str = Form("", description="Comma-separated tags"),
     description: str = Form("", max_length=1000),
+    publish_now: bool = Form(False, description="Publish immediately instead of saving as DRAFT"),
     current_user: User = Depends(get_current_active_user),
     client_ip: str = Depends(get_client_ip),
     db: AsyncSession = Depends(get_db)
@@ -480,8 +714,10 @@ async def upload_paper(
         user_stream_id = stream_map.get(user_stream, user_stream)
         paper_stream_id = stream_map.get(paper_stream, paper_stream)
         
-        # Allow admins to upload for any stream
-        is_admin = hasattr(current_user, 'role') and (current_user.role or '').lower() in ['admin', 'tenant_admin', 'super_admin']
+        # Allow admins to upload for any stream (role may be an enum — use .value)
+        _raw_role = getattr(current_user, 'role', '')
+        _role_str = str(getattr(_raw_role, 'value', _raw_role) or '').lower()
+        is_admin = _role_str in ['admin', 'tenant_admin', 'super_admin']
         
         if not is_admin and user_stream_id and paper_stream_id and user_stream_id != paper_stream_id:
             raise HTTPException(
@@ -525,7 +761,18 @@ async def upload_paper(
             uploader=current_user,
             ip_address=client_ip
         )
-        
+
+        # Publish immediately when the admin requested it (upload -> publish
+        # in one step). Otherwise the paper stays DRAFT until explicit Publish.
+        if publish_now:
+            try:
+                await svc.publish_paper(paper_id=result['id'], publisher=current_user, ip_address=client_ip)
+                result['status'] = 'approved'
+            except Exception:
+                # Never fail the upload because the publish step hiccuped;
+                # the paper remains a DRAFT the admin can publish later.
+                pass
+
         return PaperUploadResponse(**result)
         
     except HTTPException:
@@ -550,20 +797,19 @@ async def upload_paper(
 @router.get("/{paper_id}/download")
 async def download_paper(
     paper_id: int,
-    current_user: User = Depends(get_current_active_user),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
     """Download paper file directly (PDF or image).
     
-    Uses the storage_key from PaperVersion to locate the file on disk.
-    Stream-based authorization: users can only download papers 
-    matching their enrolled stream/specialization.
-    Super admins can download any paper.
+    PUBLIC for approved papers (no login required); admins may download
+    any paper regardless of status. Logged-in students keep the
+    stream-based check for non-approved papers.
     """
     from starlette.responses import FileResponse
     from app.core.config import settings
     from sqlalchemy import select
-    from app.models.paper import Paper as PaperModel, PaperVersion
+    from app.models.paper import Paper as PaperModel, PaperVersion, PaperStatus
     
     from app.utils.supabase_client import is_supabase_storage_enabled, get_supabase_admin
     
@@ -577,15 +823,28 @@ async def download_paper(
     if not paper:
         raise HTTPException(status_code=404, detail="Paper not found")
     
-    # Authorization check: stream-based access (AFTER paper fetch)
+    # Authorization: approved papers are public; other statuses need auth.
     user = current_user
-    is_admin = hasattr(user, 'role') and (user.role or '').lower() in ['admin', 'tenant_admin', 'super_admin']
+    user_role = getattr(user, 'role', None)
+    user_role = user_role.value if hasattr(user_role, 'value') else user_role
+    is_admin = bool(user) and str(user_role or '').lower() in ['admin', 'tenant_admin', 'super_admin']
     
-    if not is_admin:
+    paper_status = paper.status.value if hasattr(paper.status, 'value') else paper.status
+    is_public_paper = str(paper_status or '').lower() == 'approved'
+    
+    if not is_public_paper and not user:
+        raise HTTPException(status_code=401, detail="Authentication required")
+    
+    if user and not is_admin:
+        # Non-approved papers (DRAFT/PENDING/REJECTED) are only for admins and
+        # the uploader — community submissions must never leak to other
+        # students, even same-stream ones. Stream checks stay in place for
+        # legacy DRAFT papers the uploader may want to fetch.
+        if not is_public_paper and paper.uploader_id != user.id:
+            raise HTTPException(status_code=403, detail="You do not have access to this paper.")
+
         user_stream = (user.course or "").lower()
-        user_spec = (user.specialization or "").lower()
         paper_stream = (paper.stream or "").lower()
-        paper_spec = (paper.specialization or "").lower()
         
         # Map course names to stream IDs
         stream_map = {
@@ -597,15 +856,13 @@ async def download_paper(
         user_stream_id = stream_map.get(user_stream, user_stream)
         paper_stream_id = stream_map.get(paper_stream, paper_stream)
         
-        # Check if user has access to this paper stream
-        if user_stream_id and paper_stream_id and user_stream_id != paper_stream_id:
+        # Stream check applies only to non-approved papers; approved content
+        # is public by design (students see everything published).
+        if not is_public_paper and user_stream_id and paper_stream_id and user_stream_id != paper_stream_id:
             raise HTTPException(
                 status_code=403,
                 detail="You do not have access to papers from this stream."
             )
-        
-        # Specialization check removed: shared papers are accessible
-        # to all users within the same stream (product requirement).
     
     # After authorization, try Supabase signed URL
     if is_supabase_storage_enabled() and paper.file_url:
@@ -762,9 +1019,67 @@ async def stamp_paper(
         )
 
 # Admin endpoints
+@router.post("/{paper_id}/publish")
+async def publish_paper_endpoint(
+    paper_id: int,
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
+):
+    """Publish a paper (admin only): DRAFT/PENDING/REJECTED/ARCHIVED -> APPROVED.
+
+    Published papers appear in the public PYQ Hub and search.
+    """
+    try:
+        paper_svc = PaperService(db=db)
+        await paper_svc.publish_paper(
+            paper_id=paper_id,
+            publisher=current_user,
+            ip_address=client_ip
+        )
+        return {"message": "Paper published successfully"}
+    except NotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Paper not found")
+    except PermissionError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to publish paper")
+
+@router.post("/{paper_id}/unpublish")
+async def unpublish_paper_endpoint(
+    paper_id: int,
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
+):
+    """Unpublish a paper (admin only): APPROVED -> ARCHIVED.
+
+    The paper is hidden from the public PYQ Hub/search but NOT deleted —
+    the admin can review and re-publish it later.
+    """
+    try:
+        paper_svc = PaperService(db=db)
+        await paper_svc.unpublish_paper(
+            paper_id=paper_id,
+            publisher=current_user,
+            ip_address=client_ip
+        )
+        return {"message": "Paper unpublished successfully"}
+    except NotFoundError:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Paper not found")
+    except PermissionError:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+    except ValidationError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to unpublish paper")
+
 @router.post("/{paper_id}/approve")
 async def approve_paper(
     paper_id: int,
+    note: str = Form("", max_length=500),
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
     current_tenant: Tenant = Depends(get_current_tenant),
     client_ip: str = Depends(get_client_ip),
@@ -779,7 +1094,8 @@ async def approve_paper(
         await paper_svc.approve_paper(
             paper_id=paper_id,
             approver=current_user,
-            ip_address=client_ip
+            ip_address=client_ip,
+            note=note or None,
         )
         
         return {"message": "Paper approved successfully"}
@@ -881,8 +1197,7 @@ async def delete_paper(
 
 @router.get("/stats/overview", response_model=PaperStatsResponse)
 async def get_paper_stats(
-    current_user: User = Depends(get_current_active_user),
-    current_tenant: Tenant = Depends(get_current_tenant)
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
 ):
     """Get paper statistics
     

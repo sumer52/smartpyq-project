@@ -20,14 +20,19 @@ from pydantic import BaseModel, Field
 from ..core.dependencies import (
     get_current_active_user,
     require_roles,
-    get_client_ip
+    get_client_ip,
 )
+from ..core.database import get_db
 from ..core.exceptions import (
     ValidationError,
     NotFoundError,
     PermissionError
 )
-from ..models.user import User, UserRole
+from ..models.user import User, UserRole, UserStatus
+from ..models.paper import Paper, PaperStatus
+from ..models.tenant import Tenant
+from sqlalchemy import select, func
+from sqlalchemy.ext.asyncio import AsyncSession
 from ..repositories import (
     UserRepository,
     TenantRepository,
@@ -97,6 +102,9 @@ class SystemStatsResponse(BaseModel):
     total_papers: int
     approved_papers: int
     pending_papers: int
+    draft_papers: int = 0
+    unpublished_papers: int = 0
+    ai_analyses: int = 0
     total_downloads: int
     storage_used_gb: float
     
@@ -469,34 +477,69 @@ async def get_audit_logs(
 # System Statistics
 @router.get("/stats", response_model=SystemStatsResponse)
 async def get_system_stats(
-    current_user: User = Depends(require_roles(["admin"]))
+    current_user: User = Depends(require_roles(["admin"])),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get system-wide statistics (admin only)
     
     Returns comprehensive system statistics and metrics.
+    Computed inline against the real model columns (the module-level repos
+    have no DB session, and get_tenant_stats queries a nonexistent
+    Tenant.status column — see model: tenants.is_active boolean).
     """
     try:
-        # Get user stats
-        user_stats = await user_repo.get_user_stats()
-        
-        # Get tenant stats
-        tenant_stats = await tenant_repo.get_tenant_stats()
-        
-        # Get paper stats
-        paper_stats = await paper_repo.get_paper_stats()
-        
+        # User stats
+        total_users = (await db.execute(select(func.count(User.id)))).scalar() or 0
+        active_users = (await db.execute(
+            select(func.count(User.id)).where(User.status == UserStatus.ACTIVE)
+        )).scalar() or 0
+
+        # Tenant stats (model uses is_active boolean, not a status enum)
+        total_tenants = (await db.execute(select(func.count(Tenant.id)))).scalar() or 0
+        active_tenants = (await db.execute(
+            select(func.count(Tenant.id)).where(Tenant.is_active == True)  # noqa: E712
+        )).scalar() or 0
+
+        # Paper stats (status enum stored by NAME, e.g. 'APPROVED').
+        # Public model: APPROVED == published; DRAFT == awaiting review;
+        # ARCHIVED == unpublished; PENDING/REJECTED == legacy moderation queue.
+        total_papers = (await db.execute(select(func.count(Paper.id)))).scalar() or 0
+        approved_papers = (await db.execute(
+            select(func.count(Paper.id)).where(Paper.status == PaperStatus.APPROVED)
+        )).scalar() or 0
+        pending_papers = (await db.execute(
+            select(func.count(Paper.id)).where(Paper.status == PaperStatus.PENDING)
+        )).scalar() or 0
+        draft_papers = (await db.execute(
+            select(func.count(Paper.id)).where(Paper.status == PaperStatus.DRAFT)
+        )).scalar() or 0
+        unpublished_papers = (await db.execute(
+            select(func.count(Paper.id)).where(Paper.status == PaperStatus.ARCHIVED)
+        )).scalar() or 0
+        ai_analyses = (await db.execute(
+            select(func.count(Paper.id)).where(
+                Paper.extracted_text.isnot(None), Paper.extracted_text != ""
+            )
+        )).scalar() or 0
+        total_downloads = (await db.execute(
+            select(func.coalesce(func.sum(Paper.download_count), 0))
+        )).scalar() or 0
+
         # TODO: Calculate storage usage from file storage service
         storage_used_gb = 0.0  # Placeholder
         
         return SystemStatsResponse(
-            total_users=user_stats["total_users"],
-            active_users=user_stats["active_users"],
-            total_tenants=tenant_stats["total_tenants"],
-            active_tenants=tenant_stats["active_tenants"],
-            total_papers=paper_stats["total_papers"],
-            approved_papers=paper_stats["approved_papers"],
-            pending_papers=paper_stats["pending_papers"],
-            total_downloads=paper_stats["total_downloads"],
+            total_users=total_users,
+            active_users=active_users,
+            total_tenants=total_tenants,
+            active_tenants=active_tenants,
+            total_papers=total_papers,
+            approved_papers=approved_papers,
+            pending_papers=pending_papers,
+            draft_papers=draft_papers,
+            unpublished_papers=unpublished_papers,
+            ai_analyses=ai_analyses,
+            total_downloads=total_downloads,
             storage_used_gb=storage_used_gb
         )
         

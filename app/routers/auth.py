@@ -3,6 +3,7 @@
 Handles user authentication, registration, and session management.
 """
 
+import os
 from datetime import datetime
 from typing import Optional
 
@@ -40,8 +41,13 @@ class SignupRequest(BaseModel):
     tenant_access_code: str = Field(..., min_length=6, max_length=50)
     
 class LoginRequest(BaseModel):
-    """User login request"""
-    email: EmailStr
+    """User login request.
+
+    Email is a plain string (validated later) so the admin login can also
+    accept a bare admin ID like "admin" which maps to the seeded admin
+    account's email.
+    """
+    email: str = Field(..., min_length=3, max_length=254)
     password: str = Field(..., min_length=1, max_length=128)
     remember_me: bool = False
 
@@ -212,6 +218,76 @@ async def login(
     except Exception as e:
         import logging as _log
         _log.getLogger(__name__).error(f"Login error: {type(e).__name__}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed. Please try again."
+        )
+
+@router.post("/admin-login", response_model=AuthResponse)
+async def admin_login(
+    request: LoginRequest,
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db)
+):
+    """Admin-only authentication for /admin routes.
+
+    Same credential check as /login but additionally rejects any user
+    without an administrative role — students get 403, never a token.
+    Accepts a bare admin ID (e.g. "admin") as well as the full email;
+    it resolves to the seeded admin account.
+    """
+    try:
+        # Bare admin-ID convenience: "admin" -> seeded admin account.
+        email_input = (request.email or "").strip()
+        if email_input and "@" not in email_input:
+            from app.core.config import settings as _settings
+            env_admin = os.environ.get("ADMIN_EMAIL", "admin@smartpyq.com").strip().lower()
+            if email_input.lower() == "admin":
+                email_input = env_admin
+
+        auth_svc = AuthService(db=db, email_service=_email_svc)
+        from app.schemas.auth import UserLoginRequest
+        login_data = UserLoginRequest(email=email_input, password=request.password)
+        result = await auth_svc.login(
+            login_data=login_data,
+            ip_address=client_ip,
+            user_agent="admin-login"
+        )
+
+        result_dict = result.model_dump() if hasattr(result, 'model_dump') else (
+            result if isinstance(result, dict) else dict(result)
+        )
+
+        user_info = result_dict.get("user", {})
+        role = str(user_info.get("role", "")).lower()
+        if role not in ("admin", "tenant_admin", "super_admin"):
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Admin access required"
+            )
+
+        return AuthResponse(
+            access_token=result_dict["access_token"],
+            refresh_token=result_dict["refresh_token"],
+            expires_in=result_dict["expires_in"],
+            user=user_info
+        )
+
+    except HTTPException:
+        raise
+    except AuthenticationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e)
+        )
+    except RateLimitError as e:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=str(e)
+        )
+    except Exception as e:
+        import logging as _log
+        _log.getLogger(__name__).error(f"Admin login error: {type(e).__name__}")
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail="Login failed. Please try again."

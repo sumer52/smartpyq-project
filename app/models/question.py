@@ -55,6 +55,19 @@ class Question(Base):
     # Embedding for semantic search (stored as JSON array of floats)
     embedding = Column(JSON, nullable=True)
     
+    # Teacher answer (Exam Practice Mode). Stored in its ORIGINAL format:
+    # 'text' renders as formatted text; 'image'/'pdf' keep the uploaded file
+    # untouched and are served via the answers router. Never converted.
+    ANSWER_TYPES = ("text", "image", "pdf")
+    answer_type = Column(String(20), nullable=True)   # None | text | image | pdf
+    answer_text = Column(Text, nullable=True)
+    answer_file_url = Column(String(1000), nullable=True)  # storage key / URL
+    answer_file_name = Column(String(255), nullable=True)
+    answer_file_size = Column(Integer, nullable=True)
+    answer_file_mime = Column(String(100), nullable=True)
+    answer_updated_at = Column(DateTime(timezone=True), nullable=True)
+    answer_updated_by = Column(Integer, ForeignKey("users.id"), nullable=True)
+    
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     

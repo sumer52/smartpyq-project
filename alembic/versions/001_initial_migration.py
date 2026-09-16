@@ -30,8 +30,8 @@ def upgrade() -> None:
         sa.Column('access_code_hash', sa.String(length=255), nullable=True),
         sa.Column('is_active', sa.Boolean(), nullable=False),
         sa.Column('settings', postgresql.JSON(astext_type=sa.Text()), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('slug')
     )
@@ -62,8 +62,8 @@ def upgrade() -> None:
         sa.Column('backup_codes', postgresql.JSON(astext_type=sa.Text()), nullable=True),
         sa.Column('social_providers', postgresql.JSON(astext_type=sa.Text()), nullable=False),
         sa.Column('preferences', postgresql.JSON(astext_type=sa.Text()), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('email')
@@ -110,8 +110,8 @@ def upgrade() -> None:
         sa.Column('is_featured', sa.Boolean(), nullable=False),
         sa.Column('is_public', sa.Boolean(), nullable=False),
         sa.Column('approved_at', sa.DateTime(timezone=True), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['moderator_id'], ['users.id'], ),
         sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ),
         sa.ForeignKeyConstraint(['uploader_id'], ['users.id'], ),
@@ -136,7 +136,7 @@ def upgrade() -> None:
         sa.Column('checksum', sa.String(length=64), nullable=False),
         sa.Column('changes_description', sa.Text(), nullable=True),
         sa.Column('uploaded_by', sa.Integer(), nullable=False),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['paper_id'], ['papers.id'], ondelete='CASCADE'),
         sa.ForeignKeyConstraint(['uploaded_by'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
@@ -156,8 +156,8 @@ def upgrade() -> None:
         sa.Column('settings', postgresql.JSON(astext_type=sa.Text()), nullable=False),
         sa.Column('total_messages', sa.Integer(), nullable=False),
         sa.Column('total_tokens', sa.Integer(), nullable=False),
-        sa.Column('started_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('last_activity_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('started_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column('last_activity_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('ended_at', sa.DateTime(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(['user_id'], ['users.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id'),
@@ -177,7 +177,7 @@ def upgrade() -> None:
         sa.Column('tokens_used', sa.Integer(), nullable=True),
         sa.Column('model_used', sa.String(length=100), nullable=True),
         sa.Column('response_time_ms', sa.Integer(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['session_id'], ['chat_sessions.id'], ondelete='CASCADE'),
         sa.PrimaryKeyConstraint('id')
     )
@@ -206,8 +206,8 @@ def upgrade() -> None:
         sa.Column('version', sa.String(length=20), nullable=True),
         sa.Column('release_date', sa.DateTime(timezone=True), nullable=True),
         sa.Column('deprecation_date', sa.DateTime(timezone=True), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
-        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
+        sa.Column('updated_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.PrimaryKeyConstraint('id'),
         sa.UniqueConstraint('feature_key')
     )
@@ -230,7 +230,7 @@ def upgrade() -> None:
         sa.Column('unsubscribe_reason', sa.String(length=255), nullable=True),
         sa.Column('source', sa.String(length=100), nullable=True),
         sa.Column('referrer', sa.String(length=500), nullable=True),
-        sa.Column('subscribed_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('subscribed_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.Column('verified_at', sa.DateTime(timezone=True), nullable=True),
         sa.Column('last_email_sent', sa.DateTime(timezone=True), nullable=True),
         sa.PrimaryKeyConstraint('id'),
@@ -260,7 +260,7 @@ def upgrade() -> None:
         sa.Column('success', sa.Boolean(), nullable=False),
         sa.Column('error_message', sa.Text(), nullable=True),
         sa.Column('tenant_id', sa.Integer(), nullable=True),
-        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=False),
+        sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=False),
         sa.ForeignKeyConstraint(['actor_id'], ['users.id'], ),
         sa.ForeignKeyConstraint(['tenant_id'], ['tenants.id'], ),
         sa.PrimaryKeyConstraint('id')

@@ -100,7 +100,11 @@ class PaperService:
         paper_dict.update({
             'tenant_id': paper_data.tenant_id or uploader.tenant_id,
             'uploader_id': uploader.id,
-            'status': PaperStatus.PENDING,
+            # Public platform model: every new paper starts as DRAFT and is
+            # only visible publicly after an admin publishes it. Student
+            # community uploads are switched to PENDING right after creation
+            # (see upload_paper), so they always go through admin verification.
+            'status': PaperStatus.DRAFT,
             'created_at': datetime.utcnow()
         })
         
@@ -265,7 +269,8 @@ class PaperService:
         filename: str,
         paper_data: PaperCreateRequest,
         uploader: User,
-        ip_address: Optional[str] = None
+        ip_address: Optional[str] = None,
+        initial_status: Optional[PaperStatus] = None,
     ) -> Dict[str, Any]:
         """Upload paper file and create paper record.
         
@@ -433,7 +438,9 @@ class PaperService:
             else:
                 logger.warning(f"Paper {paper.id}: no file data available for text extraction")
 
-            # Update paper with file info and auto-approve
+            # Update paper with file info. New uploads stay in their initial
+            # status (DRAFT for admins, PENDING for student community uploads)
+            # and only become public after an admin publishes/approves them.
             await self.paper_repo.update(
                 paper.id,
                 file_url=file_url,
@@ -443,7 +450,7 @@ class PaperService:
                 checksum=file_hash,
                 extracted_text=extracted_text,
                 processing_status=ProcessingStatus.UPLOADED,
-                status=PaperStatus.APPROVED
+                status=initial_status or PaperStatus.DRAFT
             )
             
             # Create paper version record with storage_key for reliable file lookup
@@ -512,7 +519,8 @@ class PaperService:
         self,
         paper_id: int,
         approver: User,
-        ip_address: Optional[str] = None
+        ip_address: Optional[str] = None,
+        note: Optional[str] = None,
     ) -> PaperResponse:
         """Approve a paper.
         
@@ -541,12 +549,14 @@ class PaperService:
             raise ValidationError("Only pending papers can be approved")
         
         # Update paper status
-        updated_paper = await self.paper_repo.update(
-            paper_id,
+        update_kwargs = dict(
             status=PaperStatus.APPROVED,
             moderator_id=approver.id,
             approved_at=datetime.utcnow()
         )
+        if note is not None and note.strip():
+            update_kwargs["moderation_notes"] = note.strip()
+        updated_paper = await self.paper_repo.update(paper_id, **update_kwargs)
         
         # Clear cache
         if self.cache_service:
@@ -563,6 +573,91 @@ class PaperService:
             ip_address=ip_address
         )
         
+        return PaperResponse.from_orm(updated_paper)
+
+    async def publish_paper(
+        self,
+        paper_id: int,
+        publisher: User,
+        ip_address: Optional[str] = None
+    ) -> PaperResponse:
+        """Publish a paper — make it publicly visible.
+
+        DRAFT/PENDING/REJECTED/ARCHIVED -> APPROVED (published).
+        """
+        paper = await self.paper_repo.get_by_id(paper_id)
+        if not paper:
+            raise NotFoundError("Paper not found")
+
+        if not await self._check_paper_moderation_access(paper, publisher):
+            raise PermissionError("Access denied")
+
+        if paper.status == PaperStatus.APPROVED:
+            raise ValidationError("Paper is already published")
+
+        updated_paper = await self.paper_repo.update(
+            paper_id,
+            status=PaperStatus.APPROVED,
+            moderator_id=publisher.id,
+            approved_at=datetime.utcnow(),
+            moderation_notes=None,
+        )
+
+        if self.cache_service:
+            await self._clear_paper_cache(paper_id)
+
+        await self._log_audit(
+            AuditAction.PAPER_APPROVED,
+            actor_id=publisher.id,
+            target_type="paper",
+            target_id=paper_id,
+            tenant_id=paper.tenant_id,
+            details=f"Paper published: {paper.title}",
+            ip_address=ip_address
+        )
+
+        return PaperResponse.from_orm(updated_paper)
+
+    async def unpublish_paper(
+        self,
+        paper_id: int,
+        publisher: User,
+        ip_address: Optional[str] = None
+    ) -> PaperResponse:
+        """Unpublish a paper — remove it from public view WITHOUT deleting.
+
+        APPROVED -> ARCHIVED. The file and record remain available to admins,
+        who can re-publish later.
+        """
+        paper = await self.paper_repo.get_by_id(paper_id)
+        if not paper:
+            raise NotFoundError("Paper not found")
+
+        if not await self._check_paper_moderation_access(paper, publisher):
+            raise PermissionError("Access denied")
+
+        if paper.status != PaperStatus.APPROVED:
+            raise ValidationError("Only published papers can be unpublished")
+
+        updated_paper = await self.paper_repo.update(
+            paper_id,
+            status=PaperStatus.ARCHIVED,
+            moderator_id=publisher.id,
+        )
+
+        if self.cache_service:
+            await self._clear_paper_cache(paper_id)
+
+        await self._log_audit(
+            AuditAction.PAPER_UPDATED,
+            actor_id=publisher.id,
+            target_type="paper",
+            target_id=paper_id,
+            tenant_id=paper.tenant_id,
+            details=f"Paper unpublished: {paper.title}",
+            ip_address=ip_address
+        )
+
         return PaperResponse.from_orm(updated_paper)
     
     async def reject_paper(
