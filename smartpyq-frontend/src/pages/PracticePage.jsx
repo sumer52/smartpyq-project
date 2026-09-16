@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import practiceQuestions from '../data/practiceQuestions.json';
 import { Counter } from '../components/ui/Loaders';
+import AnswerView from '../components/AnswerView';
 import { stagger, cardUp, EASE } from '../lib/motion';
 
 const PracticePage = () => {
@@ -15,43 +17,73 @@ const PracticePage = () => {
   const [history, setHistory] = useState([]);
   const [subjectFilter, setSubjectFilter] = useState('');
   const [semesterFilter, setSemesterFilter] = useState('');
+  // Teacher answer (Exam Practice Mode): fetched from the question detail API
+  // when the answer is revealed. Local fallback questions keep their built-in
+  // answer string; backend questions render via <AnswerView> in the teacher's
+  // original format (text / image / pdf).
+  const [answerDetail, setAnswerDetail] = useState(null);
+  const [answerLoading, setAnswerLoading] = useState(false);
+
+  // PYQ Analysis Dashboard integration: ?papers=1,2,3 restricts practice to
+  // the analyzed papers (most-repeated first); &q=<id> deep-links a question.
+  const [searchParams] = useSearchParams();
+  const papersParam = searchParams.get('papers');
+  const focusQuestionId = searchParams.get('q') ? Number(searchParams.get('q')) : null;
 
   useEffect(() => {
     // Load local practice questions from question bank
     const loadQuestions = async () => {
-      try {
-        // Try backend first
-        const qs = await api.getQuestions({ limit: 200 });
-        if (qs && qs.length > 0) {
-          setAllQuestions(qs);
-          setQuestions(qs);
-        } else {
-          throw new Error('No backend questions');
-        }
-      } catch (e) {
-        // Fall back to local question bank
-        const localQs = [];
-        let qNum = 1;
-        for (const [subject, topics] of Object.entries(practiceQuestions)) {
-          for (const [topic, qs] of Object.entries(topics)) {
-            for (const q of qs) {
-              localQs.push({
-                id: 'local_' + qNum,
-                question_text: q.q,
-                subject: subject,
-                topic: topic,
-                question_number: qNum,
-                answer: q.a,
-                marks: null,
-                question_type: null,
-                paper_id: null
-              });
-              qNum++;
+      let loadedFromPapers = false;
+      if (papersParam) {
+        try {
+          const qs = await api.getQuestions({ paper_ids: papersParam, limit: 300 });
+          if (qs && qs.length > 0) {
+            const sorted = [...qs].sort((a, b) => (b.frequency || 1) - (a.frequency || 1));
+            setAllQuestions(sorted);
+            setQuestions(sorted);
+            if (focusQuestionId) {
+              const idx = sorted.findIndex(q => q.id === focusQuestionId);
+              if (idx >= 0) setCurrentIdx(idx);
+            }
+            loadedFromPapers = true;
+          }
+        } catch (e) { /* fall through to the general question bank */ }
+      }
+      if (!loadedFromPapers) {
+        try {
+          // Try backend first
+          const qs = await api.getQuestions({ limit: 200 });
+          if (qs && qs.length > 0) {
+            setAllQuestions(qs);
+            setQuestions(qs);
+          } else {
+            throw new Error('No backend questions');
+          }
+        } catch (e) {
+          // Fall back to local question bank
+          const localQs = [];
+          let qNum = 1;
+          for (const [subject, topics] of Object.entries(practiceQuestions)) {
+            for (const [topic, qs] of Object.entries(topics)) {
+              for (const q of qs) {
+                localQs.push({
+                  id: 'local_' + qNum,
+                  question_text: q.q,
+                  subject: subject,
+                  topic: topic,
+                  question_number: qNum,
+                  answer: q.a,
+                  marks: null,
+                  question_type: null,
+                  paper_id: null
+                });
+                qNum++;
+              }
             }
           }
+          setAllQuestions(localQs);
+          setQuestions(localQs);
         }
-        setAllQuestions(localQs);
-        setQuestions(localQs);
       }
       try {
         const hist = await api.getPracticeHistory();
@@ -62,7 +94,7 @@ const PracticePage = () => {
       setLoading(false);
     };
     loadQuestions();
-  }, []);
+  }, [papersParam, focusQuestionId]);
 
   // Build filter options
   const subjects = [...new Set(allQuestions.map(q => q.subject).filter(Boolean))];
@@ -89,18 +121,55 @@ const PracticePage = () => {
   };
 
   const current = questions[currentIdx];
+  const currentId = current ? current.id : null;
+
+  // The id of the question on screen as of the latest committed render. Async
+  // answer callbacks compare against this to detect that their question has
+  // navigated away. The effect also resets all answer state per question —
+  // a slow fetch must never display question X's answer under question Y.
+  const answerReqRef = useRef(null);
+  const currentIdRef = useRef(null);
+  useEffect(() => {
+    currentIdRef.current = currentId;
+    answerReqRef.current = null;
+    setAnswerDetail(null);
+    setAnswerLoading(false);
+  }, [currentId]);
+
+  const handleRevealAnswer = async () => {
+    // AnimatePresence keeps the previous question's card mounted during its
+    // exit animation — its handlers still fire on click. Ignore any reveal
+    // from a card whose question is no longer the one on screen.
+    if (currentIdRef.current !== current?.id) return;
+    setShowAnswer(true);
+    if (typeof current.id === 'number' && !current.answer && !answerDetail) {
+      const qid = current.id;
+      answerReqRef.current = qid;
+      setAnswerLoading(true);
+      try {
+        const detail = await api.request(`/api/v1/analysis/questions/${qid}/detail`);
+        if (currentIdRef.current === qid) setAnswerDetail(detail || null);
+      } catch (e) {
+        if (currentIdRef.current === qid) setAnswerDetail(null);
+      } finally {
+        if (currentIdRef.current === qid) setAnswerLoading(false);
+      }
+    }
+  };
 
   const handlePractice = async (status) => {
     if (!current) return;
+    // Record the attempt locally first so anonymous visitors keep full
+    // practice functionality; the server sync is best-effort (guests get 401).
+    setHistory(prev => [...prev, { question_id: current.id, status, question_text: current.question_text, subject: current.subject }]);
+    setShowAnswer(false);
+    setUserAnswer('');
+    if (currentIdx < questions.length - 1) {
+      setCurrentIdx(currentIdx + 1);
+    }
     try {
       await api.startPractice(current.id);
-      setHistory(prev => [...prev, { question_id: current.id, status, question_text: current.question_text, subject: current.subject }]);
-      setShowAnswer(false);
-      setUserAnswer('');
-      if (currentIdx < questions.length - 1) {
-        setCurrentIdx(currentIdx + 1);
-      }
-    } catch (err) { console.error(err); }
+    } catch (err) { /* anonymous users have no server-side history — fine */ }
   };
 
   const stats = {
@@ -122,6 +191,12 @@ const PracticePage = () => {
           <h1 className="text-3xl font-bold text-white mb-2">Exam Practice Mode</h1>
           <p className="text-gray-400">Sharpen your preparation by practicing with real questions extracted from previous year examinations.</p>
         </motion.div>
+
+        {papersParam && (
+          <div className="bg-brand-500/10 border border-brand-500/30 text-brand-200 rounded-xl p-4 text-sm mb-6">
+            Practicing questions from your {papersParam.split(',').length} analyzed paper{papersParam.split(',').length > 1 ? 's' : ''} — most repeated questions first.
+          </div>
+        )}
 
         {allQuestions.length === 0 ? (
           <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
@@ -175,7 +250,7 @@ const PracticePage = () => {
                 </div>
 
                 {current && (
-                  <AnimatePresence mode="wait">
+                  <AnimatePresence mode="popLayout">
                   <motion.div key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25, ease: EASE }}
                     className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 mb-6">
                     <div className="flex items-center gap-2 mb-4">
@@ -183,17 +258,27 @@ const PracticePage = () => {
                       <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.subject}</span>
                       {current.marks && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.marks} marks</span>}
                       {current.question_type && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.question_type}</span>}
+                      {current.frequency > 1 && <span className="bg-orange-500/20 text-orange-300 text-xs px-2 py-1 rounded">repeated {current.frequency}×</span>}
                     </div>
                     <p className="text-white text-lg font-medium mb-6">{current.question_text}</p>
 
                     {showAnswer ? (
                       <div className="space-y-4">
-                        {current.answer && (
+                        {current.answer ? (
                           <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
                             <p className="text-green-400 text-xs font-semibold mb-2">ANSWER</p>
                             <p className="text-white text-sm leading-relaxed">{current.answer}</p>
                           </div>
-                        )}
+                        ) : typeof current.id === 'number' ? (
+                          answerLoading ? (
+                            <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-center gap-3">
+                              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"></div>
+                              <p className="text-green-300 text-sm">Loading answer…</p>
+                            </div>
+                          ) : (
+                            <AnswerView answer={answerDetail} answerUrl={api.answerFileUrl(current.id)} />
+                          )
+                        ) : null}
                         <textarea value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Write your own answer here to test your understanding..."
                           className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none" />
@@ -205,7 +290,7 @@ const PracticePage = () => {
                         </div>
                       </div>
                     ) : (
-                      <button onClick={() => setShowAnswer(true)}
+                      <button onClick={handleRevealAnswer}
                         className="btn btn-secondary btn-block py-3">
                         Show Answer
                       </button>

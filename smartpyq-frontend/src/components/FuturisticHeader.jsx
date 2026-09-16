@@ -1,32 +1,47 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, HeartIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, HeartIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
-import { useIntroVideo } from '../contexts/IntroVideoContext';const FuturisticHeader = memo(() => {
+const FuturisticHeader = memo(() => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, isAuthenticated, logout, isDemoUser } = useAuth();
-  const { triggerIntro } = useIntroVideo();
+  const { user, isAuthenticated, logout, isDemoUser, isAdmin } = useAuth();
   
   const handleHomeClick = useCallback(
     (e) => {
       e.preventDefault();
-      if (!isAuthenticated) {
-        triggerIntro(() => navigate('/'));
-      } else {
-        navigate('/');
-      }
+      navigate('/');
     },
-    [isAuthenticated, triggerIntro, navigate]
+    [navigate]
   );
   
   useEffect(() => {
     const t = setTimeout(() => setEntered(true), 100);
     return () => clearTimeout(t);
+  }, []);
+
+  // Scrolled state: pill gains a stronger surface + shadow once the page
+  // scrolls past the hero fold. rAF-throttled scroll listener.
+  useEffect(() => {
+    let raf = 0;
+    const onScroll = () => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 24);
+        raf = 0;
+      });
+    };
+    onScroll();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => {
+      window.removeEventListener('scroll', onScroll);
+      if (raf) cancelAnimationFrame(raf);
+    };
   }, []);
   
   useEffect(() => {
@@ -36,32 +51,28 @@ import { useIntroVideo } from '../contexts/IntroVideoContext';const FuturisticHe
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
-    navigate('/login');
+    navigate('/');
   };
 
+  // The whole student platform is public — no login needed for any of it.
+  // Upload is the one admin-only entry point (routes to Admin Login).
   const navItems = [
         { name: 'Home', href: '/', icon: HomeIcon },
-        { name: 'PYQ', href: isAuthenticated ? '/pyq' : '/login', icon: BookOpenIcon },
-        { name: 'Upload', href: isAuthenticated ? '/upload' : '/login', icon: CloudArrowUpIcon },
-        { name: 'AI', href: isAuthenticated ? '/ai' : '/login', icon: ChatBubbleLeftRightIcon },
-        { name: 'Analyze', href: isAuthenticated ? '/analyze' : '/login', icon: FireIcon },
-        { name: 'Search', href: isAuthenticated ? '/search' : '/login', icon: MagnifyingGlassIcon },
-        { name: 'Practice', href: isAuthenticated ? '/practice' : '/login', icon: AcademicCapIcon },
-        { name: 'Bookmarks', href: isAuthenticated ? '/bookmarks' : '/login', icon: HeartIcon },
-      ];
+        { name: 'PYQ', href: '/pyq', icon: BookOpenIcon },
+        { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
+        { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
+        { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
+        { name: 'Analyze', href: '/analyze', icon: FireIcon },
+        { name: 'Bookmarks', href: '/bookmarks', icon: HeartIcon },
+        { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
+        { name: 'Upload', href: '/upload', icon: CloudArrowUpIcon, adminOnly: true },
+      ].filter(item => !item.adminOnly || isAdmin);
 
   // Only highlight the item whose href exactly matches the current path
-  // When not authenticated, multiple items share '/login' href - only highlight the first one (PYQ)
-  const isActive = (item, index) => {
-    if (location.pathname !== item.href) return false;
-    if (!isAuthenticated && item.href === '/login') {
-      return index === 1; // Only PYQ (index 1) shows active on login page
-    }
-    return true;
-  };
+  const isActive = (item) => location.pathname === item.href;
 
   return (
-    <header className={'fh ' + (entered ? 'fh--entered' : '')} role='banner'>
+    <header className={'fh ' + (entered ? 'fh--entered' : '') + (scrolled ? ' fh--scrolled' : '')} role='banner'>
       <div className='fh__pill'>
         <Link to='/' onClick={handleHomeClick} className='fh__logo' aria-label='SmartPYQ Home'>
           <img src='/logo.png' alt='SmartPYQ' className='fh__logo-img' />
@@ -96,28 +107,34 @@ import { useIntroVideo } from '../contexts/IntroVideoContext';const FuturisticHe
         </button>
 
         <div className='fh__right'>
-          {isAuthenticated ? (
+          {isAuthenticated && isAdmin ? (
             <div className='relative'>
-              <button onClick={() => setShowUserMenu(!showUserMenu)} className='fh__avatar-btn' aria-label='User menu' aria-expanded={showUserMenu}>
-                <div className='fh__avatar'>{user?.name?.charAt(0)?.toUpperCase() || 'U'}</div>
+              <button onClick={() => setShowUserMenu(!showUserMenu)} className='fh__avatar-btn' aria-label='Admin menu' aria-expanded={showUserMenu}>
+                <div className='fh__avatar'>{user?.name?.charAt(0)?.toUpperCase() || 'A'}</div>
               </button>
               <AnimatePresence>
                 {showUserMenu && (
                   <motion.div className='fh__dropdown' initial={{ opacity: 0, y: -8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.95 }} transition={{ duration: 0.15 }}>
                     <div className='fh__dd-head'>
                       <p className='fh__dd-name'>{user?.name}</p>
-                      <p className='fh__dd-course'>{user?.course || 'Student'}</p>
+                      <p className='fh__dd-course'>Administrator</p>
                     </div>
-                    <Link to='/dashboard' className='fh__dd-item' onClick={() => setShowUserMenu(false)}><UserIcon className='h-4 w-4' /> Dashboard</Link>
-                    <Link to='/profile' className='fh__dd-item' onClick={() => setShowUserMenu(false)}><Cog6ToothIcon className='h-4 w-4' /> Settings</Link>
+                    <Link to='/admin' className='fh__dd-item text-emerald-400' onClick={() => setShowUserMenu(false)}><ShieldCheckIcon className='h-4 w-4' /> Admin Dashboard</Link>
+                    <Link to='/upload' className='fh__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload PDF</Link>
                     <hr className='border-white/[0.06] my-1' />
                     <button onClick={handleLogout} className='fh__dd-item text-red-400 hover:bg-red-500/10'><ArrowRightOnRectangleIcon className='h-4 w-4' /> Logout</button>
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
+          ) : isAuthenticated && !isAdmin ? (
+            /* Legacy signed-in student session: offer sign-out, no student
+               dashboard/profile destinations exist anymore. */
+            <button onClick={handleLogout} className='fh__login' aria-label='Sign out legacy session'>SIGN&nbsp;OUT</button>
           ) : (
-            <Link to='/login' className='fh__login'>LOGIN</Link>
+            /* Public visitors see no login chrome at all. Admin entry lives
+               in the footer (Admin Login) and behind Upload. */
+            <Link to='/admin/login' className='fh__login' aria-label='Admin login'>ADMIN</Link>
           )}
         </div>
       </div>

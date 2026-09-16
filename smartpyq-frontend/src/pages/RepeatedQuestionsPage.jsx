@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import localBookmarks from '../lib/localBookmarks';
 
 const RepeatedQuestionsPage = () => {
   const [tab, setTab] = useState('repeated'); // 'repeated' | 'history'
@@ -50,8 +51,10 @@ const RepeatedQuestionsPage = () => {
     loadGroups(subject);
   };
 
-  const handleBookmark = async (questionId) => {
-    try { await api.createBookmark(questionId, 'question'); alert('Bookmarked!'); } catch (err) { console.error(err); }
+  // Client-side bookmark: works for every visitor, no account needed.
+  const handleBookmark = (question) => {
+    const added = localBookmarks.toggle(question);
+    alert(added ? 'Bookmarked!' : 'Removed from bookmarks.');
   };
 
   const handleDeleteAnalysis = async (id) => {
@@ -156,7 +159,7 @@ const RepeatedQuestionsPage = () => {
                               <span className="bg-blue-500/20 text-blue-400 text-sm font-bold px-2 py-1 rounded">{ev.paper_year || 'N/A'}</span>
                               <span className="text-white text-sm">{ev.paper_title || 'Untitled'}</span>
                             </div>
-                            <button onClick={() => handleBookmark(ev.question_id)} className="btn btn-icon btn-sm btn-ghost text-yellow-400" title="Bookmark">&#9825;</button>
+                            <button onClick={() => handleBookmark({ id: ev.question_id, question_text: ev.question_text, subject: detail.subject })} className="btn btn-icon btn-sm btn-ghost text-yellow-400" title="Bookmark">&#9825;</button>
                           </div>
                           <p className="text-gray-300 text-sm">{ev.question_text}</p>
                         </div>

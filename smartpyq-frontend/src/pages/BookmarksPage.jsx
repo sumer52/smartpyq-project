@@ -1,35 +1,34 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import api from '../lib/api';
+import { Link } from 'react-router-dom';
+import localBookmarks from '../lib/localBookmarks';
 
+/**
+ * Saved Questions — fully public, client-side bookmarks.
+ *
+ * Anyone can save questions without an account; they persist in this
+ * browser via localStorage and sync across tabs.
+ */
 const BookmarksPage = () => {
   const [bookmarks, setBookmarks] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [expandedSubject, setExpandedSubject] = useState(null);
 
-  useEffect(() => { loadBookmarks(); }, []);
+  const refresh = useCallback(() => {
+    const list = localBookmarks.list();
+    setBookmarks(list);
+    const subjects = [...new Set(list.map((b) => b.subject || 'Uncategorized'))];
+    if (subjects.length > 0) setExpandedSubject((cur) => cur ?? subjects[0]);
+  }, []);
 
-  const loadBookmarks = async () => {
-    try {
-      setLoading(true);
-      const data = await api.getBookmarksList();
-      setBookmarks(data || []);
-      // Auto-expand first subject
-      const subjects = [...new Set((data || []).map(bm => bm.question?.subject || 'Uncategorized'))];
-      if (subjects.length > 0) setExpandedSubject(subjects[0]);
-    } catch (err) { console.error(err); } finally { setLoading(false); }
-  };
+  useEffect(() => refresh(), [refresh]);
 
-  const handleRemove = async (id) => {
-    try {
-      await api.deleteBookmark(id);
-      setBookmarks(bookmarks.filter(b => b.id !== id));
-    } catch (err) { console.error(err); }
-  };
+  useEffect(() => localBookmarks.subscribe(refresh), [refresh]);
+
+  const handleRemove = (questionId) => localBookmarks.remove(questionId);
 
   // Group by subject
   const grouped = bookmarks.reduce((acc, bm) => {
-    const subject = bm.question?.subject || 'Uncategorized';
+    const subject = bm.subject || 'Uncategorized';
     if (!acc[subject]) acc[subject] = [];
     acc[subject].push(bm);
     return acc;
@@ -42,15 +41,14 @@ const BookmarksPage = () => {
       <main className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Saved <span className="text-brand-gradient">Questions</span></h1>
-          <p className="text-gray-400">Questions you bookmarked for quick access, organized by subject.</p>
+          <p className="text-gray-400">Questions you bookmarked for quick access, organized by subject. Saved in this browser — no account needed.</p>
         </motion.div>
 
-        {loading ? (
-          <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div></div>
-        ) : bookmarks.length === 0 ? (
+        {bookmarks.length === 0 ? (
           <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
             <p className="text-gray-400 text-lg">No saved questions yet</p>
             <p className="text-gray-500 text-sm mt-2">Browse Repeated Questions and tap the bookmark icon &#9825; to save important questions here.</p>
+            <Link to="/pyq" className="inline-block mt-6 text-indigo-400 hover:text-indigo-300 text-sm font-medium">Browse the PYQ Hub →</Link>
           </div>
         ) : (
           <div className="space-y-4">
@@ -73,19 +71,14 @@ const BookmarksPage = () => {
                 {expandedSubject === subject && (
                   <div className="border-t border-white/10 p-4 space-y-3">
                     {grouped[subject].map((bm, idx) => (
-                      <motion.div key={bm.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                      <motion.div key={bm.question_id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: idx * 0.03 }}
                         className="flex items-start justify-between gap-4 p-3 bg-white/5 rounded-lg">
                         <div className="flex-1 min-w-0">
-                          {bm.question ? (
-                            <p className="text-white text-sm">{bm.question.question_text}</p>
-                          ) : bm.paper ? (
-                            <p className="text-white text-sm">{bm.paper.paper_title} ({bm.paper.year})</p>
-                          ) : (
-                            <p className="text-gray-400 text-sm">Bookmark #{bm.id}</p>
-                          )}
+                          <p className="text-white text-sm">{bm.question_text}</p>
+                          <p className="text-gray-500 text-xs mt-1">Saved {new Date(bm.saved_at).toLocaleDateString()}</p>
                         </div>
-                        <button onClick={() => handleRemove(bm.id)}
+                        <button onClick={() => handleRemove(bm.question_id)}
                           className="text-gray-500 hover:text-red-400 transition-colors text-xs whitespace-nowrap">Remove</button>
                       </motion.div>
                     ))}
@@ -99,4 +92,5 @@ const BookmarksPage = () => {
     </div>
   );
 };
+
 export default BookmarksPage;

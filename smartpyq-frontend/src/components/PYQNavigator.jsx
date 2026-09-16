@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Heart, Flame } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Heart, Flame, CheckSquare, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getStreams, getSpecializations, getSemesters, getSubjects, getPyqYears, getSemesterOptions } from '../data/pyqData';
 import { apiClient } from '../lib/api';
@@ -25,26 +25,27 @@ const PYQNavigator = () => {
   const [previewPaper, setPreviewPaper] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
   const [bookmarkedPapers, setBookmarkedPapers] = useState(new Set());
-  const { user, isDemoUser } = useAuth();
+  // Multi-year analysis selection (PYQ Hub -> select years -> analyze)
+  const [selectedYears, setSelectedYears] = useState([]);
+  const [yearCounts, setYearCounts] = useState({});
+  const [analyzeBusy, setAnalyzeBusy] = useState(false);
+  const [analyzeError, setAnalyzeError] = useState('');
+  const { user } = useAuth();
   const navigate = useNavigate();
   
-  const isUnlocked = (streamId, specId) => {
-    // Demo users see everything unlocked
-    if (isDemoUser) return true;
-    // Admins see everything
-    if (user?.role === 'admin' || user?.role === 'super_admin' || user?.role === 'tenant_admin') return true;
-    // Check if user matches this stream/spec
-    const userStream = user?.course?.toLowerCase()?.includes('bsc') ? 'bsc' : user?.course?.toLowerCase()?.includes('bcom') ? 'bcom' : user?.course?.toLowerCase()?.includes('bca') ? 'bca' : user?.course?.toLowerCase()?.includes('bba') ? 'bba' : '';
-    if (streamId === userStream && (!specId || specId === user?.specialization)) return true;
-    return false;
-  };
+  // Public platform: browsing is open to everyone — no account, no stream
+  // locks. (Writes — upload/analyze/publish — remain admin-only behind the
+  // backend role checks; this navigator is read-only.)
+  const isUnlocked = () => true;
 
   useEffect(() => {
     const fetchPapers = async () => {
       if (!selectedSubject || !selectedPyqYear || !selectedStream) return;
       setIsLoadingPapers(true); setPaperError(null);
       try {
-        const r = await apiClient.getPapers({ subject: selectedSubject, stream: selectedStream.id, year: selectedPyqYear, semester: selectedSem?.id, paper_status: 'approved', per_page: 50 });
+        // stream must be the display name ('B.Sc') — catalog ids ('bsc')
+        // don't substring-match stored stream values.
+        const r = await apiClient.getPapers({ subject: selectedSubject, stream: selectedStream.displayName || selectedStream.name, year: selectedPyqYear, semester: selectedSem?.id, paper_status: 'approved', per_page: 50 });
         setPapers(r.papers || []);
       } catch (e) { setPaperError('No papers available yet. Be the first to upload!'); setPapers([]); }
       finally { setIsLoadingPapers(false); }
@@ -57,6 +58,75 @@ const PYQNavigator = () => {
   const handleSemSelect = (s) => { setSelectedSem(s); setCurrentLevel('subjects'); };
   const handleSubjectSelect = (s) => { setSelectedSubject(s); setCurrentLevel('pyqYears'); };
   const handleYearSelect = (y) => { setSelectedPyqYear(y); setCurrentLevel('papers'); };
+
+  // Per-year paper availability for the selected subject (year cards show
+  // real counts from the database; the static catalog is only the fallback).
+  useEffect(() => {
+    if (currentLevel !== 'pyqYears' || !selectedSubject) return;
+    let cancelled = false;
+    apiClient.getYearAvailability({
+      subject: selectedSubject,
+      stream: selectedStream?.displayName || selectedStream?.name,
+      semester: selectedSem?.id,
+    }).then(d => {
+      if (cancelled) return;
+      const map = {};
+      for (const yc of (d?.year_counts || [])) map[yc.year] = yc.paper_count;
+      setYearCounts(map);
+    }).catch(() => { if (!cancelled) setYearCounts({}); });
+    return () => { cancelled = true; };
+  }, [currentLevel, selectedSubject, selectedStream, selectedSem]);
+
+  const toggleYearSelect = (y) => {
+    setAnalyzeError('');
+    setSelectedYears(prev => prev.includes(y) ? prev.filter(x => x !== y) : [...prev, y]);
+  };
+
+  const handleAnalyzeSelected = async () => {
+    if (!selectedYears.length || analyzeBusy) return;
+    setAnalyzeBusy(true);
+    setAnalyzeError('');
+    try {
+      // Collect approved papers for each selected year. Subject + semester
+      // drive the query; stream is matched client-side (catalog ids like
+      // 'bsc' don't substring-match stored values like 'B.Sc').
+      const ids = [];
+      const yearsWithPapers = [];
+      for (const y of selectedYears) {
+        const r = await apiClient.getPapers({
+          subject: selectedSubject,
+          year: y,
+          semester: selectedSem?.id,
+          paper_status: 'approved',
+          per_page: 100,
+        });
+        const list = (r.papers || []).filter(p =>
+          !selectedStream || !p.stream ||
+          p.stream === selectedStream.displayName || p.stream === selectedStream.name ||
+          (selectedStream.displayName || '').startsWith(p.stream) || p.stream.startsWith(selectedStream.name || ''));
+        if (list.length) { ids.push(...list.map(p => p.id)); yearsWithPapers.push(y); }
+      }
+      if (!ids.length) {
+        setAnalyzeError('No analyzable papers found for the selected year(s). Upload approved papers first.');
+        return;
+      }
+      navigate('/analyze?papers=' + ids.join(','), {
+        state: {
+          context: {
+            stream: selectedStream?.displayName,
+            spec: selectedSpec?.displayName,
+            semester: selectedSem?.displayName,
+            subject: selectedSubject,
+            years: yearsWithPapers,
+          },
+        },
+      });
+    } catch (e) {
+      setAnalyzeError(e?.message || 'Could not start the analysis. Please try again.');
+    } finally {
+      setAnalyzeBusy(false);
+    }
+  };
   const handleBack = () => {
     if (currentLevel === 'specializations') { setCurrentLevel('streams'); setSelectedStream(null); }
     else if (currentLevel === 'semesters') { setCurrentLevel('specializations'); setSelectedSpec(null); }
@@ -64,7 +134,7 @@ const PYQNavigator = () => {
     else if (currentLevel === 'pyqYears') { setCurrentLevel('subjects'); setSelectedSubject(null); }
     else if (currentLevel === 'papers') { setCurrentLevel('pyqYears'); setSelectedPyqYear(null); setPapers([]); }
   };
-  const handleReset = () => { setCurrentLevel('streams'); setSelectedStream(null); setSelectedSpec(null); setSelectedSem(null); setSelectedSubject(null); setSelectedPyqYear(null); setSearchTerm(''); setPapers([]); };
+  const handleReset = () => { setCurrentLevel('streams'); setSelectedStream(null); setSelectedSpec(null); setSelectedSem(null); setSelectedSubject(null); setSelectedPyqYear(null); setSearchTerm(''); setPapers([]); setSelectedYears([]); setAnalyzeError(''); };
   const handleDownload = async (p) => { try { await apiClient.authorizePaperDownload(p.id); } catch(e) { console.error('Download failed:', e); alert('Download failed. Please try again.'); } };
   const formatFileSize = (b) => { if (!b) return ''; return (b / 1048576).toFixed(1) + ' MB'; };
   const getBreadcrumb = () => { const c = ['PYQ Hub']; if (selectedStream) c.push(selectedStream.displayName); if (selectedSpec) c.push(selectedSpec.displayName); if (selectedSem) c.push(selectedSem.displayName); if (selectedSubject) c.push(selectedSubject); if (selectedPyqYear) c.push(String(selectedPyqYear)); return c; };
@@ -127,7 +197,7 @@ const PYQNavigator = () => {
       {Object.entries(s).map(([k, v]) => { const unlocked = isUnlocked(k); return (<motion.div key={k} variants={card} className={"card-nav p-8 cursor-pointer text-center " + (!unlocked ? "opacity-40" : "")} onClick={() => unlocked && handleStreamSelect(k, v)}>
         <div className="text-5xl mb-4">{v.icon}</div>
         <h3 className="text-2xl font-bold text-white mb-2">{v.displayName}</h3>
-        <p className="text-gray-400 text-sm">{Object.keys(v.specializations).length} specialization{Object.keys(v.specializations).length > 1 ? 's' : ''}</p>{!isUnlocked(k) && <div className="mt-2 text-xs bg-gray-700 text-gray-400 px-2 py-0.5 rounded-full inline-block">🔒 Coming Soon</div>}</motion.div>);})}
+        <p className="text-gray-400 text-sm">{Object.keys(v.specializations).length} specialization{Object.keys(v.specializations).length > 1 ? 's' : ''}</p></motion.div>);})}
     </motion.div>);
   };
   const renderSpecializations = () => {
@@ -165,12 +235,51 @@ const PYQNavigator = () => {
   };
   const renderPyqYears = () => {
     const years = getPyqYears();
-    return (<motion.div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3" variants={container} initial="hidden" animate="visible" exit="exit">
-      {years.map((y) => (<motion.div key={y} variants={card} className="card-nav p-5 cursor-pointer text-center" onClick={() => handleYearSelect(y)}>
-        <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-2"><Calendar className="w-6 h-6 text-white" /></div>
-        <h3 className="text-lg font-bold text-white">{y}</h3>
-      </motion.div>))}
-    </motion.div>);
+    return (<>
+      <motion.div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-3" variants={container} initial="hidden" animate="visible" exit="exit">
+        {years.map((y) => {
+          const isSelected = selectedYears.includes(y);
+          const count = yearCounts[y];
+          return (<motion.div key={y} variants={card}
+            className={`card-nav p-5 cursor-pointer text-center relative transition-colors ${isSelected ? 'ring-2 ring-brand-400 bg-brand-500/10' : ''} ${count === 0 ? 'opacity-50' : ''}`}
+            onClick={(e) => {
+              // Checkbox zone toggles analysis selection; the rest of the
+              // card keeps the original single-year browse behavior.
+              if (e.target.closest('[data-year-checkbox]')) { toggleYearSelect(y); return; }
+              handleYearSelect(y);
+            }}>
+            <label data-year-checkbox className="absolute top-2 right-2 z-10 cursor-pointer" aria-label={`Select ${y} for analysis`}>
+              <input type="checkbox" className="sr-only" checked={isSelected} onChange={() => toggleYearSelect(y)} />
+              <span className={`inline-flex items-center justify-center w-7 h-7 rounded-md border-2 transition-colors ${isSelected ? 'bg-brand-500 border-brand-400 text-white' : 'border-white/40 bg-white/10 text-transparent hover:border-brand-300'}`}>
+                <CheckSquare className="w-5 h-5" strokeWidth={3} />
+              </span>
+            </label>
+            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-2"><Calendar className="w-6 h-6 text-white" /></div>
+            <h3 className="text-lg font-bold text-white">{y}</h3>
+            <p className="text-gray-400 text-xs mt-1">
+              {count == null ? 'View papers' : count === 0 ? 'No papers' : `${count} paper${count > 1 ? 's' : ''}`}
+            </p>
+          </motion.div>);
+        })}
+      </motion.div>
+      {/* Selection + analyze bar (spec sections 2-3) */}
+      <div className="mt-6 sticky bottom-4 z-20">
+        <div className="bg-gray-900/95 border border-white/15 rounded-2xl shadow-xl p-4 flex flex-col sm:flex-row items-center gap-3 backdrop-blur">
+          <div className="text-white font-semibold whitespace-nowrap">
+            {selectedYears.length > 0
+              ? `${selectedYears.length} Paper${selectedYears.length > 1 ? 's' : ''} Selected`
+              : 'Select years to analyze'}
+          </div>
+          <div className="flex-1 text-xs text-gray-400 hidden sm:block">{selectedYears.length ? `Selected: ${selectedYears.join(', ')}` : 'Tick the checkbox on a year card, or tap a card to browse its papers.'}</div>
+          <button onClick={handleAnalyzeSelected} disabled={selectedYears.length === 0 || analyzeBusy}
+            className="btn btn-primary px-6 py-2.5 flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
+            {analyzeBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flame className="w-4 h-4" />}
+            {analyzeBusy ? 'Collecting papers...' : 'Analyze Selected Papers'}
+          </button>
+        </div>
+        {analyzeError && <div className="mt-2 bg-red-500/10 border border-red-400/30 text-red-300 rounded-xl p-3 text-sm">{analyzeError}</div>}
+      </div>
+    </>);
   };
 
   const renderPapers = () => {

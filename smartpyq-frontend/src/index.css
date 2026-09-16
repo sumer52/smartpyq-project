@@ -18,18 +18,131 @@
   --fw-body: 400;
   --fw-sub: 500;
   --fw-heading: 700;
+  --font-display: 'Sora', -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+
+  /* Semantic text-color tokens — the ONLY sanctioned text colors.
+     Components map to these via utility classes below; raw hex in
+     component JSX is reserved for brand-specific gradients. */
+  --text-primary: #f1f5f9;   /* headings, key values */
+  --text-secondary: #cbd5e1; /* supporting copy */
+  --text-muted: #94a3b8;     /* meta, timestamps */
+  --text-faint: #64748b;     /* least emphasis */
+  --text-accent: #a78bfa;    /* brand accent (violet) */
+  --text-accent-2: #67e8f9;  /* secondary accent (cyan) */
+  --text-success: #34d399;
+  --text-warning: #fbbf24;
+  --text-error: #f87171;
 }
 
 *, *::before, *::after { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
+
+/* Global reduced-motion contract: kill every continuous/looping animation
+   (shimmer, sweep, aurora drift, gradient movement) while keeping one-shot
+   state transitions usable. JS primitives also read this via motion.js. */
+@media (prefers-reduced-motion: reduce) {
+  .scroll-progress { display: none; }
+  .gradient-glow { text-shadow: none; }
+  .stat-value--gradient { filter: none; }
+  .link-underline::after { transition: none; }
+  /* Stop continuous decorative loops (framer-motion honors via useReducedMotion
+     in JS; these cover the CSS/Tailwind-driven ones). */
+  .animate-ping { animation: none; }
+  [class*="bg-clip-text"] { background-position: 0% center !important; }
+}
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif;
+  font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
   background: #0a0618;
   color: #e2e8f0;
   line-height: 1.6;
   overflow-x: hidden;
+}
+
+/* Display face for headings — Sora gives the brand a distinct voice while
+   falling back gracefully to the system stack. */
+h1, h2, h3, .font-display { font-family: var(--font-display); letter-spacing: -0.02em; }
+
+/* ============================================================
+   SEMANTIC TEXT UTILITIES — one sanctioned vocabulary.
+   ============================================================ */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-faint { color: var(--text-faint); }
+.text-accent { color: var(--text-accent); }
+.text-accent-2 { color: var(--text-accent-2); }
+.text-success { color: var(--text-success); }
+.text-warning { color: var(--text-warning); }
+.text-error { color: var(--text-error); }
+
+/* ============================================================
+   TEXT REVEAL PRIMITIVES (paired with components/text/TextReveals.jsx)
+   ============================================================ */
+.reveal-mask {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  /* padding keeps descenders (g, y, p) inside the clip box */
+  padding-bottom: 0.08em;
+  margin-bottom: -0.08em;
+}
+.reveal-mask__inner { display: inline-block; will-change: transform; }
+.reveal-word { display: inline-block; overflow: hidden; vertical-align: bottom; }
+
+/* Soft glow behind gradient keywords — subtle, never neon */
+.gradient-glow {
+  text-shadow: 0 0 18px rgba(139, 92, 246, 0.35);
+}
+
+/* Stat numbers: gradient + faint glow; used via AnimatedCounter */
+.stat-value {
+  font-family: var(--font-display);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.stat-value--gradient {
+  background: linear-gradient(120deg, #a78bfa 0%, #8b5cf6 40%, #60a5fa 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  filter: drop-shadow(0 0 10px rgba(139, 92, 246, 0.25));
+}
+
+/* Animated underline for text links — grows from the left on hover */
+.link-underline {
+  position: relative;
+}
+.link-underline::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -2px;
+  height: 1.5px;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--brand-500), var(--accent-500));
+  transition: transform var(--anim-medium) cubic-bezier(0.22, 1, 0.36, 1);
+}
+.link-underline:hover::after,
+.link-underline:focus-visible::after { transform: scaleX(1); }
+
+/* ============================================================
+   SCROLL PROGRESS BAR — 2px, transform-only, brand gradient
+   ============================================================ */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  z-index: 60;
+  transform-origin: 0 50%;
+  background: linear-gradient(90deg, var(--brand-500), var(--accent-500), #60a5fa);
+  pointer-events: none;
+  will-change: transform;
 }
 
 /* Typography system */
@@ -53,73 +166,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 
 .skip-link { position: absolute; top: -100%; left: 6px; background: var(--brand-500); color: #fff; padding: 8px; text-decoration: none; border-radius: 4px; z-index: 1000; transition: top 0.15s ease; }
 .skip-link:focus { top: 6px; }
-
-/* ============================================================
-   VIDEO BACKGROUND
-   ============================================================ */
-.video-bg {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.video-bg__video {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  background: linear-gradient(135deg, #080414 0%, #1a1040 30%, #2d1b69 60%, #080414 100%);
-  min-width: 100%;
-  min-height: 100%;
-  width: auto;
-  height: auto;
-  transform: translate(-50%, -50%);
-  object-fit: cover;
-  object-position: center 40%;
-  will-change: transform;
-}
-@media (max-width: 768px) {
-  .video-bg__video { object-position: center 30%; }
-}
-@media (max-width: 480px) {
-  .video-bg__video { object-position: center 25%; }
-}
-@media (min-width: 1200px) {
-  .video-bg__video { object-position: center 45%; }
-}
-
-.video-bg__overlay {
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(180deg,
-    rgba(6,3,16,0.22) 0%,
-    rgba(6,3,16,0.10) 20%,
-    rgba(6,3,16,0.06) 45%,
-    rgba(6,3,16,0.15) 70%,
-    rgba(6,3,16,0.40) 100%
-  );
-  pointer-events: none;
-}
-
-.video-bg__vignette {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(ellipse at center, transparent 35%, rgba(6,3,16,0.35) 100%);
-  pointer-events: none;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .video-bg__video { display: none; }
-  .video-bg::after {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, #080414 0%, #1a1040 30%, #2d1b69 60%, #080414 100%);
-  }
-}
-
 
 /* ============================================================
    TOP HEADER - FUTURISTIC DASHBOARD BANNER
@@ -335,6 +381,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 @media (max-width: 767px) { .fh { left: 0; padding: 12px 8px; } }
 @media (prefers-reduced-motion: reduce) {
   .fh { transition: none; transform: none; opacity: 1; }
+  .fh__pill { transition: none; }
 }
 .fh__pill {
   display: flex; align-items: center; gap: 8px;
@@ -349,6 +396,16 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
     inset 0 1px 0 rgba(255,255,255,0.06);
   pointer-events: auto;
   animation: fhPillEntrance 0.8s cubic-bezier(0.22,1,0.36,1) both;
+  /* Scrolled state: deepen surface + shadow. transition avoids layout props */
+  transition: background 0.35s cubic-bezier(0.22,1,0.36,1), box-shadow 0.35s cubic-bezier(0.22,1,0.36,1), border-color 0.35s cubic-bezier(0.22,1,0.36,1);
+}
+.fh--scrolled .fh__pill {
+  background: linear-gradient(135deg, rgba(10,6,24,0.72) 0%, rgba(15,10,35,0.68) 50%, rgba(10,6,24,0.72) 100%);
+  border-color: rgba(108,78,246,0.3);
+  box-shadow:
+    0 10px 32px rgba(0,0,0,0.35),
+    0 0 50px rgba(108,78,246,0.14),
+    inset 0 1px 0 rgba(255,255,255,0.08);
 }
 @keyframes fhPillEntrance {
   from { opacity: 0; transform: translateY(-10px); }
@@ -1471,7 +1528,6 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
   .cmd-bar { animation: none !important; }
   .fh { animation: none !important; transition: none !important; opacity: 1 !important; transform: none !important; }
   .fh__pill { animation: none !important; }
-  .video-bg__video { display: none; }
   * { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
 }
 

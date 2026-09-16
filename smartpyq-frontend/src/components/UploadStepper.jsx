@@ -271,6 +271,17 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
     setDetectedQuestions(prev => prev.filter((_, i) => i !== index));
   };
 
+  // Standard university pattern: Part A = 8 short questions × 4 marks,
+  // Part B = 4 long questions × 12 marks (80 total). Fills in missing
+  // sections/marks by position; never overwrites explicit values.
+  const applyStandardPattern = () => {
+    setDetectedQuestions(prev => prev.map((q, i) => ({
+      ...q,
+      section: q.section || (i < 8 ? 'Part A' : 'Part B'),
+      marks: q.marks ?? (i < 8 ? 4 : 12),
+    })));
+  };
+
   const addQuestion = () => {
     setDetectedQuestions(prev => [
       ...prev,
@@ -351,6 +362,9 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
       formData.append('year', uploadData.year.toString());
       formData.append('tags', uploadData.tags.join(','));
       if (uploadData.description) formData.append('description', uploadData.description);
+      // DRAFT-by-default publishing model: the admin reviews the AI analysis
+      // and publishes from the dashboard. (publish_now=true skips that.)
+      formData.append('publish_now', 'false');
 
       const response = await apiClient.uploadPaper(formData);
       clearInterval(interval);
@@ -728,7 +742,17 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                         <SparklesIcon className="h-3.5 w-3.5 text-purple-400" />
                         Detected Questions ({detectedQuestions.length})
                       </h4>
-                      <span className="text-xs text-gray-500">Edit below or remove incorrect entries</span>
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          onClick={applyStandardPattern}
+                          className="text-xs text-purple-300 hover:text-white px-2.5 py-1 rounded-lg border border-purple-500/30 hover:border-purple-400/50 transition-colors"
+                          title="Part A: questions 1-8 at 4 marks, Part B: questions 9-12 at 12 marks (80 total)"
+                        >
+                          Apply standard pattern (8×4 + 4×12)
+                        </button>
+                        <span className="text-xs text-gray-500">Edit below or remove incorrect entries</span>
+                      </div>
                     </div>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                       {detectedQuestions.map((q, i) => (

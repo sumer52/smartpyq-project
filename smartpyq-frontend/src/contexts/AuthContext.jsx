@@ -3,6 +3,12 @@ import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_SESSION_KEY, attachDemoBackendSession, 
 import { BACKEND_URL } from '../lib/backendUrl';
 
 const AuthContext = createContext();
+
+// Backend roles that unlock the admin area. The public student experience
+// never requires any of these.
+export const ADMIN_ROLES = ['admin', 'tenant_admin', 'super_admin'];
+export const isAdminRole = (role) => ADMIN_ROLES.includes(String(role || '').toLowerCase());
+
 const DEMO_USER = {
   id: 'demo-001',
   name: 'Demo Student',
@@ -119,6 +125,63 @@ export const AuthProvider = ({ children }) => {
       return { success: true };
     }
     return { success: false, error: 'Invalid demo credentials.' };
+  }, []);
+
+  // Admin authentication — hits the admin-only endpoint which REFUSES to
+  // issue a token to non-admin roles (403). Never accepts demo credentials.
+  const adminLogin = useCallback(async (email, password) => {
+    setIsLoading(true);
+    try {
+      const response = await fetch(`${BACKEND_URL}/api/v1/auth/admin-login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const detail = errorData.detail || '';
+        if (response.status === 403) {
+          throw new Error('This account does not have admin access.');
+        }
+        throw new Error(detail || 'Admin login failed');
+      }
+
+      const data = await response.json();
+
+      // Store tokens exactly like a normal login — same storage keys so
+      // api.js and the interceptor work unchanged.
+      localStorage.setItem('auth_token', data.access_token);
+      localStorage.setItem('authToken', data.access_token);
+      localStorage.setItem('refresh_token', data.refresh_token);
+
+      const userData = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role,
+        tenant_id: data.user.tenant_id,
+        avatar: null,
+        course: data.user.course,
+        specialization: data.user.specialization,
+        academic_year: data.user.academic_year,
+        semester: data.user.semester,
+        onboarding_completed: data.user.onboarding_completed,
+        stats: { papersDownloaded: 0, studyStreak: 0 }
+      };
+
+      localStorage.setItem('userData', JSON.stringify(userData));
+      localStorage.setItem('user', JSON.stringify(userData));
+
+      setUser(userData);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+
+      return { success: true, user: userData };
+    } catch (error) {
+      setIsLoading(false);
+      return { success: false, error: error.message || 'Admin login failed. Please try again.' };
+    }
   }, []);
 
   const login = useCallback(async (email, password) => {
@@ -416,14 +479,19 @@ export const AuthProvider = ({ children }) => {
   // Demo user detection
   const isDemoUser = user?.role === 'demo' || localStorage.getItem(DEMO_SESSION_KEY) !== null;
 
+  // Admin flag drives the /admin route guard and nav visibility.
+  const isAdmin = isAdminRole(user?.role);
+
   // Memoize context value to prevent unnecessary re-renders of consumers
   const value = useMemo(() => ({
     user,
     isAuthenticated,
     isLoading,
     isDemoUser,
+    isAdmin,
     login,
     loginDemo,
+    adminLogin,
     register,
     logout,
     updateUser,
@@ -431,7 +499,7 @@ export const AuthProvider = ({ children }) => {
     completeOnboarding,
     updateAcademicProfile,
     deleteAccount
-  }), [user, isAuthenticated, isLoading, isDemoUser, login, register, logout, updateUser, fetchProfile, completeOnboarding, updateAcademicProfile, deleteAccount]);
+  }), [user, isAuthenticated, isLoading, isDemoUser, isAdmin, login, loginDemo, adminLogin, register, logout, updateUser, fetchProfile, completeOnboarding, updateAcademicProfile, deleteAccount]);
 
   return (
     <AuthContext.Provider value={value}>

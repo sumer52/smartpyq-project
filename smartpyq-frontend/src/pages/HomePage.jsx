@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
-import { motion, useInView, useScroll, useTransform } from 'framer-motion';
+import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import {
   FileText, Bot, Search, BookOpen, Upload, TrendingUp,
@@ -10,10 +10,10 @@ import { apiClient } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { getStreams, getAllSubjectsForStreamSemester, getAvailableSemesters, getPyqYears } from '../data/pyqData';
 import MagneticButton from '../components/ui/MagneticButton';
+import ThumbnailCarousel from '../components/ui/ThumbnailCarousel';
 import SpotlightCard from '../components/ui/SpotlightCard';
 import AnimatedBeam from '../components/ui/AnimatedBeam';
 import Typewriter from '../components/ui/Typewriter';
-import GlowEffect from '../components/ui/GlowEffect';
 import AuroraGradient from '../components/ui/AuroraGradient';
 import BorderBeam from '../components/ui/BorderBeam';
 import CursorGlow from '../components/ui/CursorGlow';
@@ -21,10 +21,99 @@ import PerspectiveGrid from '../components/ui/PerspectiveGrid';
 import TextScramble from '../components/ui/TextScramble';
 import Marquee from '../components/ui/Marquee';
 import { Star } from 'lucide-react';
+import { EASE_OUT, useReducedMotionSafe } from '../lib/motion';
 
 /* ---- Animation Variants ---- */
 const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.08 } } };
 const cardUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22,1,0.36,1] } } };
+
+/* ---- Hero artifact: an analyzed question-paper excerpt ----
+
+   The one bold element on the page. A paper-white excerpt of a real
+   question paper, annotated the way the analysis engine annotates:
+   a highlight sweep over a repeated question, the exam officer's year
+   stamps, and the engine's verdict chip. The reveal sequence plays once
+   on load: the paper arrives blank, then "receives its analysis".
+   Question text mirrors the real seeded DBMS papers (2023–2025). */
+const AnnotatedPaper = () => {
+  const reduced = useReducedMotion();
+  const quiet = useReducedMotionSafe();
+  const D = (d) => (quiet ? 0 : d);
+
+  return (
+    <div className="relative" aria-hidden="true">
+      {/* ghost sheet behind, like a pile of past papers */}
+      <div className="absolute inset-0 translate-x-4 translate-y-4 rotate-[1.6deg] rounded-sm bg-[#efece4]/25" />
+      <div className="absolute inset-0 -translate-x-3 translate-y-2 -rotate-[1.2deg] rounded-sm bg-[#efece4]/40" />
+
+      <motion.div
+        className="relative rounded-sm bg-[#f7f4ec] text-[#231f18] shadow-[0_24px_60px_-18px_rgba(0,0,0,0.65)]"
+        initial={reduced ? false : { opacity: 0, y: 28, rotate: 2.5 }}
+        animate={{ opacity: 1, y: 0, rotate: 0 }}
+        transition={{ duration: D(0.7), ease: EASE_OUT }}
+      >
+        {/* paper header — university question-paper furniture */}
+        <div className="border-b border-[#231f18]/20 px-6 pt-5 pb-3 sm:px-8">
+          <div className="font-serif text-[13px] sm:text-sm tracking-wide text-[#231f18]">OSMANIA UNIVERSITY</div>
+          <div className="font-serif text-[11px] sm:text-xs text-[#231f18]/60">B.Sc MSCS · Semester V · Database Systems</div>
+          <div className="mt-2 flex items-center justify-between font-serif text-[11px] text-[#231f18]/50">
+            <span>Time: 3 hours</span>
+            <span>Max marks: 80</span>
+          </div>
+        </div>
+
+        <ol className="px-6 py-4 sm:px-8 space-y-4 font-serif text-[13px] sm:text-[15px] leading-snug">
+          {/* Q1 — the repeated one: highlight + stamps + chip */}
+          <li className="relative">
+            <motion.span
+              className="absolute -inset-x-2 -inset-y-1 -z-0 rounded-sm bg-[#ffe34d]"
+              style={{ transformOrigin: 'left center' }}
+              initial={reduced ? false : { scaleX: 0 }}
+              animate={{ scaleX: 1 }}
+              transition={{ duration: D(0.55), delay: D(1.15), ease: EASE_OUT }}
+            />
+            <span className="relative z-10">
+              <span className="font-semibold">1.</span> Explain normalization in DBMS with suitable examples.
+              <span className="italic text-[#231f18]/55"> (10 marks)</span>
+            </span>
+            <motion.span
+              className="absolute right-0 -top-4 font-serif text-[10px] tracking-wider text-[#b3261e]"
+              initial={reduced ? false : { opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: D(0.3), delay: D(1.7) }}
+            >'23 '24 '25</motion.span>
+            <motion.span
+              className="absolute left-1/2 -translate-x-1/2 -bottom-6 whitespace-nowrap rounded-full bg-[#0b0620] px-3 py-1 text-[11px] font-medium text-cyan-200 shadow-lg"
+              initial={reduced ? false : { opacity: 0, y: 8, scale: 0.9 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ duration: D(0.4), delay: D(2.0), ease: EASE_OUT }}
+            >Asked 3 years in a row</motion.span>
+          </li>
+          <li className="pt-3 text-[#231f18]/85">
+            <span className="font-semibold">2.</span> What is a transaction? Explain ACID properties.
+            <span className="italic text-[#231f18]/55"> (10 marks)</span>
+            <span className="ml-2 font-serif text-[10px] tracking-wider text-[#b3261e]/80">'23 '25</span>
+          </li>
+          <li className="text-[#231f18]/85">
+            <span className="font-semibold">3.</span> Write SQL queries to create, insert and join tables.
+            <span className="italic text-[#231f18]/55"> (10 marks)</span>
+          </li>
+        </ol>
+
+        {/* engine signature strip */}
+        <motion.div
+          className="flex items-center justify-between border-t border-dashed border-[#231f18]/25 px-6 py-2.5 sm:px-8"
+          initial={reduced ? false : { opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: D(0.4), delay: D(2.35) }}
+        >
+          <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#231f18]/50">Analyzed by SmartPYQ</span>
+          <span className="font-serif text-[11px] italic text-[#231f18]/55">21 questions · 3 papers</span>
+        </motion.div>
+      </motion.div>
+    </div>
+  );
+};
 
 /* ---- Reusable Animation Components ---- */
 
@@ -257,91 +346,121 @@ const HomePage = () => {
       {/* ================================================================
           1. HERO — AI Value Proposition
           ================================================================ */}
-      <section ref={heroRef} className="relative min-h-[85vh] flex items-center justify-center overflow-hidden">
+      <section ref={heroRef} className="relative min-h-[85vh] flex items-center overflow-hidden">
         <AuroraGradient />
 
         <motion.div
-          className="relative z-10 max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center"
+          className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 w-full py-16"
           style={{ y: heroY, opacity: heroOpacity }}
         >
-          <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.8, ease: [0.22,1,0.36,1] }}>
-            {/* Badge */}
-            <motion.div
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6"
-              initial={{ opacity: 0, y: -10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-              <span className="text-xs font-medium text-purple-300">AI-Powered Exam Preparation</span>
-            </motion.div>
+          <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
+            {/* ---- Pitch column ---- */}
+            <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE_OUT }}>
+              {/* Welcome eyebrow — spec: WELCOME TO SMARTPYQ */}
+              <motion.p
+                className="text-[11px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-purple-300/80 mb-3"
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+              >
+                Welcome to SmartPYQ
+              </motion.p>
+              {/* Badge */}
+              <motion.div
+                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6"
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+              >
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                <span className="text-xs font-medium text-purple-300">AI-Powered Exam Preparation</span>
+              </motion.div>
 
-            {/* Headline */}
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-white mb-5 leading-tight">
-              <WordReveal text="Analyze PYQs. Find Patterns." delay={0.3} />
-              <br />
-              <GradientText className="text-4xl sm:text-5xl lg:text-6xl">
-                Predict Exam Patterns.
-              </GradientText>
-            </h1>
+              {/* Headline — spec: Analyze PYQs. Find Patterns. / Predict Exam Trends. */}
+              <motion.h1
+                className="text-4xl sm:text-5xl lg:text-[3.4rem] font-bold text-white mb-5 leading-[1.08] [text-wrap:balance]"
+              >
+                <WordReveal text="Analyze PYQs. Find Patterns." delay={0.3} />
+                <br />
+                <GradientText className="text-4xl sm:text-5xl lg:text-[3.4rem]">
+                  Predict Exam Trends.
+                </GradientText>
+              </motion.h1>
 
-            <motion.p
-              className="text-lg text-gray-400 mb-8 max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.9 }}
-            >
-              Upload or search previous-year papers and let SmartPYQ identify
-              <span className="text-purple-300 font-medium"> repeated questions</span>,
-              <span className="text-purple-300 font-medium"> important topics</span>,
-              <span className="text-purple-300 font-medium"> exam patterns</span>, and
-              <span className="text-purple-300 font-medium"> practice priorities</span>.
-            </motion.p>
+              <motion.p
+                className="text-lg text-gray-400 mb-8 max-w-xl"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.9 }}
+              >
+                Upload or search previous-year papers and let SmartPYQ identify
+                <span className="text-purple-300 font-medium"> repeated questions</span>,
+                <span className="text-purple-300 font-medium"> important topics</span>,
+                <span className="text-purple-300 font-medium"> exam patterns</span>, and
+                <span className="text-purple-300 font-medium"> practice priorities</span>.
+              </motion.p>
 
-            {/* Search Bar */}
-            <GlowEffect className="max-w-xl mx-auto mb-8" color="rgba(139,92,246,0.1)" size={400}>
-              <motion.form onSubmit={handleSearch} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 1.1 }}>
-                <div className="relative group">
-                  <motion.div
-                    className="absolute -inset-[1px] rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity duration-500"
-                    style={{ background: 'linear-gradient(135deg, rgba(139,92,246,0.3), rgba(59,130,246,0.3))' }}
-                    animate={searchFocused ? { opacity: 1 } : {}}
-                  />
-                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+              {/* Primary action + search: one clear hierarchy */}
+              <motion.div
+                className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 max-w-xl"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 1.1 }}
+              >
+                <MagneticButton className="btn btn-primary px-6 py-3.5 text-sm whitespace-nowrap" onClick={() => navigate('/pyq')}>
+                  <Search className="h-4 w-4" /> Find your PYQs
+                </MagneticButton>
+                <form onSubmit={handleSearch} className="relative flex-1">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400 z-10 pointer-events-none" />
                   <input
-                    type="text"
+                    type="search"
+                    name="pyq-hero-search"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
-                    onFocus={() => setSearchFocused(true)}
-                    onBlur={() => setSearchFocused(false)}
-                    placeholder="Search subject, paper, course, or year..."
-                    className="relative w-full pl-12 pr-28 py-4 bg-white/5 border border-white/10 rounded-2xl text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 transition-all z-10"
+                    aria-label="Search papers, subjects, and courses"
+                    placeholder="or search by subject, course, year…"
+                    className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 transition-[border-color]"
                   />
-                  <button type="submit" className="absolute right-2 top-1/2 -translate-y-1/2 btn btn-primary px-5 py-2.5 text-sm rounded-xl z-10">
-                    Search
-                  </button>
-                </div>
-              </motion.form>
-            </GlowEffect>
+                </form>
+              </motion.div>
 
-            {/* 3 Primary CTAs */}
-            <motion.div
-              className="flex flex-col sm:flex-row gap-3 justify-center max-w-2xl mx-auto"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 1.3 }}
-            >
-              <MagneticButton className="btn btn-primary px-6 py-3 text-sm" onClick={() => navigate('/pyq')}>
-                <Search className="h-4 w-4" /> Search PYQs
-              </MagneticButton>
-              <MagneticButton className="btn btn-secondary px-6 py-3 text-sm" onClick={() => navigate('/analyze')}>
-                <Zap className="h-4 w-4" /> Analyze a Paper
-              </MagneticButton>
-              <MagneticButton className="btn btn-secondary px-6 py-3 text-sm" onClick={() => navigate('/practice')}>
-                <Target className="h-4 w-4" /> Practice Questions
-              </MagneticButton>
+              {/* Quiet secondary paths — text links, not more pills */}
+              <motion.div
+                className="mt-5 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 1.35 }}
+              >
+                <button onClick={() => navigate('/analyze')} className="inline-flex items-center gap-1.5 text-purple-300 hover:text-purple-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                  <Zap className="h-3.5 w-3.5" /> Analyze a paper
+                </button>
+                <button onClick={() => navigate('/practice')} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                  <Target className="h-3.5 w-3.5" /> Practice questions
+                </button>
+              </motion.div>
+
+              {/* Live library pulse — real numbers from the database */}
+              <motion.div
+                className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-500"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 1.6 }}
+              >
+                <span className="relative inline-flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                </span>
+                <span><span className="text-white font-semibold">{stats.total}</span> papers in the library</span>
+                <span aria-hidden="true" className="text-gray-700">|</span>
+                <span><span className="text-white font-semibold">{stats.subjects.size}</span> subjects covered</span>
+              </motion.div>
             </motion.div>
-          </motion.div>
+
+            {/* ---- Artifact column: the analyzed paper ---- */}
+            <div className="relative mx-auto w-full max-w-md lg:max-w-none lg:justify-self-end">
+              <AnnotatedPaper />
+            </div>
+          </div>
         </motion.div>
       </section>
 
@@ -543,10 +662,11 @@ const HomePage = () => {
                         <span className="text-purple-400 font-medium">{t.percent}%</span>
                       </div>
                       <div className="h-2 bg-white/5 rounded-full overflow-hidden">
+                        {/* scaleX (transform-only) instead of width — GPU-composited */}
                         <motion.div
-                          className={`h-full rounded-full ${t.color}`}
-                          initial={{ width: 0 }}
-                          whileInView={{ width: `${t.percent}%` }}
+                          className={`h-full w-full origin-left rounded-full ${t.color}`}
+                          initial={{ scaleX: 0 }}
+                          whileInView={{ scaleX: t.percent / 100 }}
                           viewport={{ once: true }}
                           transition={{ duration: 1, delay: i * 0.1, ease: [0.22,1,0.36,1] }}
                         />
@@ -633,29 +753,63 @@ const HomePage = () => {
             <p className="text-gray-400 mt-3">Based on analysis of question papers across multiple years</p>
           </motion.div>
 
-          <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            {demoTrendingTopics.map((stream, i) => (
-              <SpotlightCard key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/10" spotlightColor="rgba(239,68,68,0.08)">
-                <motion.div variants={cardUp}>
-                  <h3 className="text-base font-semibold text-white mb-4">{stream.stream}</h3>
-                  <div className="space-y-2.5">
-                    {stream.topics.map((topic, j) => (
-                      <div key={j} className="flex items-center justify-between p-2.5 bg-white/[0.03] rounded-lg border border-white/5">
-                        <span className="text-sm text-gray-300">{topic.name}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                          topic.priority === 'high' ? 'bg-red-500/15 text-red-300' :
-                          topic.priority === 'medium' ? 'bg-yellow-500/15 text-yellow-300' :
-                          'bg-gray-500/15 text-gray-400'
-                        }`}>
-                          {topic.priority === 'high' ? '🔥 High' : topic.priority === 'medium' ? '⚡ Medium' : 'Low'}
-                        </span>
-                      </div>
-                    ))}
+          {/* Desktop: 3-up grid. Mobile (<640px): swipeable thumbnail carousel
+              — same content, thumb-friendly navigation instead of a long stack. */}
+          <div className="hidden sm:block">
+            <motion.div className="grid grid-cols-1 md:grid-cols-3 gap-6" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
+              {demoTrendingTopics.map((stream, i) => (
+                <SpotlightCard key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/10" spotlightColor="rgba(239,68,68,0.08)">
+                  <motion.div variants={cardUp}>
+                    <h3 className="text-base font-semibold text-white mb-4">{stream.stream}</h3>
+                    <div className="space-y-2.5">
+                      {stream.topics.map((topic, j) => (
+                        <div key={j} className="flex items-center justify-between p-2.5 bg-white/[0.03] rounded-lg border border-white/5">
+                          <span className="text-sm text-gray-300">{topic.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            topic.priority === 'high' ? 'bg-red-500/15 text-red-300' :
+                            topic.priority === 'medium' ? 'bg-yellow-500/15 text-yellow-300' :
+                            'bg-gray-500/15 text-gray-400'
+                          }`}>
+                            {topic.priority === 'high' ? '🔥 High' : topic.priority === 'medium' ? '⚡ Medium' : 'Low'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
+                </SpotlightCard>
+              ))}
+            </motion.div>
+          </div>
+          <div className="sm:hidden">
+            <ThumbnailCarousel
+              ariaLabel="Most repeated topics by stream"
+              interval={5200}
+              items={demoTrendingTopics.map((stream, i) => ({
+                id: `trend-${i}`,
+                label: stream.stream,
+                thumbClass: i === 0 ? 'bg-gradient-to-br from-purple-600/40 to-indigo-700/40' : i === 1 ? 'bg-gradient-to-br from-blue-600/40 to-cyan-700/40' : 'bg-gradient-to-br from-rose-600/40 to-orange-600/40',
+                render: () => (
+                  <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10">
+                    <h3 className="text-base font-semibold text-white mb-4">{stream.stream}</h3>
+                    <div className="space-y-2.5">
+                      {stream.topics.map((topic, j) => (
+                        <div key={j} className="flex items-center justify-between p-2.5 bg-white/[0.03] rounded-lg border border-white/5">
+                          <span className="text-sm text-gray-300">{topic.name}</span>
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            topic.priority === 'high' ? 'bg-red-500/15 text-red-300' :
+                            topic.priority === 'medium' ? 'bg-yellow-500/15 text-yellow-300' :
+                            'bg-gray-500/15 text-gray-400'
+                          }`}>
+                            {topic.priority === 'high' ? '🔥 High' : topic.priority === 'medium' ? '⚡ Medium' : 'Low'}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                </motion.div>
-              </SpotlightCard>
-            ))}
-          </motion.div>
+                ),
+              }))}
+            />
+          </div>
         </div>
       </motion.section>
 

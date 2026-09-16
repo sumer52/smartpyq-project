@@ -16,7 +16,7 @@ const stagger = {
   visible: { opacity: 1, transition: { staggerChildren: 0.08 } }
 };
 const UploadPage = () => {
-  const { isAuthenticated } = useAuth();
+  const { user, isAdmin } = useAuth();
   const [uploadSuccess, setUploadSuccess] = useState(false);
   const [expandedFaq, setExpandedFaq] = useState(null);
 
@@ -30,7 +30,8 @@ const UploadPage = () => {
     { q: 'What happens after I upload?', a: 'Our system automatically analyzes your uploaded file and extracts key information like subject, semester, and questions. You\'ll see a review screen where you can verify and correct any auto-detected details before confirming the upload.' },
     { q: 'Can I upload answer keys?', a: 'No, we only accept original question papers. Answer keys, solutions, and study materials are not accepted at this time.' },
     { q: 'Is there a file size limit?', a: 'You can upload files up to 50MB in size. Most question papers are well under this limit.' },
-    { q: 'Do I need an account to upload?', a: 'Yes, you need to be logged in. This helps us track uploads and ensure the quality of papers in the database.' }
+    { q: 'Who can upload papers?', a: 'Uploads are managed by SmartPYQ administrators to guarantee quality and correctness. Students never need an account — every paper in the PYQ Hub is freely accessible without login.' },
+    { q: 'When do uploads become public?', a: 'New uploads start as DRAFT and are reviewed by an administrator. Only after the admin clicks Publish does the paper appear in the public PYQ Hub and search.' },
   ];
   return (
     <motion.div className="min-h-screen bg-white/[0.02]" variants={stagger} initial="hidden" animate="visible">
@@ -39,10 +40,10 @@ const UploadPage = () => {
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 text-center">
           <motion.div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm font-medium mb-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
             <ArrowUpTrayIcon className="h-4 w-4" />
-            Community Upload
+            Admin Upload
           </motion.div>
-          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">Share a <span className="text-brand-gradient">Question Paper</span></h1>
-          <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">Upload your previous year question paper and help thousands of students prepare smarter. Every paper you contribute makes SmartPYQ better for everyone.</p>
+          <h1 className="text-4xl sm:text-5xl font-bold text-white mb-4 tracking-tight">Add a <span className="text-brand-gradient">Question Paper</span></h1>
+          <p className="text-lg text-gray-400 max-w-2xl mx-auto leading-relaxed">Administrative content management — upload new previous year papers, review the AI analysis, and publish them to the PYQ Hub when ready.</p>
 
         </div>
       </motion.div>
@@ -55,24 +56,24 @@ const UploadPage = () => {
                   className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
                   <SparklesIcon className="h-5 w-5 text-green-400 flex-shrink-0" />
                   <div><p className="text-green-300 font-medium text-sm">Upload successful!</p>
-                  <p className="text-green-400/70 text-xs mt-0.5">Your paper is now available in the PYQ Hub.</p></div>
+                  <p className="text-green-400/70 text-xs mt-0.5">Saved as DRAFT — publish it from the Admin Dashboard when reviewed.</p></div>
                 </motion.div>
               )}
             </AnimatePresence>
-            {!isAuthenticated ? (
+            {isAdmin ? (
+              <UploadStepper onUploadComplete={handleUploadComplete} />
+            ) : (
               <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-10 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto mb-6">
                   <ShieldCheckIcon className="h-8 w-8 text-purple-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-2">Login to Upload</h3>
-                <p className="text-gray-400 mb-8 max-w-md mx-auto">You need an account to contribute question papers. Logging in takes just a moment and helps us maintain quality.</p>
+                <h3 className="text-xl font-semibold text-white mb-2">Admin access required</h3>
+                <p className="text-gray-400 mb-8 max-w-md mx-auto">Uploading is restricted to SmartPYQ administrators. Students can browse, search, practice, and download every published paper — no account needed.</p>
                 <div className="flex items-center justify-center gap-3">
-                  <a href="/login" className="btn btn-primary px-6 py-3">Login</a>
-                  <a href="/login" className="btn btn-secondary px-6 py-3">Create Account</a>
+                  <a href="/admin/login" className="btn btn-primary px-6 py-3">Admin Login</a>
+                  <a href="/pyq" className="btn btn-secondary px-6 py-3">Browse PYQ Hub</a>
                 </div>
               </div>
-            ) : (
-              <UploadStepper onUploadComplete={handleUploadComplete} />
             )}
           </motion.div>
           <motion.div className="space-y-6" variants={fadeUp}>
@@ -82,9 +83,9 @@ const UploadPage = () => {
               </h3>
               <div className="space-y-4">
                 {[
-                  { step: 1, title: 'Upload your file', desc: 'Drag or select your question paper (PDF or image)' },
-                  { step: 2, title: 'Review & edit', desc: 'Verify auto-detected details and questions' },
-                  { step: 3, title: 'Instant access', desc: 'Paper appears in the PYQ Hub immediately' }
+                  { step: 1, title: 'Upload your file', desc: 'Drag or select the question paper (PDF or image)' },
+                  { step: 2, title: 'AI analyzes & you review', desc: 'Verify auto-detected details and extracted questions' },
+                  { step: 3, title: 'Publish from the dashboard', desc: 'Drafts go public only after you click Publish' }
                 ].map((item) => (
                   <div key={item.step} className="flex gap-3">
                     <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-300 text-xs font-bold">{item.step}</div>

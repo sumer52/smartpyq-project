@@ -1,17 +1,20 @@
 import React, { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useReducedMotionSafe } from '../../lib/motion';
 
 /**
  * SpotlightCard - Card with a radial gradient spotlight that follows the cursor.
  * Creates a premium hover effect where light appears to shine on the card.
+ * Gated on touch-only devices and for reduced-motion users (static card).
  */
 const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(139,92,246,0.15)', ...props }) => {
   const ref = useRef(null);
+  const skipSpotlight = useReducedMotionSafe();
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [opacity, setOpacity] = useState(0);
 
   const handleMouseMove = (e) => {
-    if (!ref.current) return;
+    if (skipSpotlight || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     setPosition({
       x: e.clientX - rect.left,

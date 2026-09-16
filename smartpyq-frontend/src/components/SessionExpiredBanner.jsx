@@ -45,15 +45,15 @@ const SessionExpiredBanner = () => {
             <div className="flex-1">
               <p className="text-sm font-semibold text-amber-300">Session Expired</p>
               <p className="text-sm text-gray-300 mt-1">
-                Your session has expired. Please log in again to continue.
+                Your admin session has expired. Please sign in again to continue managing content.
               </p>
               <div className="mt-3 flex items-center space-x-3">
                 <Link
-                  to="/login"
+                  to="/admin/login"
                   className="btn btn-primary btn-sm px-4 py-1.5 text-xs font-semibold"
                   onClick={() => setVisible(false)}
                 >
-                  Log In
+                  Admin Login
                 </Link>
                 <button
                   onClick={() => setVisible(false)}

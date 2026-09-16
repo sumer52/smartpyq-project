@@ -110,6 +110,14 @@ class ApiClient {
       headers: this.getAuthHeaders(),
       ...options,
     };
+    // Multipart bodies must set their own boundary — never send the default
+    // JSON content-type with a FormData payload.
+    if (options.body instanceof FormData) {
+      const headers = { ...config.headers };
+      delete headers['Content-Type'];
+      delete headers['content-type'];
+      config.headers = headers;
+    }
 
     // A demo session silently attaches the real backend demo account so feature
     // pages (PYQ Hub, Upload, Analysis, Practice) can load actual data. This is a
@@ -159,10 +167,10 @@ class ApiClient {
             }
             // If refresh failed or no refresh token, clear auth
             this.clearAuth();
+            // Public platform: surface the error to the caller instead of
+            // bouncing visitors to a login page that no longer exists.
             if (this.onUnauthorized) {
               this.onUnauthorized(errorMessage);
-            } else {
-              window.location.href = '/login?session=expired';
             }
             throw new UnauthorizedError(errorMessage, errorData);
           }
@@ -319,6 +327,33 @@ class ApiClient {
     });
   }
 
+  // Public multi-paper PYQ analysis (PYQ Hub flow). One synchronous request
+  // returning {analysis_id, reused, insights, paper_ids}.
+  async analyzePapersPublic(paperIds) {
+    return this.request('/api/v1/analysis/analyze-public', {
+      method: 'POST',
+      body: JSON.stringify({ paper_ids: paperIds })
+    });
+  }
+
+  // Question detail with recurrence evidence (public).
+  async getQuestionDetail(questionId, paperIds) {
+    const params = new URLSearchParams();
+    if (paperIds && paperIds.length) params.set('papers', paperIds.join(','));
+    const qs = params.toString();
+    return this.request('/api/v1/analysis/questions/' + questionId + '/detail' + (qs ? '?' + qs : ''));
+  }
+
+  // Available PYQ years with per-year approved-paper counts (public).
+  async getYearAvailability(filters = {}) {
+    const params = new URLSearchParams();
+    if (filters.subject) params.set('subject', filters.subject);
+    if (filters.stream) params.set('stream', filters.stream);
+    if (filters.semester) params.set('semester', filters.semester);
+    const qs = params.toString();
+    return this.request('/api/v1/papers/years' + (qs ? '?' + qs : ''));
+  }
+
   async getAnalyses() {
     return this.request('/api/v1/analysis/analyses');
   }
@@ -384,6 +419,71 @@ class ApiClient {
 
   async getPracticeHistory() {
     return this.request('/api/v1/analysis/practice/history');
+  }
+
+  // ------------------------------------------------------------------
+  // Teacher answers (Exam Practice Mode)
+  // ------------------------------------------------------------------
+
+  async saveQuestionAnswer(questionId, formData) {
+    // Multipart upload: must not send the default JSON content-type.
+    return this.request(`/api/v1/questions/${questionId}/answer`, {
+      method: 'POST',
+      body: formData,
+    });
+  }
+
+  async deleteQuestionAnswer(questionId) {
+    return this.request(`/api/v1/questions/${questionId}/answer`, { method: 'DELETE' });
+  }
+
+  answerFileUrl(questionId) {
+    return `${this.baseURL}/api/v1/questions/${questionId}/answer-file`;
+  }
+
+  // ------------------------------------------------------------------
+  // Student paper submissions + admin verification
+  // ------------------------------------------------------------------
+
+  async uploadStudentPaper(formData, onProgress) {
+    // XHR (not fetch) so the caller can show real upload progress.
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
+    return new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', `${this.baseURL}/api/v1/papers/upload-student`);
+      if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
+      xhr.upload.onprogress = (e) => {
+        if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
+      };
+      xhr.onload = () => {
+        let data = null;
+        try { data = JSON.parse(xhr.responseText); } catch (e) { /* non-JSON */ }
+        if (xhr.status >= 200 && xhr.status < 300) resolve(data);
+        else reject(new ApiError(data?.detail || `HTTP ${xhr.status}`, xhr.status, data));
+      };
+      xhr.onerror = () => reject(new ApiError('Network error during upload', 0));
+      xhr.send(formData);
+    });
+  }
+
+  async getMySubmissions() {
+    return this.request('/api/v1/papers/mine');
+  }
+
+  async getPendingReview() {
+    return this.request('/api/v1/papers/pending-review');
+  }
+
+  // Authenticated binary fetch (used by the admin review preview — pending
+  // papers need the Authorization header, which a plain iframe can't send).
+  async getFileBlob(endpoint) {
+    const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
+    const headers = token ? { Authorization: `Bearer ${token}` } : {};
+    const res = await fetch(`${this.baseURL}${endpoint}`, { headers });
+    if (!res.ok) {
+      throw new ApiError(`HTTP ${res.status}`, res.status);
+    }
+    return res.blob();
   }
 }
 

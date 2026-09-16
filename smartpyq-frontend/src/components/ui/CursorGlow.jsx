@@ -1,5 +1,6 @@
 import React, { useRef, useState, useCallback } from 'react';
 import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import { useReducedMotionSafe } from '../../lib/motion';
 
 /**
  * CursorGlow - VengeanceUI-inspired cursor tracking with spring physics.
@@ -7,7 +8,7 @@ import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
  * - Spring-based cursor following (smoother)
  * - Radial gradient that moves with cursor
  * - Border glow intensity based on cursor proximity
- * - Works on touch devices (center glow on tap)
+ * - Gated on touch-only devices and for reduced-motion users (static card).
  */
 const CursorGlow = ({
   children,
@@ -17,6 +18,7 @@ const CursorGlow = ({
   springConfig = { stiffness: 300, damping: 25 },
   ...props
 }) => {
+  const skipCursorFx = useReducedMotionSafe();
   const ref = useRef(null);
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -32,18 +34,18 @@ const CursorGlow = ({
   const [isHovering, setIsHovering] = useState(false);
 
   const handleMouseMove = useCallback((e) => {
-    if (!ref.current) return;
+    if (skipCursorFx || !ref.current) return;
     const rect = ref.current.getBoundingClientRect();
     mouseX.set(e.clientX - rect.left);
     mouseY.set(e.clientY - rect.top);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, skipCursorFx]);
 
   const handleTouchMove = useCallback((e) => {
-    if (!ref.current || !e.touches[0]) return;
+    if (skipCursorFx || !ref.current || !e.touches[0]) return;
     const rect = ref.current.getBoundingClientRect();
     mouseX.set(e.touches[0].clientX - rect.left);
     mouseY.set(e.touches[0].clientY - rect.top);
-  }, [mouseX, mouseY]);
+  }, [mouseX, mouseY, skipCursorFx]);
 
   return (
     <motion.div
@@ -54,7 +56,7 @@ const CursorGlow = ({
       onMouseLeave={() => setIsHovering(false)}
       onTouchMove={handleTouchMove}
       onTouchStart={() => {
-        if (!ref.current) return;
+        if (skipCursorFx || !ref.current) return;
         const rect = ref.current.getBoundingClientRect();
         mouseX.set(rect.width / 2);
         mouseY.set(rect.height / 2);

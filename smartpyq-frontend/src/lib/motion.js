@@ -7,6 +7,19 @@
 /** Signature ease — matches the CSS cubic-bezier used across index.css */
 export const EASE = [0.22, 1, 0.36, 1];
 
+/** Stronger deceleration for hero/headline entrances */
+export const EASE_OUT = [0.16, 1, 0.3, 1];
+
+/** ------------------------------------------------------------------
+ *  Duration tokens (seconds) — use these, never ad-hoc numbers.
+ *  ------------------------------------------------------------------ */
+export const D = {
+  fast: 0.2,     // micro-interactions: presses, icon nudges
+  normal: 0.35,  // hovers, dropdowns, small reveals
+  reveal: 0.55,  // section/heading entrances
+  hero: 0.9,     // hero headline sequence
+};
+
 /** Container: staggers children as they enter the viewport */
 export const stagger = (delay = 0.06) => ({
   hidden: { opacity: 0 },
@@ -56,3 +69,46 @@ export const sheetPanel = {
   animate: { opacity: 1, y: 0, transition: { duration: 0.3, ease: EASE } },
   exit: { opacity: 0, y: '100%', transition: { duration: 0.2, ease: EASE } },
 };
+
+/** List/table row entrance: tighter than cardUp, for use inside stagger containers */
+export const listItem = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.32, ease: EASE } },
+};
+
+/**
+ * Reduced-motion-safe flag: true when the user prefers reduced motion OR the
+ * device has no hover pointer (phones/tablets). Use to skip decorative
+ * cursor-driven and continuous animations. Static renders remain identical.
+ */
+export const useReducedMotionSafe = () => {
+  const prefersReduced = usePrefersReducedMotion();
+  const noHover = useNoHoverPointer();
+  return prefersReduced || noHover;
+};
+
+import { useEffect, useState, useRef } from 'react';
+
+function usePrefersReducedMotion() {
+  const [reduced, setReduced] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setReduced(mq.matches);
+    const onChange = (e) => setReduced(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return reduced;
+}
+
+function useNoHoverPointer() {
+  const [noHover, setNoHover] = useState(false);
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: none)');
+    setNoHover(mq.matches);
+    const onChange = (e) => setNoHover(e.matches);
+    mq.addEventListener('change', onChange);
+    return () => mq.removeEventListener('change', onChange);
+  }, []);
+  return noHover;
+}
