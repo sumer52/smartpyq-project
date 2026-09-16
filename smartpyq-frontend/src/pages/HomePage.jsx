@@ -62,43 +62,50 @@ const AnnotatedPaper = () => {
           </div>
         </div>
 
-        <ol className="px-6 py-4 sm:px-8 space-y-4 font-serif text-[13px] sm:text-[15px] leading-snug">
-          {/* Q1 — the repeated one: highlight + stamps + chip */}
-          <li className="relative">
-            <motion.span
-              className="absolute -inset-x-2 -inset-y-1 -z-0 rounded-sm bg-[#ffe34d]"
-              style={{ transformOrigin: 'left center' }}
-              initial={reduced ? false : { scaleX: 0 }}
-              animate={{ scaleX: 1 }}
-              transition={{ duration: D(0.55), delay: D(1.15), ease: EASE_OUT }}
-            />
-            <span className="relative z-10">
-              <span className="font-semibold">1.</span> Explain normalization in DBMS with suitable examples.
-              <span className="italic text-[#231f18]/55"> (10 marks)</span>
-            </span>
-            <motion.span
-              className="absolute right-0 -top-4 font-serif text-[10px] tracking-wider text-[#b3261e]"
-              initial={reduced ? false : { opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: D(0.3), delay: D(1.7) }}
-            >'23 '24 '25</motion.span>
-            <motion.span
-              className="absolute left-1/2 -translate-x-1/2 -bottom-6 whitespace-nowrap rounded-full bg-[#0b0620] px-3 py-1 text-[11px] font-medium text-cyan-200 shadow-lg"
-              initial={reduced ? false : { opacity: 0, y: 8, scale: 0.9 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ duration: D(0.4), delay: D(2.0), ease: EASE_OUT }}
-            >Asked 3 years in a row</motion.span>
-          </li>
-          <li className="pt-3 text-[#231f18]/85">
-            <span className="font-semibold">2.</span> What is a transaction? Explain ACID properties.
-            <span className="italic text-[#231f18]/55"> (10 marks)</span>
-            <span className="ml-2 font-serif text-[10px] tracking-wider text-[#b3261e]/80">'23 '25</span>
-          </li>
-          <li className="text-[#231f18]/85">
-            <span className="font-semibold">3.</span> Write SQL queries to create, insert and join tables.
-            <span className="italic text-[#231f18]/55"> (10 marks)</span>
-          </li>
-        </ol>
+        <div className="px-6 py-4 sm:px-8 space-y-3 font-serif text-[13px] sm:text-[15px] leading-snug">
+          {/* PART A — short answers */}
+          <div className="font-semibold tracking-wide text-[12px] sm:text-[13px]">PART A — Answer all questions. 8 × 4 = 32 marks</div>
+          <ol className="space-y-1.5 text-[#231f18]/85">
+            <li><span className="font-semibold">1.</span> Define DBMS and list its advantages. <span className="italic text-[#231f18]/55">(4 marks)</span></li>
+            <li><span className="font-semibold">2.</span> Differentiate between primary key and foreign key. <span className="italic text-[#231f18]/55">(4 marks)</span></li>
+            <li><span className="font-semibold">3.</span> What is a view in SQL? <span className="italic text-[#231f18]/55">(4 marks)</span></li>
+          </ol>
+          {/* PART B — long answers, where the analysis happens */}
+          <div className="pt-1 font-semibold tracking-wide text-[12px] sm:text-[13px]">PART B — Answer all questions. 4 × 12 = 48 marks</div>
+          <ol className="space-y-2.5">
+            {/* Q9 — the repeated one: highlight + stamps + chip */}
+            <li className="relative">
+              <motion.span
+                className="absolute -inset-x-2 -inset-y-1 -z-0 rounded-sm bg-[#ffe34d]"
+                style={{ transformOrigin: 'left center' }}
+                initial={reduced ? false : { scaleX: 0 }}
+                animate={{ scaleX: 1 }}
+                transition={{ duration: D(0.55), delay: D(1.15), ease: EASE_OUT }}
+              />
+              <span className="relative z-10">
+                <span className="font-semibold">9.</span> Explain normalization in DBMS with suitable examples.
+                <span className="italic text-[#231f18]/55"> (12 marks)</span>
+              </span>
+              <motion.span
+                className="absolute right-0 -top-4 font-serif text-[10px] tracking-wider text-[#b3261e]"
+                initial={reduced ? false : { opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: D(0.3), delay: D(1.7) }}
+              >'23 '24 '25</motion.span>
+              <motion.span
+                className="absolute left-1/2 -translate-x-1/2 -bottom-6 whitespace-nowrap rounded-full bg-[#0b0620] px-3 py-1 text-[11px] font-medium text-cyan-200 shadow-lg"
+                initial={reduced ? false : { opacity: 0, y: 8, scale: 0.9 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: D(0.4), delay: D(2.0), ease: EASE_OUT }}
+              >Asked 3 years in a row</motion.span>
+            </li>
+            <li className="text-[#231f18]/85">
+              <span className="font-semibold">10.</span> What is a transaction? Explain ACID properties with examples.
+              <span className="italic text-[#231f18]/55"> (12 marks)</span>
+              <span className="ml-2 font-serif text-[10px] tracking-wider text-[#b3261e]/80">'23 '25</span>
+            </li>
+          </ol>
+        </div>
 
         {/* engine signature strip */}
         <motion.div
@@ -108,7 +115,7 @@ const AnnotatedPaper = () => {
           transition={{ duration: D(0.4), delay: D(2.35) }}
         >
           <span className="font-sans text-[10px] uppercase tracking-[0.18em] text-[#231f18]/50">Analyzed by SmartPYQ</span>
-          <span className="font-serif text-[11px] italic text-[#231f18]/55">21 questions · 3 papers</span>
+          <span className="font-serif text-[11px] italic text-[#231f18]/55">12 questions · 3 papers · 80 marks</span>
         </motion.div>
       </motion.div>
     </div>

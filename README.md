@@ -1,5 +1,11 @@
 # Smart PYQ Project
 
+[![CI](https://github.com/sumer52/smartpyq-project/actions/workflows/ci.yml/badge.svg)](https://github.com/sumer52/smartpyq-project/actions/workflows/ci.yml)
+![Python](https://img.shields.io/badge/python-3.10%2B-blue)
+![Node](https://img.shields.io/badge/node-18%2B-green)
+![React](https://img.shields.io/badge/react-18-61dafb)
+![License](https://img.shields.io/badge/license-MIT-yellow)
+
 **Smart PYQ** is an intelligent previous-year question paper (PYQ) platform for Osmania University. Students browse, upload, search, and download past exam papers organized by course, semester, and subject — and then go further: an AI engine extracts the actual questions from each paper, classifies them by topic and type, finds questions that repeat across years, ranks the most important topics, and helps students practice what matters.
 
 The student platform is **public and account-free**: no login is needed to browse, analyze, practice, or bookmark. Authentication exists only for admins (paper approval, question answers, moderation).
@@ -33,7 +39,7 @@ flowchart TD
 
 - **PYQ Hub** — Browse previous-year papers by Stream → Specialization → Semester → Subject → Year. Students can also upload papers themselves (see below).
 - **Paper Analysis** — A real data pipeline: reads the PDF, extracts each question with part/section, marks, type, and topic, then computes priority tiers (🔥 A / B / C from repetition × marks), repeated questions with per-year variants, topic frequency, marks weightage, year-wise breakdowns, exam focus, and a filterable Question Explorer. Single-paper analyses clearly show that repetition insights need multiple papers.
-- **Standard paper pattern** — The platform understands the common university pattern out of the box: **Part A: 8 × 4 = 32 marks (short answers)** + **Part B: 4 × 12 = 48 marks (long answers), 80 marks total**. Uploaded papers with part headers get their sections and per-question marks detected automatically; the upload wizard offers a one-click "apply standard pattern" helper.
+- **Standard paper pattern** — The platform understands the common university pattern out of the box: **Part A: 8 × 4 = 32 marks (short answers)** + **Part B: 4 × 12 = 48 marks (long answers), 80 marks total**. Uploaded papers with part headers get their sections and per-question marks detected automatically; the upload wizard offers a one-click "apply standard pattern" helper. Individual questions may carry **4, 8 or 12 marks** — the engine reads whatever scheme each paper declares. See [the pattern reference](docs/QUESTION_PAPER_PATTERN.md).
 - **Exam Practice Mode** — Practice with questions extracted from actual papers. Each question can carry a **teacher answer in its original format**: formatted text, an image (with zoom lightbox), or a PDF document (inline preview + open-in-new-tab). Answers are never converted to text — students study from exactly what the teacher provided. Read-only for students; managed by admins.
 - **Student Paper Upload + Verification** — Students upload their own PYQ papers through a guided wizard; submissions enter an admin verification queue (with automatic duplicate detection) and only become public after approval. Students track their submission status on a "My Submissions" page.
 - **Repeated Questions** — See which questions and topics recur across exam years, with per-year evidence.
@@ -189,6 +195,7 @@ See `.env.example` for the full template.
 
 ## Documentation
 
+- `docs/QUESTION_PAPER_PATTERN.md` — the standard Part A/B question-paper pattern and how every layer handles it.
 - `docs/ARCHITECTURE.md`, `docs/DEPLOYMENT.md`, `docs/BACKUP_RESTORE.md` — architecture and operations.
 
 ## License

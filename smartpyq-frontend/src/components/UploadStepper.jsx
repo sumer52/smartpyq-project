@@ -274,6 +274,8 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
   // Standard university pattern: Part A = 8 short questions × 4 marks,
   // Part B = 4 long questions × 12 marks (80 total). Fills in missing
   // sections/marks by position; never overwrites explicit values.
+  // Marks may legitimately vary per question (4, 8 or 12 are common) —
+  // explicit per-question marks always win over the positional default.
   const applyStandardPattern = () => {
     setDetectedQuestions(prev => prev.map((q, i) => ({
       ...q,
@@ -747,11 +749,11 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                           type="button"
                           onClick={applyStandardPattern}
                           className="text-xs text-purple-300 hover:text-white px-2.5 py-1 rounded-lg border border-purple-500/30 hover:border-purple-400/50 transition-colors"
-                          title="Part A: questions 1-8 at 4 marks, Part B: questions 9-12 at 12 marks (80 total)"
+                          title="Part A: questions 1-8 default to 4 marks, Part B: questions 9-12 default to 12 marks. Individual questions may carry 4, 8 or 12 marks — set those manually and the defaults only fill blanks."
                         >
                           Apply standard pattern (8×4 + 4×12)
                         </button>
-                        <span className="text-xs text-gray-500">Edit below or remove incorrect entries</span>
+                        <span className="text-xs text-gray-500">Edit below or remove incorrect entries · total must equal 80</span>
                       </div>
                     </div>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
