@@ -79,10 +79,10 @@ class TestListPapers:
 class TestUploadPaper:
     """Tests for the paper upload endpoint."""
 
-    async def test_upload_paper_success(self, authed_client, tenant):
-        """Valid PDF upload with metadata returns 201."""
+    async def test_upload_paper_success(self, admin_client, tenant):
+        """Valid PDF upload with metadata returns 201 (admin-only operation)."""
         pdf_bytes = make_pdf_bytes()
-        resp = await authed_client.post(
+        resp = await admin_client.post(
             "/api/v1/papers/upload",
             files={"file": ("test.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
             data={
@@ -101,12 +101,72 @@ class TestUploadPaper:
         assert resp.status_code == 201
         data = resp.json()
         assert "title" in data
-        assert "status" in data  # uploaded, approved, pending, or draft
+        assert "status" in data
         assert "id" in data
+        # DRAFT-by-default publishing model: uploads are NOT public until an
+        # admin explicitly publishes them.
+        assert data["status"] == "uploaded"  # response shape; row is DRAFT
 
-    async def test_upload_paper_no_file(self, authed_client):
-        """Missing file returns 422."""
+    async def test_upload_creates_draft_and_publish_flow(self, admin_client, tenant):
+        """Upload -> DRAFT -> publish -> public; unpublish -> hidden."""
+        pdf_bytes = make_pdf_bytes()
+        resp = await admin_client.post(
+            "/api/v1/papers/upload",
+            files={"file": ("flow.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
+            data={
+                "title": "Draft Publish Flow Test",
+                "subject": "Flow Subject",
+                "stream": "bca",
+                "semester": "2",
+                "exam": "Final",
+                "year": "2024",
+            },
+        )
+        assert resp.status_code == 201
+        paper_id = resp.json()["id"]
+
+        # DRAFT: hidden from the public list (anonymous browse shows APPROVED)
+        public_list = await admin_client.get("/api/v1/papers/?paper_status=draft")
+        assert public_list.status_code == 200
+        draft_ids = [p["id"] for p in public_list.json()["papers"]]
+        assert paper_id in draft_ids
+
+        # Publish it
+        pub = await admin_client.post(f"/api/v1/papers/{paper_id}/publish")
+        assert pub.status_code == 200
+
+        # Now visible in the public (approved) listing
+        approved_list = await admin_client.get("/api/v1/papers/?paper_status=approved")
+        assert approved_list.status_code == 200
+        approved_ids = [p["id"] for p in approved_list.json()["papers"]]
+        assert paper_id in approved_ids
+
+        # Unpublish -> archived, still exists, no longer in public list
+        unpub = await admin_client.post(f"/api/v1/papers/{paper_id}/unpublish")
+        assert unpub.status_code == 200
+        archived_list = await admin_client.get("/api/v1/papers/?paper_status=archived")
+        assert archived_list.status_code == 200
+        archived_ids = [p["id"] for p in archived_list.json()["papers"]]
+        assert paper_id in archived_ids
+
+        still_public = await admin_client.get("/api/v1/papers/?paper_status=approved")
+        still_public_ids = [p["id"] for p in still_public.json()["papers"]]
+        assert paper_id not in still_public_ids
+
+    async def test_upload_paper_student_forbidden(self, authed_client):
+        """Students cannot upload — admin-only operation."""
+        pdf_bytes = make_pdf_bytes()
         resp = await authed_client.post(
+            "/api/v1/papers/upload",
+            files={"file": ("test.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
+            data={"title": "Student Upload", "subject": "X", "stream": "bca",
+                  "semester": "1", "exam": "Final", "year": "2024"},
+        )
+        assert resp.status_code == 403
+
+    async def test_upload_paper_no_file(self, admin_client):
+        """Missing file returns 422."""
+        resp = await admin_client.post(
             "/api/v1/papers/upload",
             data={"title": "No File", "subject": "X", "stream": "bca",
                   "semester": "1", "exam": "Final", "year": "2024"},
@@ -124,9 +184,9 @@ class TestUploadPaper:
         )
         assert resp.status_code in (401, 403)
 
-    async def test_upload_paper_wrong_file_type(self, authed_client):
+    async def test_upload_paper_wrong_file_type(self, admin_client):
         """Non-PDF file returns 400 or 422."""
-        resp = await authed_client.post(
+        resp = await admin_client.post(
             "/api/v1/papers/upload",
             files={"file": ("test.exe", io.BytesIO(b"not a pdf"), "application/octet-stream")},
             data={"title": "X", "subject": "Y", "stream": "bca",
@@ -134,9 +194,9 @@ class TestUploadPaper:
         )
         assert resp.status_code in (400, 422)
 
-    async def test_upload_paper_empty_file(self, authed_client):
+    async def test_upload_paper_empty_file(self, admin_client):
         """Empty file returns 400 or 422."""
-        resp = await authed_client.post(
+        resp = await admin_client.post(
             "/api/v1/papers/upload",
             files={"file": ("empty.pdf", io.BytesIO(b""), "application/pdf")},
             data={"title": "X", "subject": "Y", "stream": "bca",
@@ -171,9 +231,9 @@ class TestSearchPapers:
         assert resp.status_code == 422
 
     async def test_search_papers_no_auth(self, client):
-        """Unauthenticated search returns 401/403."""
+        """Search is public — unauthenticated requests succeed."""
         resp = await client.get("/api/v1/papers/search?q=test")
-        assert resp.status_code in (401, 403)
+        assert resp.status_code == 200
 
 
 # ===================================================================
@@ -195,9 +255,22 @@ class TestGetPaper:
         assert resp.status_code == 404
 
     async def test_get_paper_no_auth(self, client, sample_paper):
-        """Unauthenticated request returns 401/403."""
+        """Paper detail is public — unauthenticated requests succeed."""
         resp = await client.get(f"/api/v1/papers/{sample_paper.id}")
-        assert resp.status_code in (401, 403)
+        assert resp.status_code == 200
+
+    async def test_publish_status_filter_lock(self, client, authed_client):
+        """Anonymous and student users can NEVER browse non-approved statuses."""
+        for status_value in ("draft", "archived", "pending", "rejected"):
+            for c, label in ((client, "anonymous"), (authed_client, "student")):
+                resp = await c.get(f"/api/v1/papers/?paper_status={status_value}")
+                assert resp.status_code == 200, f"{label} browse {status_value} should not error"
+                papers = resp.json()["papers"]
+                # The lock silently coerces non-approved requests to APPROVED,
+                # so no draft/archived/pending/rejected paper can ever leak.
+                assert all(
+                    str(p.get("status", "")).lower() == "approved" for p in papers
+                ), f"{label} saw non-approved papers when browsing {status_value}"
 
 
 # ===================================================================

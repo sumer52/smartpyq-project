@@ -17,22 +17,24 @@ from tests.conftest import make_pdf_bytes
 # ===================================================================
 
 class TestFullUploadFlow:
-    """End-to-end flow: create account, login, upload paper, analyze it."""
+    """End-to-end flow: create account, login, upload paper, analyze it.
 
-    async def test_signup_login_upload_analyze(self, client, tenant):
-        """Complete flow from registration to analysis."""
-        # 1. Sign up
-        signup_resp = await client.post(
-            "/api/v1/auth/simple-signup",
+    Under the public-read / admin-write access model, uploads and AI
+    analysis are admin-only operations, so this flow runs as an admin.
+    """
+
+    async def test_signup_login_upload_analyze(self, client, tenant, admin_user):
+        """Complete flow from login to analysis (as admin)."""
+        # 1. Login as admin (registration creates students, not admins)
+        login_resp = await client.post(
+            "/api/v1/auth/simple-login",
             json={
-                "name": "Integration Tester",
-                "email": "integration@test.edu",
-                "password": "StrongPass123!",
-                "tenant_access_code": "TESTCODE123",
+                "email": admin_user.email,
+                "password": "AdminPass123!",
             },
         )
-        assert signup_resp.status_code == 200
-        token = signup_resp.json()["access_token"]
+        assert login_resp.status_code == 200
+        token = login_resp.json()["access_token"]
         headers = {"Authorization": f"Bearer {token}"}
 
         # 2. Verify token works
@@ -62,13 +64,20 @@ class TestFullUploadFlow:
         assert upload_resp.status_code == 201
         paper_id = upload_resp.json()["id"]
 
+        # 3b. Upload starts as DRAFT — publish before public visibility
+        pub_resp = await client.post(
+            f"/api/v1/papers/{paper_id}/publish",
+            headers=headers,
+        )
+        assert pub_resp.status_code == 200
+
         # 4. Verify paper appears in list
         list_resp = await client.get("/api/v1/papers/", headers=headers)
         assert list_resp.status_code == 200
         paper_ids = [p["id"] for p in list_resp.json()["papers"]]
         assert paper_id in paper_ids
 
-        # 5. Analyze the paper
+        # 5. Analyze the paper (admin-only operation)
         analyze_resp = await client.post(
             "/api/v1/analysis/analyze",
             headers=headers,
@@ -77,6 +86,39 @@ class TestFullUploadFlow:
         assert analyze_resp.status_code == 200
         analysis = analyze_resp.json()
         assert analysis["status"] in ("completed", "failed")
+
+        # 5b. The same flow must FAIL for a student (403)
+        student_signup = await client.post(
+            "/api/v1/auth/simple-signup",
+            json={
+                "name": "Student Cannot Upload",
+                "email": "student-cannot-upload@test.edu",
+                "password": "StrongPass123!",
+                "tenant_access_code": "TESTCODE123",
+            },
+        )
+        assert student_signup.status_code == 200
+        student_headers = {"Authorization": f"Bearer {student_signup.json()['access_token']}"}
+        student_upload = await client.post(
+            "/api/v1/papers/upload",
+            headers=student_headers,
+            files={"file": ("student.pdf", io.BytesIO(pdf_bytes), "application/pdf")},
+            data={
+                "title": "Student Should Not Upload This",
+                "subject": "Computer Science",
+                "stream": "bca",
+                "semester": "3",
+                "exam": "Final",
+                "year": "2024",
+            },
+        )
+        assert student_upload.status_code == 403
+        student_analyze = await client.post(
+            "/api/v1/analysis/analyze",
+            headers=student_headers,
+            json=[paper_id],
+        )
+        assert student_analyze.status_code == 403
 
         # 6. Check dashboard
         dashboard_resp = await client.get("/api/v1/analysis/dashboard", headers=headers)

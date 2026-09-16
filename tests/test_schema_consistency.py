@@ -225,7 +225,9 @@ def _model_tables():
 
 class TestSchemaConsistency:
     def test_migration_reaches_004(self, migrated_inspector):
-        assert migrated_inspector["version"] == "004", (
+        # 004 is the last *structural reconciliation* migration; 005+ only add
+        # columns, so pin the floor at 004 and require head >= 004.
+        assert migrated_inspector["version"] >= "004", (
             f"alembic_version={migrated_inspector['version']}"
         )
 

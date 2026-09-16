@@ -29,26 +29,26 @@ import pytest
 class TestStartAnalysis:
     """Tests for starting paper analysis."""
 
-    async def test_analyze_no_papers(self, authed_client):
-        """Empty paper list returns 404."""
-        resp = await authed_client.post(
+    async def test_analyze_no_papers(self, admin_client):
+        """Empty paper list returns 404 (admin-only endpoint)."""
+        resp = await admin_client.post(
             "/api/v1/analysis/analyze",
             json=[],
         )
         # Empty list or no papers found
         assert resp.status_code in (200, 404, 422)
 
-    async def test_analyze_nonexistent_paper(self, authed_client):
+    async def test_analyze_nonexistent_paper(self, admin_client):
         """Non-existent paper IDs return 404."""
-        resp = await authed_client.post(
+        resp = await admin_client.post(
             "/api/v1/analysis/analyze",
             json=[99999],
         )
         assert resp.status_code in (404, 200)
 
-    async def test_analyze_existing_paper(self, authed_client, sample_paper):
+    async def test_analyze_existing_paper(self, admin_client, sample_paper):
         """Existing paper triggers analysis (may fail on extraction)."""
-        resp = await authed_client.post(
+        resp = await admin_client.post(
             "/api/v1/analysis/analyze",
             json=[sample_paper.id],
         )
@@ -57,6 +57,14 @@ class TestStartAnalysis:
         data = resp.json()
         assert "status" in data
         assert data["status"] in ("completed", "failed", "pending")
+
+    async def test_analyze_student_forbidden(self, authed_client, sample_paper):
+        """Students cannot run AI analysis — admin-only operation."""
+        resp = await authed_client.post(
+            "/api/v1/analysis/analyze",
+            json=[sample_paper.id],
+        )
+        assert resp.status_code == 403
 
     async def test_analyze_no_auth(self, client, sample_paper):
         """Unauthenticated analysis returns 401/403."""
@@ -123,9 +131,9 @@ class TestListQuestions:
         assert len(resp.json()) >= 1
 
     async def test_list_questions_no_auth(self, client):
-        """Unauthenticated request returns 401/403."""
+        """Questions are public content — unauthenticated requests succeed."""
         resp = await client.get("/api/v1/analysis/questions")
-        assert resp.status_code in (401, 403)
+        assert resp.status_code == 200
 
 
 # ===================================================================
@@ -306,10 +314,10 @@ class TestDashboard:
         assert "repeated_groups" in data
         assert "most_repeated" in data
 
-    async def test_dashboard_after_analysis(self, authed_client, sample_paper):
+    async def test_dashboard_after_analysis(self, authed_client, admin_client, sample_paper):
         """Dashboard reflects analysis results."""
-        # Run analysis
-        await authed_client.post(
+        # Run analysis (admin-only operation)
+        await admin_client.post(
             "/api/v1/analysis/analyze",
             json=[sample_paper.id],
         )

@@ -29,6 +29,15 @@ class TestRejectPaper:
         assert upload_resp.status_code == 201
         paper_id = upload_resp.json()["id"]
 
+        # Reject only applies to pending papers; uploads are DRAFT now, so
+        # move it into the moderation queue first.
+        await admin_client.post(f"/api/v1/papers/{paper_id}/publish")
+        await admin_client.post(f"/api/v1/papers/{paper_id}/unpublish")
+        # ARCHIVED -> publish again puts it to APPROVED; reject accepts
+        # PENDING/APPROVED, so publish it and reject from there.
+        pub = await admin_client.post(f"/api/v1/papers/{paper_id}/publish")
+        assert pub.status_code == 200
+
         # Reject it
         resp = await admin_client.post(
             f"/api/v1/papers/{paper_id}/reject",
@@ -115,6 +124,10 @@ class TestStampPaper:
             },
         )
         paper_id = upload_resp.json()["id"]
+
+        # Stamping is for public (approved) papers — publish the DRAFT first.
+        pub = await admin_client.post(f"/api/v1/papers/{paper_id}/publish")
+        assert pub.status_code == 200
 
         resp = await admin_client.post(f"/api/v1/papers/{paper_id}/stamp")
         assert resp.status_code == 200
