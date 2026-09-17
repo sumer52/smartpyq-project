@@ -117,7 +117,7 @@ const RepeatedQuestionsPage = () => {
                 ) : groups.length === 0 ? (
                   <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
                     <p className="text-gray-400">No repeated questions found yet.</p>
-                    <button onClick={() => navigate('/analyze')} className="btn btn-primary px-5 py-2 mt-3 text-sm">Run Analysis</button>
+                    <button onClick={() => navigate('/analyze')} className="btn btn-primary mt-3">Run Analysis</button>
                   </div>
                 ) : groups.map((group, idx) => (
                   <motion.div key={group.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
@@ -177,7 +177,7 @@ const RepeatedQuestionsPage = () => {
             ) : analyses.length === 0 ? (
               <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
                 <p className="text-gray-400 text-lg">No analyses yet</p>
-                <button onClick={() => navigate('/analyze')} className="btn btn-primary px-6 py-2 mt-4">Start Your First Analysis</button>
+                <button onClick={() => navigate('/analyze')} className="btn btn-primary mt-4">Start Your First Analysis</button>
               </div>
             ) : (
               <div className="space-y-4">

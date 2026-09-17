@@ -50,7 +50,7 @@ const SessionExpiredBanner = () => {
               <div className="mt-3 flex items-center space-x-3">
                 <Link
                   to="/admin/login"
-                  className="btn btn-primary btn-sm px-4 py-1.5 text-xs font-semibold"
+                  className="btn btn-sm btn-primary font-semibold"
                   onClick={() => setVisible(false)}
                 >
                   Admin Login

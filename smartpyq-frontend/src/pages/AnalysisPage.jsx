@@ -234,10 +234,10 @@ const AnalysisPage = () => {
               )}
             </div>
             <div className="flex flex-wrap gap-2">
-              <button onClick={() => navigate('/pyq')} className="btn btn-secondary px-4 py-2 text-sm">Back to PYQs</button>
-              <button onClick={changePapers} className="btn btn-secondary px-4 py-2 text-sm">Change Papers</button>
+              <button onClick={() => navigate('/pyq')} className="btn btn-secondary">Back to PYQs</button>
+              <button onClick={changePapers} className="btn btn-secondary">Change Papers</button>
               <button onClick={() => navigate(practiceUrl)} disabled={!paperIds.length}
-                className="btn btn-primary px-4 py-2 text-sm disabled:opacity-40">Practice These Questions</button>
+                className="btn btn-primary disabled:opacity-40">Practice These Questions</button>
             </div>
           </div>
         </motion.div>
@@ -263,8 +263,8 @@ const AnalysisPage = () => {
           <div className="bg-red-500/10 border border-red-400/30 text-red-300 rounded-xl p-4 mb-6 text-sm">
             {error}
             <div className="mt-3 flex gap-2">
-              <button onClick={() => runAnalysis(paperIds)} className="btn btn-secondary px-4 py-1.5 text-xs">Retry</button>
-              <button onClick={changePapers} className="btn btn-secondary px-4 py-1.5 text-xs">Choose different papers</button>
+              <button onClick={() => runAnalysis(paperIds)} className="btn btn-sm btn-secondary">Retry</button>
+              <button onClick={changePapers} className="btn btn-sm btn-secondary">Choose different papers</button>
             </div>
           </div>
         )}
@@ -551,8 +551,8 @@ const AnalysisPage = () => {
                 a.download = 'pyq-analysis.json';
                 a.click();
                 URL.revokeObjectURL(a.href);
-              }} className="btn btn-secondary px-6 py-2">Download Report (JSON)</button>
-              <button onClick={() => navigate('/repeated-questions')} className="btn btn-secondary px-6 py-2">View Repeated Questions</button>
+              }} className="btn btn-secondary">Download Report (JSON)</button>
+              <button onClick={() => navigate('/repeated-questions')} className="btn btn-secondary">View Repeated Questions</button>
             </div>
           </motion.div>
         )}
@@ -615,7 +615,7 @@ const AnalysisPage = () => {
                 </div>
               )}
               <button onClick={() => { setDetailQ(null); navigate(`/practice?papers=${paperIds.join(',')}&q=${detailQ.id}`); }}
-                className="btn btn-primary btn-block py-2.5">Practice This Question</button>
+                className="btn btn-primary btn-block">Practice This Question</button>
             </div>
           </div>
         </div>

@@ -490,19 +490,19 @@ const ChatWidget = ({ className = "" }) => {
                       {messages.length <= 1 && (
                         <>
                           <button
-                            className="btn btn-sm btn-ghost btn-pill text-xs"
+                            className="btn btn-sm btn-ghost btn-pill"
                             onClick={() => setInputValue('Help me find previous year papers for computer science')}
                           >
                             Find Papers
                           </button>
                           <button
-                            className="btn btn-sm btn-ghost btn-pill text-xs"
+                            className="btn btn-sm btn-ghost btn-pill"
                             onClick={() => setInputValue('What are some good study tips for exams?')}
                           >
                             Study Tips
                           </button>
                           <button
-                            className="btn btn-sm btn-ghost btn-pill text-xs"
+                            className="btn btn-sm btn-ghost btn-pill"
                             onClick={() => setInputValue('Explain this topic to me')}
                           >
                             Explain Topic

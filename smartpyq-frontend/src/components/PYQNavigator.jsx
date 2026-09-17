@@ -250,7 +250,7 @@ const PYQNavigator = () => {
           </div>
           <div className="flex-1 text-xs text-gray-400 hidden sm:block">{selectedYears.length ? `Selected: ${selectedYears.join(', ')}` : 'Tick the checkbox on a year card, or tap a card to browse its papers.'}</div>
           <button onClick={handleAnalyzeSelected} disabled={selectedYears.length === 0 || analyzeBusy}
-            className="btn btn-primary px-6 py-2.5 flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
+            className="btn btn-primary flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
             {analyzeBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flame className="w-4 h-4" />}
             {analyzeBusy ? 'Collecting papers...' : 'Analyze Selected Papers'}
           </button>

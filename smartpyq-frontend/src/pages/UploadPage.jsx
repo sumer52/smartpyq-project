@@ -70,8 +70,8 @@ const UploadPage = () => {
                 <h3 className="text-xl font-semibold text-white mb-2">Admin access required</h3>
                 <p className="text-gray-400 mb-8 max-w-md mx-auto">Uploading is restricted to SmartPYQ administrators. Students can browse, search, practice, and download every published paper — no account needed.</p>
                 <div className="flex items-center justify-center gap-3">
-                  <a href="/admin/login" className="btn btn-primary px-6 py-3">Admin Login</a>
-                  <a href="/pyq" className="btn btn-secondary px-6 py-3">Browse PYQ Hub</a>
+                  <a href="/admin/login" className="btn btn-primary btn-lg">Admin Login</a>
+                  <a href="/pyq" className="btn btn-secondary btn-lg">Browse PYQ Hub</a>
                 </div>
               </div>
             )}
@@ -163,7 +163,7 @@ const UploadPage = () => {
             ))}
           </div>
           <div className="text-center mt-8">
-            <a href="/support" className="btn btn-secondary px-6 py-2.5 text-sm">Need more help? Contact Support</a>
+            <a href="/support" className="btn btn-secondary">Need more help? Contact Support</a>
           </div>
         </motion.section>
       </div>

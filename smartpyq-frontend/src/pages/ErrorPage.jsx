@@ -79,18 +79,18 @@ const ErrorPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Link to="/" className="btn btn-primary px-8 py-3 font-semibold inline-flex items-center justify-center">
+          <Link to="/" className="btn btn-primary btn-lg font-semibold">
             <HomeIcon className="h-5 w-5 mr-2" />
             Go Home
           </Link>
           <button
             onClick={() => window.history.back()}
-            className="btn btn-secondary px-8 py-3 font-semibold inline-flex items-center justify-center"
+            className="btn btn-secondary btn-lg font-semibold"
           >
             <ArrowLeftIcon className="h-5 w-5 mr-2" />
             Go Back
           </button>
-          <Link to="/contact" className="btn btn-ghost px-8 py-3 font-semibold inline-flex items-center justify-center">
+          <Link to="/contact" className="btn btn-ghost btn-lg font-semibold">
             Contact Support
           </Link>
         </motion.div>

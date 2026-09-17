@@ -190,10 +190,10 @@ const CookiePolicyPage = () => {
               If you have any questions about our use of cookies, please contact us.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Link to="/contact" className="btn btn-primary px-6 py-3 font-semibold">
+              <Link to="/contact" className="btn btn-primary btn-lg font-semibold">
                 Contact Support
               </Link>
-              <a href="mailto:privacy@smartpyq.com" className="btn btn-secondary px-6 py-3 font-semibold">
+              <a href="mailto:privacy@smartpyq.com" className="btn btn-secondary btn-lg font-semibold">
                 privacy@smartpyq.com
               </a>
             </div>

@@ -240,7 +240,7 @@ const ContactPage = () => {
                 <motion.button
                   type="submit"
                   disabled={isSubmitting}
-                  className="btn btn-primary btn-block py-4 text-lg font-semibold"
+                  className="btn btn-primary btn-block btn-xl font-semibold"
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center space-x-2">

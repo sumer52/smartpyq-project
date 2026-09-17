@@ -264,7 +264,7 @@ const MySubmissionsPage = () => {
           )}
 
           <button type="submit" disabled={uploading}
-            className="btn btn-primary w-full sm:w-auto mt-6 px-8 py-3 disabled:opacity-50 disabled:cursor-not-allowed">
+            className="btn btn-primary btn-lg w-full sm:w-auto mt-6 disabled:opacity-50 disabled:cursor-not-allowed">
             {uploading ? 'Submitting…' : 'Upload Paper'}
           </button>
           <p className="text-[11px] text-gray-500 mt-3">

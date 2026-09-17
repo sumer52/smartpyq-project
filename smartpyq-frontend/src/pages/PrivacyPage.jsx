@@ -267,13 +267,13 @@ const PrivacyPage = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <motion.button
                 onClick={() => window.location.href = '/contact'}
-                className="btn btn-primary px-6 py-3 font-semibold"
+                className="btn btn-primary btn-lg font-semibold"
               >
                 Contact Support
               </motion.button>
               <motion.a
                 href="mailto:privacy@smartpyq.com"
-                className="btn btn-secondary px-6 py-3 font-semibold"
+                className="btn btn-secondary btn-lg font-semibold"
               >
                 privacy@smartpyq.com
               </motion.a>

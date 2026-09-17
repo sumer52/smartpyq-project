@@ -827,8 +827,8 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
 
               {/* Navigation */}
               <div className="mt-6 flex justify-between">
-                <button onClick={prevStep} className="btn btn-ghost px-5 py-2.5 text-sm">Back</button>
-                <button onClick={nextStep} className="btn btn-primary px-6 py-2.5 text-sm">Review Upload</button>
+                <button onClick={prevStep} className="btn btn-ghost">Back</button>
+                <button onClick={nextStep} className="btn btn-primary">Review Upload</button>
               </div>
             </motion.div>
           )}
@@ -881,10 +881,10 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
               </div>
 
               <div className="mt-6 flex justify-between">
-                <button onClick={() => { setShowCorrections(false); setCorrections([]); }} className="btn btn-ghost px-5 py-2.5 text-sm">Back to Edit</button>
+                <button onClick={() => { setShowCorrections(false); setCorrections([]); }} className="btn btn-ghost">Back to Edit</button>
                 <div className="flex gap-3">
-                  <button onClick={skipCorrections} className="btn btn-ghost px-5 py-2.5 text-sm text-gray-400">Skip All</button>
-                  <button onClick={applyAndContinue} className="btn btn-primary px-6 py-2.5 text-sm">
+                  <button onClick={skipCorrections} className="btn btn-ghost text-gray-400">Skip All</button>
+                  <button onClick={applyAndContinue} className="btn btn-primary">
                     Apply {Object.values(acceptedCorrections).filter(Boolean).length} & Continue
                   </button>
                 </div>
@@ -976,15 +976,15 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
 
               {/* Action buttons */}
               <div className="flex justify-between">
-                <button onClick={prevStep} disabled={isUploading} className="btn btn-ghost px-5 py-2.5 text-sm disabled:opacity-50">Back</button>
+                <button onClick={prevStep} disabled={isUploading} className="btn btn-ghost disabled:opacity-50">Back</button>
                 <div className="flex gap-3">
                   <button onClick={() => { setIsUploading(false); setCurrentStep(1); setUploadData(prev => ({ ...prev, file: null })); setAnalysisResult(null); setDetectedQuestions([]); }}
                     disabled={isUploading}
-                    className="btn btn-ghost px-5 py-2.5 text-sm disabled:opacity-50 text-gray-400">
+                    className="btn btn-ghost disabled:opacity-50 text-gray-400">
                     Cancel
                   </button>
                   <button onClick={handleSubmit} disabled={isUploading}
-                    className="btn btn-primary px-8 py-2.5 text-sm disabled:opacity-50 flex items-center gap-2">
+                    className="btn btn-primary disabled:opacity-50 flex items-center gap-2">
                     {isUploading ? (<><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>Uploading...</>)
                     : (<><CloudArrowUpIcon className="h-4 w-4" /> Confirm & Upload</>)}
                   </button>

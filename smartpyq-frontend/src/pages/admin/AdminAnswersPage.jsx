@@ -388,10 +388,10 @@ const AdminAnswersPage = () => {
                   {/* Save / replace */}
                   <div className="flex flex-col sm:flex-row gap-3 pt-1">
                     <button onClick={saveAnswer} disabled={saving}
-                      className="btn btn-primary flex-1 py-2.5 disabled:opacity-50 disabled:cursor-not-allowed">
+                      className="btn btn-primary flex-1 disabled:opacity-50 disabled:cursor-not-allowed">
                       {saving ? 'Saving…' : hasExisting ? 'Replace Answer' : 'Save & Publish Answer'}
                     </button>
-                    <button onClick={closeEditor} className="btn btn-secondary px-6 py-2.5">Close</button>
+                    <button onClick={closeEditor} className="btn btn-secondary">Close</button>
                   </div>
                   {hasExisting && (
                     <p className="text-[11px] text-amber-300/80 flex items-center gap-1.5">

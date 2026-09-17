@@ -414,7 +414,7 @@ const HomePage = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.5, delay: 1.1 }}
               >
-                <MagneticButton className="btn btn-primary px-6 py-3.5 text-sm whitespace-nowrap" onClick={() => navigate('/pyq')}>
+                <MagneticButton className="btn btn-primary btn-lg whitespace-nowrap" onClick={() => navigate('/pyq')}>
                   <Search className="h-4 w-4" /> Find your PYQs
                 </MagneticButton>
                 <form onSubmit={handleSearch} className="relative flex-1">
@@ -914,7 +914,7 @@ const HomePage = () => {
                 <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-400" /> AI Verification</span>
                 <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-400" /> Community Contribution</span>
               </div>
-              <ShimmerButton className="btn btn-primary px-8 py-3" onClick={() => navigate('/upload')}>
+              <ShimmerButton className="btn btn-primary btn-lg" onClick={() => navigate('/upload')}>
                 <Upload className="h-5 w-5" /> Upload Question Paper
               </ShimmerButton>
             </div>
@@ -953,7 +953,7 @@ const HomePage = () => {
               Have a question about your subject, exam preparation, programming, or concepts?
               Ask the SmartPYQ AI assistant — it is here to help you learn and prepare smarter.
             </p>
-            <ShimmerButton className="btn btn-primary btn-lg px-8 py-3.5" onClick={() => navigate('/ai')}>
+            <ShimmerButton className="btn btn-lg btn-primary" onClick={() => navigate('/ai')}>
               <Bot className="h-5 w-5" /> Chat with AI
             </ShimmerButton>
           </motion.div>
@@ -1041,7 +1041,7 @@ const HomePage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
-            <MagneticButton className="btn btn-primary btn-lg px-10 py-3.5" onClick={() => navigate('/pyq')}>
+            <MagneticButton className="btn btn-lg btn-primary" onClick={() => navigate('/pyq')}>
               <BookOpen className="h-5 w-5" /> Get Started
             </MagneticButton>
           </motion.div>

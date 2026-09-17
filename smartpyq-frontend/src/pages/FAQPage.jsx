@@ -248,7 +248,7 @@ const FAQPage = () => {
               </p>
               <motion.button
                 onClick={() => window.location.href = '/contact'}
-                className="btn btn-primary px-8 py-3 font-semibold"
+                className="btn btn-primary btn-lg font-semibold"
               >
                 Contact Support
               </motion.button>

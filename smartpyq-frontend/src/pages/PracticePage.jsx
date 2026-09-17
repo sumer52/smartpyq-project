@@ -284,14 +284,14 @@ const PracticePage = () => {
                           className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none" />
                         <div className="flex flex-col sm:flex-row gap-3">
                           <button onClick={() => handlePractice('reviewed')}
-                            className="btn btn-primary flex-1 py-2">I Knew This</button>
+                            className="btn btn-sm btn-primary flex-1">I Knew This</button>
                           <button onClick={() => handlePractice('attempted')}
-                            className="btn btn-primary flex-1 py-2 bg-orange-600 hover:bg-orange-700">Needs Practice</button>
+                            className="btn btn-sm btn-primary flex-1 bg-orange-600 hover:bg-orange-700">Needs Practice</button>
                         </div>
                       </div>
                     ) : (
                       <button onClick={handleRevealAnswer}
-                        className="btn btn-secondary btn-block py-3">
+                        className="btn btn-secondary btn-block">
                         Show Answer
                       </button>
                     )}
@@ -302,10 +302,10 @@ const PracticePage = () => {
                 <div className="flex gap-3 justify-center">
                   <button onClick={() => { if (currentIdx > 0) { setCurrentIdx(currentIdx - 1); setShowAnswer(false); } }}
                     disabled={currentIdx === 0}
-                    className="btn btn-secondary px-6 py-2">Previous</button>
+                    className="btn btn-secondary">Previous</button>
                   <button onClick={() => { if (currentIdx < questions.length - 1) { setCurrentIdx(currentIdx + 1); setShowAnswer(false); } }}
                     disabled={currentIdx >= questions.length - 1}
-                    className="btn btn-secondary px-6 py-2">Next</button>
+                    className="btn btn-secondary">Next</button>
                 </div>
               </>
             )}

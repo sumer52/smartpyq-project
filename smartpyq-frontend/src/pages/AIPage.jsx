@@ -279,7 +279,7 @@ const AIPage = () => {
                   <MagneticButton
                     onClick={() => handleSendMessage()}
                     disabled={!inputMessage.trim() || isLoading}
-                    className="btn btn-primary px-6 py-3"
+                    className="btn btn-primary btn-lg"
                   >
                     {isLoading ? (
                       <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">

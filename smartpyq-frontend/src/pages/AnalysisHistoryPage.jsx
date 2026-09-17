@@ -53,7 +53,7 @@ const AnalysisHistoryPage = () => {
           <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
             <p className="text-gray-400 text-lg">No analyses yet</p>
             <button onClick={() => navigate('/analyze')}
-              className="btn btn-primary px-6 py-2 mt-4">Start Your First Analysis</button>
+              className="btn btn-primary mt-4">Start Your First Analysis</button>
           </div>
         ) : (
           <div className="space-y-4">

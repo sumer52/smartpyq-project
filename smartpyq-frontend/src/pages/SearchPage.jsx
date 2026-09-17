@@ -105,7 +105,7 @@ const SearchPage = () => {
                   className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 sm:py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 min-h-[48px] transition-colors" />
               </div>
               <MagneticButton type="submit" disabled={loading}
-                className="btn btn-primary px-6 py-3.5 sm:py-3 min-h-[48px] w-full sm:w-auto">
+                className="btn btn-primary btn-lg w-full sm:w-auto">
                 {loading ? 'Searching...' : 'Search'}
               </MagneticButton>
             </div>
