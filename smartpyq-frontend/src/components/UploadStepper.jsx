@@ -544,7 +544,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
               {/* Analysis error (non-blocking) */}
               {analysisError && (
                 <motion.div className="mt-3 flex items-start gap-2 text-yellow-400 text-sm p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-                  <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-medium">Could not auto-detect details</p>
                     <p className="text-yellow-400/70 text-xs mt-0.5">{analysisError}</p>
@@ -593,7 +593,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
               {/* Analysis error banner */}
               {analysisError && (
                 <div className="mb-5 flex items-start gap-2 text-yellow-400 text-sm p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl">
-                  <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-medium">Auto-detection partially failed</p>
                     <p className="text-yellow-400/70 text-xs mt-0.5">Please review and correct the details below before uploading.</p>
@@ -760,7 +760,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                       {detectedQuestions.map((q, i) => (
                         <div key={i} className="p-3 bg-white/[0.03] rounded-lg border border-white/5 group">
                           <div className="flex items-start gap-3">
-                            <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 text-xs font-bold mt-0.5">
+                            <span className="shrink-0 w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 text-xs font-bold mt-0.5">
                               {q.question_number || i + 1}
                             </span>
                             <div className="flex-1 min-w-0 space-y-2">
@@ -942,9 +942,9 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                       <div className="space-y-1.5 max-h-40 overflow-y-auto">
                         {detectedQuestions.map((q, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
-                            <span className="text-purple-400 font-medium flex-shrink-0">{q.question_number || i + 1}.</span>
+                            <span className="text-purple-400 font-medium shrink-0">{q.question_number || i + 1}.</span>
                             <span className="text-gray-300 line-clamp-2">{q.question_text}</span>
-                            {q.marks && <span className="text-gray-500 flex-shrink-0">({q.marks}m)</span>}
+                            {q.marks && <span className="text-gray-500 shrink-0">({q.marks}m)</span>}
                           </div>
                         ))}
                       </div>

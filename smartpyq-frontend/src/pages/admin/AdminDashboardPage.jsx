@@ -235,7 +235,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/upload"
-              className="inline-flex items-center gap-2 rounded-lg bg-gradient-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow hover:from-emerald-400 hover:to-teal-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-emerald-400 hover:to-teal-500"
             >
               <ArrowUpTrayIcon className="h-4 w-4" /> Upload PDF
             </Link>
@@ -531,7 +531,7 @@ const AdminDashboardPage = () => {
                   </label>
                   <textarea id="review-note" rows={2} value={reviewNote} onChange={(e) => setReviewNote(e.target.value)}
                     placeholder="Visible in the audit trail; student sees it on rejection"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none" />
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-none" />
                 </div>
 
                 {rejectMode && (
@@ -539,7 +539,7 @@ const AdminDashboardPage = () => {
                     <label htmlFor="reject-reason" className="block text-xs font-semibold text-red-300 uppercase tracking-wide mb-1.5">Rejection reason * (min 10 characters)</label>
                     <textarea id="reject-reason" rows={2} value={rejectReason} onChange={(e) => setRejectReason(e.target.value)}
                       placeholder="e.g. Wrong subject / unclear paper / duplicate / invalid document"
-                      className="w-full bg-white/5 border border-red-500/30 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-red-500 resize-none" />
+                      className="w-full bg-white/5 border border-red-500/30 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-red-500 resize-none" />
                   </div>
                 )}
 

@@ -102,7 +102,7 @@ const SearchPage = () => {
                 <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
                   onFocus={handleFocus} onBlur={handleBlur}
                   placeholder={!query ? placeholderText : ''}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 sm:py-3 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500/50 min-h-[48px] transition-colors" />
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 sm:py-3 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500/50 min-h-[48px] transition-colors" />
               </div>
               <MagneticButton type="submit" disabled={loading}
                 className="btn btn-primary btn-lg w-full sm:w-auto">
@@ -142,7 +142,7 @@ const SearchPage = () => {
                     <CursorGlow key={q.id} className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4" glowColor="rgba(99,102,241,0.1)">
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                         <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
                             <FileText className="h-4 w-4 text-indigo-400" />
                           </div>
                           <div className="flex-1 min-w-0">

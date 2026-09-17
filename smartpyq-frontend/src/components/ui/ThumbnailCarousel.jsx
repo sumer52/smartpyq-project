@@ -130,7 +130,7 @@ const ThumbnailCarousel = ({
               aria-selected={i === index}
               aria-label={`Go to slide ${i + 1}: ${item.label || item.id}`}
               onClick={() => goTo(i)}
-              className="cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:outline-none"
+              className="cursor-pointer rounded-xl focus-visible:ring-2 focus-visible:ring-brand-400 focus-visible:outline-hidden"
             >
               <motion.div
                 className={`relative h-12 w-20 sm:h-14 sm:w-24 rounded-xl overflow-hidden border transition-colors duration-300 ${item.thumbClass || 'bg-white/5'} ${i === index ? 'border-brand-400/80' : 'border-white/10 hover:border-white/25'}`}

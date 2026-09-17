@@ -41,7 +41,7 @@ const SessionExpiredBanner = () => {
           transition={{ duration: 0.3 }}
         >
           <div className="bg-amber-500/15 backdrop-blur-xl border border-amber-500/30 rounded-xl p-4 shadow-2xl flex items-start space-x-3">
-            <ExclamationCircleIcon className="h-5 w-5 text-amber-400 flex-shrink-0 mt-0.5" />
+            <ExclamationCircleIcon className="h-5 w-5 text-amber-400 shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm font-semibold text-amber-300">Session Expired</p>
               <p className="text-sm text-gray-300 mt-1">
@@ -65,7 +65,7 @@ const SessionExpiredBanner = () => {
             </div>
             <button
               onClick={() => setVisible(false)}
-              className="text-gray-400 hover:text-white transition-colors flex-shrink-0"
+              className="text-gray-400 hover:text-white transition-colors shrink-0"
               aria-label="Dismiss"
             >
               <XMarkIcon className="h-4 w-4" />

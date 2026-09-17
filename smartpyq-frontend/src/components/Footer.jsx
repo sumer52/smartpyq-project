@@ -147,7 +147,7 @@ const Footer = ({ className = "" }) => {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`text-gray-500 ${social.color} transition-colors p-2 rounded-lg hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-brand-500/30`}
+                    className={`text-gray-500 ${social.color} transition-colors p-2 rounded-lg hover:bg-white/5 focus:outline-hidden focus:ring-2 focus:ring-brand-500/30`}
                     aria-label={`Follow us on ${social.name}`}
                   >
                     <IconComponent className="h-5 w-5" />
@@ -165,7 +165,7 @@ const Footer = ({ className = "" }) => {
               </div>
 
               <div className="flex items-start">
-                <MapPinIcon className="h-4 w-4 mr-2 mt-0.5 flex-shrink-0" />
+                <MapPinIcon className="h-4 w-4 mr-2 mt-0.5 shrink-0" />
                 <span>Hyderabad, Telangana</span>
               </div>
             </div>
@@ -315,8 +315,8 @@ const Footer = ({ className = "" }) => {
       </div>
       {/* Background decoration */}
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute -top-40 -right-40 w-80 h-80 bg-gradient-to-br from-brand-500/5 to-accent-500/5 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-gradient-to-tr from-accent-500/5 to-brand-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-linear-to-br from-brand-500/5 to-accent-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-linear-to-tr from-accent-500/5 to-brand-500/5 rounded-full blur-3xl"></div>
       </div>
     </footer>
   );

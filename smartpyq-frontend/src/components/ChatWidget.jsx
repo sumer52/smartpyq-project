@@ -338,7 +338,7 @@ const ChatWidget = ({ className = "" }) => {
             style={{ width: 'min(384px, calc(100vw - 48px))', maxHeight: 'min(600px, calc(100vh - 100px))' }}
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-brand-600 to-brand-700 px-4 py-3 flex items-center justify-between">
+            <div className="bg-linear-to-r from-brand-600 to-brand-700 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
                   <SparklesIcon className="h-5 w-5 text-white" />
@@ -391,7 +391,7 @@ const ChatWidget = ({ className = "" }) => {
                           <div
                             className={`px-4 py-2 rounded-2xl ${message.type === 'user'
                               ? 'bg-brand-600 text-white rounded-br-md'
-                              : 'bg-white/5 text-white rounded-bl-md shadow-sm border border-white/10'
+                              : 'bg-white/5 text-white rounded-bl-md shadow-xs border border-white/10'
                             }`}
                           >
                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -421,7 +421,7 @@ const ChatWidget = ({ className = "" }) => {
                           <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center mr-2">
                             <SparklesIcon className="h-4 w-4 text-indigo-300" />
                           </div>
-                          <div className="bg-white/5 rounded-2xl rounded-bl-md shadow-sm border border-white/10">
+                          <div className="bg-white/5 rounded-2xl rounded-bl-md shadow-xs border border-white/10">
                             <TypingIndicator />
                           </div>
                         </div>
@@ -443,7 +443,7 @@ const ChatWidget = ({ className = "" }) => {
                           {error}
                           <button
                             onClick={() => setError(null)}
-                            className="ml-auto text-red-500 hover:text-red-700 focus:outline-none"
+                            className="ml-auto text-red-500 hover:text-red-700 focus:outline-hidden"
                             aria-label="Dismiss error"
                           >
                             <XMarkIcon className="h-4 w-4" />

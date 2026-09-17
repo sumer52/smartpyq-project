@@ -84,7 +84,7 @@ const ContactPage = () => {
     { value: 'bug', label: 'Bug Report' }
   ];
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -95,7 +95,7 @@ const ContactPage = () => {
             className="text-center mb-16"
           >
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Contact <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-accent-500">Support</span>
+              Contact <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Support</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Have a question, found a bug, or want to suggest a feature? We would love to hear from you and improve SmartPYQ.
@@ -116,7 +116,7 @@ const ContactPage = () => {
                   href={method.action}
                   className="card-nav p-6"
                 >
-                  <div className="w-12 h-12 bg-gradient-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                  <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
                     <IconComponent className="w-6 h-6 text-white" />
                   </div>
                   <h3 className="text-lg font-semibold text-white mb-2">{method.title}</h3>
@@ -150,7 +150,7 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                       placeholder="Your full name"
                     />
                   </div>
@@ -165,7 +165,7 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                       placeholder="your@email.com"
                     />
                   </div>
@@ -181,7 +181,7 @@ const ContactPage = () => {
                       value={formData.category}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                     >
                       {categories.map((category) => (
                         <option key={category.value} value={category.value}>
@@ -201,7 +201,7 @@ const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                       placeholder="What is this about?"
                     />
                   </div>
@@ -217,7 +217,7 @@ const ContactPage = () => {
                     onChange={handleInputChange}
                     required
                     rows={6}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                     placeholder="Tell us what happened, what you expected, and any details that might help..."
                   />
                 </div>

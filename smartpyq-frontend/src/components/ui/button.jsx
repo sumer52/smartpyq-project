@@ -14,12 +14,12 @@ import { cn } from "@/lib/utils"
  *   destructive → red-500 surface for destructive confirmations
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0620] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0620] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-gradient-to-b from-brand-500 to-brand-600 text-white shadow-[0_6px_30px_rgba(108,78,246,0.25)] hover:from-brand-400 hover:to-brand-500",
+          "bg-linear-to-b from-brand-500 to-brand-600 text-white shadow-[0_6px_30px_rgba(108,78,246,0.25)] hover:from-brand-400 hover:to-brand-500",
         secondary:
           "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20",
         ghost: "text-gray-300 hover:bg-white/5 hover:text-white",

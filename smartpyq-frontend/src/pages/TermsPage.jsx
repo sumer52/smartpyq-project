@@ -118,7 +118,7 @@ const TermsPage = () => {
   ];
   const lastUpdated = 'January 15, 2024';
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -128,11 +128,11 @@ const TermsPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="w-16 h-16 bg-gradient-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <DocumentTextIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Terms of <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-accent-500">Service</span>
+              Terms of <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Service</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
               Please read these Terms of Service carefully before using SmartPYQ. These terms govern your use of our platform and services.
@@ -169,7 +169,7 @@ const TermsPage = () => {
                   className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8"
                 >
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-12 h-12 bg-gradient-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center">
+                    <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center">
                       <IconComponent className="w-6 h-6 text-white" />
                     </div>
                     <h2 className="text-2xl font-bold text-white">{section.title}</h2>
@@ -269,7 +269,7 @@ const TermsPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 1.3 }}
-            className="bg-gradient-to-r from-brand-500/10 to-accent-500/10 border border-brand-500/20 rounded-2xl p-8 mt-8 text-center"
+            className="bg-linear-to-r from-brand-500/10 to-accent-500/10 border border-brand-500/20 rounded-2xl p-8 mt-8 text-center"
           >
             <h2 className="text-2xl font-bold text-white mb-4">Questions About These Terms?</h2>
             <p className="text-gray-300 leading-relaxed mb-6">

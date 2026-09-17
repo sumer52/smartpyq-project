@@ -225,7 +225,7 @@ const AdminAnswersPage = () => {
         <div className="bg-white/5 rounded-2xl border border-white/10 p-5 mb-6">
           <label htmlFor="subject-select" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">1 · Choose subject</label>
           <select id="subject-select" value={subject} onChange={(e) => { setSubject(e.target.value); setSelected(null); setDetail(null); }}
-            className="w-full sm:w-auto min-w-[260px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500">
+            className="w-full sm:w-auto min-w-[260px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-indigo-500">
             <option value="" className="bg-gray-900">— Select a subject —</option>
             {subjects.map(s => <option key={s} value={s} className="bg-gray-900">{s}</option>)}
           </select>
@@ -243,7 +243,7 @@ const AdminAnswersPage = () => {
                 <div className="relative">
                   <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search questions…"
-                    className="w-44 sm:w-56 bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500" />
+                    className="w-44 sm:w-56 bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500" />
                 </div>
               </div>
               {loading ? (
@@ -346,7 +346,7 @@ const AdminAnswersPage = () => {
                       <label htmlFor="answer-text" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Write the answer</label>
                       <textarea id="answer-text" value={textValue} onChange={(e) => setTextValue(e.target.value)}
                         placeholder={'Write the complete answer…\n\nSupports paragraphs, line breaks,\n- bullet points\n1. numbered steps\n> quotes and indents'}
-                        className="w-full h-44 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-y" />
+                        className="w-full h-44 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-y" />
                       <p className="text-[11px] text-gray-500 mt-1.5">Blank line starts a new paragraph. Lines starting with “- ” become bullets, “1.” numbered steps, “&gt;” quotes.</p>
                       {textValue.trim() && (
                         <div className="mt-3 p-3 rounded-xl border border-white/10 bg-white/5">

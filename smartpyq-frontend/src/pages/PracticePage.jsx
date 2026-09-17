@@ -281,7 +281,7 @@ const PracticePage = () => {
                         ) : null}
                         <textarea value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Write your own answer here to test your understanding..."
-                          className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 resize-none" />
+                          className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-none" />
                         <div className="flex flex-col sm:flex-row gap-3">
                           <button onClick={() => handlePractice('reviewed')}
                             className="btn btn-sm btn-primary flex-1">I Knew This</button>

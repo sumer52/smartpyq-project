@@ -118,7 +118,7 @@ const FAQPage = () => {
     return matchesCategory && matchesSearch;
   });
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -129,7 +129,7 @@ const FAQPage = () => {
             className="text-center mb-16"
           >
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Frequently Asked <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-accent-500">Questions</span>
+              Frequently Asked <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Questions</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
               Find answers to common questions about SmartPYQ. Can't find what you're looking for? Contact our support team.
@@ -143,7 +143,7 @@ const FAQPage = () => {
                   placeholder="Search questions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-4 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
             </div>
@@ -207,7 +207,7 @@ const FAQPage = () => {
                         animate={{ rotate: openItems.has(faq.id) ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <ChevronDownIcon className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                        <ChevronDownIcon className="w-5 h-5 text-gray-400 shrink-0" />
                       </motion.div>
                     </button>
                     <AnimatePresence>

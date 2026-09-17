@@ -182,7 +182,7 @@ const PYQNavigator = () => {
     const specs = getSpecializations(selectedStream.key);
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" variants={container} initial="hidden" animate="visible" exit="exit">
       {Object.entries(specs).map(([k, v]) => (<motion.div key={k} variants={card} className="card-nav p-8 cursor-pointer text-center" onClick={() => handleSpecSelect(k, v)}>
-        <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><GraduationCap className="w-8 h-8 text-white" /></div>
+        <div className="w-16 h-16 bg-linear-to-r from-indigo-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><GraduationCap className="w-8 h-8 text-white" /></div>
         <h3 className="text-xl font-bold text-white mb-2">{v.displayName}</h3>
         <p className="text-gray-400 text-sm">{v.name}</p>
       </motion.div>))}
@@ -194,7 +194,7 @@ const PYQNavigator = () => {
     return (<motion.div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" variants={container} initial="hidden" animate="visible" exit="exit">
       {opts.map((s) => { const has = sems[s.id] && sems[s.id].length > 0; return (
         <motion.div key={s.id} variants={card} className={`card-nav p-6 cursor-pointer text-center ${!has ? 'opacity-40' : ''}`} onClick={() => has && handleSemSelect(s)}>
-          <div className="w-14 h-14 bg-gradient-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-3"><BookOpen className="w-7 h-7 text-white" /></div>
+          <div className="w-14 h-14 bg-linear-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-3"><BookOpen className="w-7 h-7 text-white" /></div>
           <h3 className="text-xl font-bold text-white mb-1">{s.displayName}</h3>
           <p className="text-gray-400 text-xs">{has ? sems[s.id].length + ' subjects' : 'No subjects'}</p>
         </motion.div>); })}
@@ -205,7 +205,7 @@ const PYQNavigator = () => {
     const filtered = subs.filter(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={container} initial="hidden" animate="visible" exit="exit">
       {filtered.map((s) => (<motion.div key={s} variants={card} className="card-nav p-6 cursor-pointer flex items-center gap-4" onClick={() => handleSubjectSelect(s)}>
-        <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center flex-shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+        <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center shrink-0"><FileText className="w-6 h-6 text-white" /></div>
         <div><h3 className="text-lg font-bold text-white">{s}</h3><p className="text-gray-400 text-sm">View PYQ papers</p></div>
       </motion.div>))}
       {filtered.length === 0 && <p className="text-gray-400 text-center col-span-full py-8">No subjects match your search.</p>}
@@ -232,7 +232,7 @@ const PYQNavigator = () => {
                 <CheckSquare className="w-5 h-5" strokeWidth={3} />
               </span>
             </label>
-            <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-2"><Calendar className="w-6 h-6 text-white" /></div>
+            <div className="w-12 h-12 bg-linear-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-2"><Calendar className="w-6 h-6 text-white" /></div>
             <h3 className="text-lg font-bold text-white">{y}</h3>
             <p className="text-gray-400 text-xs mt-1">
               {count == null ? 'View papers' : count === 0 ? 'No papers' : `${count} paper${count > 1 ? 's' : ''}`}
@@ -264,7 +264,7 @@ const PYQNavigator = () => {
     if (isLoadingPapers) return (<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" aria-busy="true" aria-label="Loading papers">{[1,2,3,4,5,6].map((i) => <SkeletonCard key={i} lines={3} />)}</div>);
     return (
       <motion.div className="space-y-6" variants={container} initial="hidden" animate="visible" exit="exit">
-        <motion.div variants={card} className="bg-gradient-to-r from-indigo-500 to-blue-600 rounded-2xl p-6 text-white">
+        <motion.div variants={card} className="bg-linear-to-r from-indigo-500 to-blue-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
             <div><h3 className="text-2xl font-bold">{selectedSubject}</h3><p className="text-indigo-100">{selectedStream?.displayName} / {selectedSpec?.displayName} / {selectedSem?.displayName} / {selectedPyqYear}</p></div>
             <div className="text-right"><div className="text-2xl font-bold">{papers.length}</div><div className="text-indigo-100 text-sm">Papers</div></div>
@@ -302,7 +302,7 @@ const PYQNavigator = () => {
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <motion.h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>PYQ Hub</motion.h1>
+          <motion.h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>PYQ Hub</motion.h1>
           <motion.p className="text-xl text-gray-400 max-w-3xl mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>Browse Osmania University previous year question papers by stream, subject, and year</motion.p>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">

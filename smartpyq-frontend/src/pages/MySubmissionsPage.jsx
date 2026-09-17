@@ -213,7 +213,7 @@ const MySubmissionsPage = () => {
             <div>
               <label htmlFor="st-stream" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Stream / Course *</label>
               <select id="st-stream" value={form.stream} onChange={(e) => setForm(f => ({ ...f, stream: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required>
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required>
                 <option value="" className="bg-gray-900">— Select stream —</option>
                 {catalog.streams.map(s => <option key={s.id} value={s.name} className="bg-gray-900">{s.name}</option>)}
               </select>
@@ -221,7 +221,7 @@ const MySubmissionsPage = () => {
             <div>
               <label htmlFor="st-sem" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Semester *</label>
               <select id="st-sem" value={form.semester} onChange={(e) => setForm(f => ({ ...f, semester: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required>
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required>
                 <option value="" className="bg-gray-900">— Select semester —</option>
                 {catalog.semesters.map(s => <option key={s.id} value={s.name} className="bg-gray-900">{s.name}</option>)}
               </select>
@@ -230,7 +230,7 @@ const MySubmissionsPage = () => {
               <label htmlFor="st-subject" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Subject *</label>
               <input id="st-subject" list="subject-options" value={form.subject} onChange={(e) => setForm(f => ({ ...f, subject: e.target.value }))}
                 placeholder="e.g. Data Structures"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required />
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required />
               <datalist id="subject-options">
                 {catalog.subjects.map(s => <option key={s} value={s} />)}
               </datalist>
@@ -238,7 +238,7 @@ const MySubmissionsPage = () => {
             <div>
               <label htmlFor="st-year" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Academic Year / Exam Year *</label>
               <select id="st-year" value={form.year} onChange={(e) => setForm(f => ({ ...f, year: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required>
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" required>
                 <option value="" className="bg-gray-900">— Select year —</option>
                 {years.map(y => <option key={y} value={y} className="bg-gray-900">{y}</option>)}
               </select>
@@ -246,7 +246,7 @@ const MySubmissionsPage = () => {
             <div>
               <label htmlFor="st-exam" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Exam</label>
               <select id="st-exam" value={form.exam} onChange={(e) => setForm(f => ({ ...f, exam: e.target.value }))}
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-indigo-500">
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-indigo-500">
                 {['Final Exam', 'Midterm', 'Quiz'].map(x => <option key={x} value={x} className="bg-gray-900">{x}</option>)}
               </select>
             </div>
@@ -254,13 +254,13 @@ const MySubmissionsPage = () => {
               <label htmlFor="st-title" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Title (optional)</label>
               <input id="st-title" value={form.title} onChange={(e) => setForm(f => ({ ...f, title: e.target.value }))}
                 placeholder="Defaults to “Subject — Year”"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" />
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30" />
             </div>
             <div className="sm:col-span-2">
               <label htmlFor="st-desc" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Description / source (optional)</label>
               <textarea id="st-desc" value={form.description} onChange={(e) => setForm(f => ({ ...f, description: e.target.value }))} rows={2}
                 placeholder="e.g. Scanned from the university library archive"
-                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 resize-none" />
+                className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 resize-none" />
             </div>
             <div className="sm:col-span-2">
               <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-1.5">Paper file * <span className="normal-case font-normal text-gray-500">(PDF, JPG, JPEG, PNG, WEBP · max 50 MB)</span></label>
@@ -311,7 +311,7 @@ const MySubmissionsPage = () => {
             <div className="flex items-center gap-2 text-xs">
               <FunnelIcon className="h-4 w-4 text-gray-500" />
               <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-gray-300 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30">
+                className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-gray-300 focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30">
                 <option value="all" className="bg-gray-900">All years</option>
                 {yearsPresent.map(y => <option key={y} value={y} className="bg-gray-900">{y}</option>)}
               </select>

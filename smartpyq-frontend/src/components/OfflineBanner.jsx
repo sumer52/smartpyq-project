@@ -42,7 +42,7 @@ const OfflineBanner = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         >
           <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-center space-x-3">
-            <WifiIcon className="h-5 w-5 text-amber-200 flex-shrink-0" />
+            <WifiIcon className="h-5 w-5 text-amber-200 shrink-0" />
             <span className="text-sm font-medium text-amber-100">
               You're currently offline. Some features may not be available.
             </span>

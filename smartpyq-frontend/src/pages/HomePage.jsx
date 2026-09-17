@@ -43,11 +43,11 @@ const AnnotatedPaper = () => {
   return (
     <div className="relative" aria-hidden="true">
       {/* ghost sheet behind, like a pile of past papers */}
-      <div className="absolute inset-0 translate-x-4 translate-y-4 rotate-[1.6deg] rounded-sm bg-[#efece4]/25" />
-      <div className="absolute inset-0 -translate-x-3 translate-y-2 -rotate-[1.2deg] rounded-sm bg-[#efece4]/40" />
+      <div className="absolute inset-0 translate-x-4 translate-y-4 rotate-[1.6deg] rounded-xs bg-[#efece4]/25" />
+      <div className="absolute inset-0 -translate-x-3 translate-y-2 -rotate-[1.2deg] rounded-xs bg-[#efece4]/40" />
 
       <motion.div
-        className="relative rounded-sm bg-[#f7f4ec] text-[#231f18] shadow-[0_24px_60px_-18px_rgba(0,0,0,0.65)]"
+        className="relative rounded-xs bg-[#f7f4ec] text-[#231f18] shadow-[0_24px_60px_-18px_rgba(0,0,0,0.65)]"
         initial={reduced ? false : { opacity: 0, y: 28, rotate: 2.5 }}
         animate={{ opacity: 1, y: 0, rotate: 0 }}
         transition={{ duration: D(0.7), ease: EASE_OUT }}
@@ -76,7 +76,7 @@ const AnnotatedPaper = () => {
             {/* Q9 — the repeated one: highlight + stamps + chip */}
             <li className="relative">
               <motion.span
-                className="absolute -inset-x-2 -inset-y-1 -z-0 rounded-sm bg-[#ffe34d]"
+                className="absolute -inset-x-2 -inset-y-1 -z-0 rounded-xs bg-[#ffe34d]"
                 style={{ transformOrigin: 'left center' }}
                 initial={reduced ? false : { scaleX: 0 }}
                 animate={{ scaleX: 1 }}
@@ -145,7 +145,7 @@ const WordReveal = ({ text, className, delay = 0 }) => {
 
 const GradientText = ({ children, className = '' }) => (
   <motion.span
-    className={`bg-gradient-to-r from-cyan-200 via-blue-200 to-purple-200 bg-clip-text text-transparent bg-[length:200%_auto] ${className}`}
+    className={`bg-linear-to-r from-cyan-200 via-blue-200 to-purple-200 bg-clip-text text-transparent bg-[length:200%_auto] ${className}`}
     animate={{ backgroundPosition: ['0% center', '200% center'] }}
     transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
   >
@@ -186,7 +186,7 @@ const AnimatedUnderline = ({ children, className = '' }) => {
     <span ref={ref} className={`relative inline-block ${className}`}>
       {children}
       <motion.span
-        className="absolute -bottom-1 left-0 h-[2px] bg-gradient-to-r from-purple-400 to-cyan-400 rounded-full"
+        className="absolute -bottom-1 left-0 h-[2px] bg-linear-to-r from-purple-400 to-cyan-400 rounded-full"
         initial={{ width: 0 }}
         animate={isInView ? { width: '100%' } : { width: 0 }}
         transition={{ duration: 0.6, delay: 0.3, ease: [0.22,1,0.36,1] }}
@@ -204,7 +204,7 @@ const ShimmerButton = ({ children, className = '', ...props }) => (
   >
     <span className="relative z-10 flex items-center gap-2">{children}</span>
     <motion.span
-      className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+      className="absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
       initial={{ x: '-100%' }}
       whileHover={{ x: '100%' }}
       transition={{ duration: 0.6, ease: 'easeInOut' }}
@@ -260,7 +260,7 @@ const testimonials = [
 ];
 
 const TestimonialCard = ({ t }) => (
-  <div className="flex-shrink-0 w-[320px] sm:w-[360px] p-5 rounded-2xl bg-white/[0.04] border border-white/10 mx-3">
+  <div className="shrink-0 w-[320px] sm:w-[360px] p-5 rounded-2xl bg-white/[0.04] border border-white/10 mx-3">
     <div className="flex gap-0.5 mb-3">
       {Array.from({ length: 5 }, (_, i) => (
         <Star key={i} className={`h-3.5 w-3.5 ${i < t.rating ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} />
@@ -268,7 +268,7 @@ const TestimonialCard = ({ t }) => (
     </div>
     <p className="text-sm text-gray-300 leading-relaxed mb-4">"{t.text}"</p>
     <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
+      <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
         {t.name.split(' ').map(n => n[0]).join('')}
       </div>
       <div>
@@ -426,7 +426,7 @@ const HomePage = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     aria-label="Search papers, subjects, and courses"
                     placeholder="or search by subject, course, year…"
-                    className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-none focus:border-purple-500/50 transition-[border-color]"
+                    className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-hidden focus:border-purple-500/50 transition-[border-color]"
                   />
                 </form>
               </motion.div>
@@ -438,10 +438,10 @@ const HomePage = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 1.35 }}
               >
-                <button onClick={() => navigate('/analyze')} className="inline-flex items-center gap-1.5 text-purple-300 hover:text-purple-200 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                <button onClick={() => navigate('/analyze')} className="inline-flex items-center gap-1.5 text-purple-300 hover:text-purple-200 transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
                   <Zap className="h-3.5 w-3.5" /> Analyze a paper
                 </button>
-                <button onClick={() => navigate('/practice')} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                <button onClick={() => navigate('/practice')} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
                   <Target className="h-3.5 w-3.5" /> Practice questions
                 </button>
               </motion.div>
@@ -581,7 +581,7 @@ const HomePage = () => {
                 className="group relative p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-purple-500/40 transition-all duration-300 text-left overflow-hidden"
                 whileHover={{ y: -4, boxShadow: '0 8px 32px rgba(139,92,246,0.15)' }}
                 onClick={() => navigate('/pyq?stream=' + s.key)}>
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <div className="absolute inset-0 bg-linear-to-br from-purple-500/0 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                 <span className="relative text-3xl mb-3 block">{s.icon || '📚'}</span>
                 <h3 className="relative text-lg font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">{s.displayName}</h3>
                 <p className="relative text-sm text-gray-500">View papers</p>
@@ -695,7 +695,7 @@ const HomePage = () => {
                   </div>
                   <h3 className="text-sm font-semibold text-white">Exam Pattern Insight</h3>
                 </div>
-                <div className="p-4 bg-gradient-to-br from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10 mb-4">
+                <div className="p-4 bg-linear-to-br from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10 mb-4">
                   <p className="text-sm text-gray-300 leading-relaxed italic">
                     "SQL and Normalization account for approximately <span className="text-white font-semibold">42% of questions</span> across the analyzed papers."
                   </p>
@@ -794,7 +794,7 @@ const HomePage = () => {
               items={demoTrendingTopics.map((stream, i) => ({
                 id: `trend-${i}`,
                 label: stream.stream,
-                thumbClass: i === 0 ? 'bg-gradient-to-br from-purple-600/40 to-indigo-700/40' : i === 1 ? 'bg-gradient-to-br from-blue-600/40 to-cyan-700/40' : 'bg-gradient-to-br from-rose-600/40 to-orange-600/40',
+                thumbClass: i === 0 ? 'bg-linear-to-br from-purple-600/40 to-indigo-700/40' : i === 1 ? 'bg-linear-to-br from-blue-600/40 to-cyan-700/40' : 'bg-linear-to-br from-rose-600/40 to-orange-600/40',
                 render: () => (
                   <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10">
                     <h3 className="text-base font-semibold text-white mb-4">{stream.stream}</h3>
@@ -894,7 +894,7 @@ const HomePage = () => {
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/15" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/15" />
             <motion.div
               className="absolute inset-0 rounded-2xl"
               style={{ background: 'conic-gradient(from 0deg, transparent, rgba(139,92,246,0.15), transparent, rgba(59,130,246,0.15), transparent)' }}

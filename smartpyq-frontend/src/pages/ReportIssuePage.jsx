@@ -99,7 +99,7 @@ const ReportIssuePage = () => {
     }));
   }, []);
   return (
-    <div className="min-h-screen bg-gradient-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -109,11 +109,11 @@ const ReportIssuePage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="w-16 h-16 bg-gradient-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
+            <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
               <ExclamationTriangleIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Report an <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-accent-500">Issue</span>
+              Report an <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Issue</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Help us make SmartPYQ better by reporting bugs, suggesting improvements, or letting us know about issues you encounter.
@@ -150,7 +150,7 @@ const ReportIssuePage = () => {
                     <div className="flex items-start space-x-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         formData.category === category.value
-                          ? 'bg-gradient-to-r from-brand-500 to-accent-500'
+                          ? 'bg-linear-to-r from-brand-500 to-accent-500'
                           : 'bg-slate-700'
                       }`}>
                         <IconComponent className="w-5 h-5 text-white" />
@@ -186,7 +186,7 @@ const ReportIssuePage = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                     placeholder="Give your issue a short title"
                   />
                 </div>
@@ -200,7 +200,7 @@ const ReportIssuePage = () => {
                     value={formData.priority}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                   >
                     {priorities.map((priority) => (
                       <option key={priority.value} value={priority.value}>
@@ -222,7 +222,7 @@ const ReportIssuePage = () => {
                   onChange={handleInputChange}
                   required
                   rows={4}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                   placeholder="What happened? How did you encounter this issue? Include any relevant details..."
                 />
               </div>
@@ -238,7 +238,7 @@ const ReportIssuePage = () => {
                     value={formData.stepsToReproduce}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                     placeholder="1. Go to...\n2. Click on...\n3. See error..."
                   />
                 </div>
@@ -256,7 +256,7 @@ const ReportIssuePage = () => {
                       value={formData.expectedBehavior}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                       placeholder="What did you expect the site to do?"
                     />
                   </div>
@@ -270,7 +270,7 @@ const ReportIssuePage = () => {
                       value={formData.actualBehavior}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                       placeholder="What did the site do instead?"
                     />
                   </div>
@@ -288,7 +288,7 @@ const ReportIssuePage = () => {
                     value={formData.browserInfo}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
                     placeholder="Browser and version info (auto-detected)"
                   />
                 </div>
@@ -302,7 +302,7 @@ const ReportIssuePage = () => {
                     value={formData.deviceInfo}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
                     placeholder="Device and screen info (auto-detected)"
                   />
                 </div>
@@ -318,7 +318,7 @@ const ReportIssuePage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                   placeholder="your@email.com (for follow-up only)"
                 />
               </div>

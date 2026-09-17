@@ -38,8 +38,8 @@ const ErrorPage = () => {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0">
-        <div className={`absolute top-20 left-20 w-64 h-64 bg-gradient-to-r ${config.gradient} rounded-full filter blur-xl animate-pulse`} />
-        <div className={`absolute bottom-20 right-20 w-48 h-48 bg-gradient-to-r ${config.gradient} rounded-full filter blur-xl animate-pulse`} style={{ animationDelay: '1s' }} />
+        <div className={`absolute top-20 left-20 w-64 h-64 bg-linear-to-r ${config.gradient} rounded-full filter blur-xl animate-pulse`} />
+        <div className={`absolute bottom-20 right-20 w-48 h-48 bg-linear-to-r ${config.gradient} rounded-full filter blur-xl animate-pulse`} style={{ animationDelay: '1s' }} />
       </div>
 
       <motion.div
@@ -56,7 +56,7 @@ const ErrorPage = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           {errorCode ? (
-            <h1 className="text-[10rem] font-bold leading-none bg-gradient-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent select-none">
+            <h1 className="text-[10rem] font-bold leading-none bg-linear-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent select-none">
               {errorCode}
             </h1>
           ) : (

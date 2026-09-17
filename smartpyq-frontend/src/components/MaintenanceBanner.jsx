@@ -29,7 +29,7 @@ const MaintenanceBanner = () => {
           initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <WrenchIcon className="h-5 w-5 text-amber-400 flex-shrink-0" />
+              <WrenchIcon className="h-5 w-5 text-amber-400 shrink-0" />
               <p className="text-sm text-amber-200">{message}</p>
             </div>
             <button onClick={dismiss} className="text-amber-400 hover:text-amber-300 p-2 rounded-lg hover:bg-white/5 transition-colors" aria-label="Dismiss maintenance notice">

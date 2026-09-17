@@ -1,5 +1,106 @@
-@tailwind base;
-@tailwind components;
+@import "tailwindcss";
+
+/* Explicit content detection: components build class strings at runtime
+   (e.g. map objects exporting full className strings), so scanning alone
+   is not safe. @source keeps the v3 content globs 1:1. */
+@source "../index.html";
+@source "./**/*.{js,ts,jsx,tsx}";
+
+/*
+ * Design tokens — the single source of truth (Tailwind v4 CSS-first config).
+ * Values are byte-identical to the former tailwind.config.js theme.extend,
+ * so the visual result is unchanged; utilities simply resolve from here.
+ */
+@theme {
+  --color-brand-50: #F0EDFF;
+  --color-brand-100: #E0D9FF;
+  --color-brand-200: #C7B8FF;
+  --color-brand-300: #A891FF;
+  --color-brand-400: #8B6AFF;
+  --color-brand-500: #6C4EF6;
+  --color-brand-600: #5A3CE0;
+  --color-brand-700: #4A2BC7;
+  --color-brand-800: #3B1FA3;
+  --color-brand-900: #2D1580;
+
+  --color-accent-50: #FAF5FF;
+  --color-accent-100: #F3E8FF;
+  --color-accent-200: #E9D5FF;
+  --color-accent-300: #D8B4FE;
+  --color-accent-400: #C084FC;
+  --color-accent-500: #9333EA;
+  --color-accent-600: #7C3AED;
+  --color-accent-700: #6D28D9;
+  --color-accent-800: #5B21B6;
+  --color-accent-900: #4C1D95;
+
+  --color-bg-dark: #0a0618;
+  --color-bg-light: #F8FAFF;
+  --color-bg-nebula: #0d0825;
+
+  --color-muted-50: #F9FAFB;
+  --color-muted-100: #F3F4F6;
+  --color-muted-200: #E5E7EB;
+  --color-muted-300: #D1D5DB;
+  --color-muted-400: #9CA3AF;
+  --color-muted-500: #6B7280;
+  --color-muted-600: #4B5563;
+  --color-muted-700: #374151;
+  --color-muted-800: #1F2937;
+  --color-muted-900: #111827;
+
+  --color-success-50: #ECFDF5;
+  --color-success-500: #10B981;
+  --color-success-600: #059669;
+
+  --color-warning-50: #FFFBEB;
+  --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
+
+  --color-error-50: #FEF2F2;
+  --color-error-500: #EF4444;
+  --color-error-600: #DC2626;
+
+  --color-nebula-50: rgba(255,255,255,0.05);
+  --color-nebula-100: rgba(255,255,255,0.08);
+  --color-nebula-200: rgba(255,255,255,0.12);
+  --color-nebula-300: rgba(255,255,255,0.18);
+  --color-nebula-400: rgba(255,255,255,0.25);
+
+  --shadow-md: 0 10px 20px rgba(16,24,40,0.08);
+  --shadow-glow: 0 6px 30px rgba(108,78,246,0.18);
+
+  --animate-fade-in: fadeIn var(--anim-medium, 300ms) ease-out;
+  --animate-slide-up: slideUp var(--anim-medium, 300ms) ease-out;
+  --animate-pulse-glow: pulseGlow 2s ease-in-out infinite;
+  --animate-float: float 3s ease-in-out infinite;
+
+  @keyframes fadeIn {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+  }
+  @keyframes slideUp {
+    0% { transform: translateY(20px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+  @keyframes pulseGlow {
+    0%, 100% { box-shadow: 0 6px 30px rgba(108,78,246,0.18); }
+    50% { box-shadow: 0 6px 30px rgba(108,78,246,0.35); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+}
+
+/* v3 defaults kept explicit: bare `border` stays currentColor, bare `ring`
+   stays 3px — utilities in the codebase rely on both. */
+@theme static {
+  --default-border-color: currentColor;
+  --default-ring-color: currentColor;
+  --default-ring-width: 3px;
+}
+
 @tailwind utilities;
 
 :root {

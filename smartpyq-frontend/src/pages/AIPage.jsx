@@ -164,7 +164,7 @@ const AIPage = () => {
           {/* Chat Interface */}
           <div className="lg:col-span-3">
             <BorderBeam className="rounded-xl" colorFrom="rgba(139,92,246,0.2)" colorTo="rgba(59,130,246,0.15)">
-            <CursorGlow className="bg-white/5 rounded-xl shadow-sm border border-white/10 h-[600px] flex flex-col" glowColor="rgba(139,92,246,0.06)">
+            <CursorGlow className="bg-white/5 rounded-xl shadow-xs border border-white/10 h-[600px] flex flex-col" glowColor="rgba(139,92,246,0.06)">
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 <AnimatePresence>
@@ -180,7 +180,7 @@ const AIPage = () => {
                       <div className={`max-w-[80%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                         {message.type === 'ai' && (
                           <div className="flex items-center mb-2">
-                            <div className="w-8 h-8 bg-gradient-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
+                            <div className="w-8 h-8 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
                               AI
                             </div>
                             <span className="text-xs text-gray-500">
@@ -190,7 +190,7 @@ const AIPage = () => {
                         )}
                         <div className={`rounded-2xl px-4 py-3 ${
                           message.type === 'user'
-                            ? 'bg-gradient-to-r from-brand-600 to-accent-600 text-white'
+                            ? 'bg-linear-to-r from-brand-600 to-accent-600 text-white'
                             : message.isError
                             ? 'bg-red-50 text-red-800 border border-red-200'
                             : 'bg-white/10 text-white'
@@ -242,7 +242,7 @@ const AIPage = () => {
                     >
                       <div className="max-w-[80%]">
                         <div className="flex items-center mb-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
+                          <div className="w-8 h-8 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
                             AI
                           </div>
                           <span className="text-xs text-gray-500">typing...</span>
@@ -305,7 +305,7 @@ const AIPage = () => {
             
             {/* Quick Actions */}
             <motion.div 
-              className="bg-white/5 rounded-xl shadow-sm border border-white/10 p-6"
+              className="bg-white/5 rounded-xl shadow-xs border border-white/10 p-6"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.3 }}
@@ -333,7 +333,7 @@ const AIPage = () => {
             </motion.div>
             {/* Tips */}
             <motion.div 
-              className="bg-gradient-to-r from-brand-600 to-accent-600 rounded-xl p-6 text-white"
+              className="bg-linear-to-r from-brand-600 to-accent-600 rounded-xl p-6 text-white"
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.6, delay: 0.4 }}

@@ -128,7 +128,7 @@ const ImageLightbox = ({ src, name, open, onOpenChange }) => {
             <a href={src} target="_blank" rel="noreferrer"
               className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white" aria-label="Open original"><ArrowTopRightOnSquareIcon className="h-4 w-4" /></a>
             <DialogClose
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60"
               aria-label="Close image viewer"><XMarkIcon className="h-4 w-4" /></DialogClose>
           </div>
         </div>
@@ -159,7 +159,7 @@ const PdfModal = ({ src, name, open, onOpenChange }) => {
               <ArrowTopRightOnSquareIcon className="h-4 w-4" /> Open in new tab
             </a>
             <DialogClose
-              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400/60"
+              className="p-2 rounded-lg bg-white/10 hover:bg-white/20 text-white focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60"
               aria-label="Close document viewer"><XMarkIcon className="h-4 w-4" /></DialogClose>
           </div>
         </div>

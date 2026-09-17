@@ -60,7 +60,7 @@ const TopicBars = ({ topics }) => {
           </div>
           <div className="h-2 bg-white/10 rounded-full overflow-hidden">
             <motion.div
-              className="h-full w-full origin-left rounded-full bg-gradient-to-r from-brand-500 to-accent-500"
+              className="h-full w-full origin-left rounded-full bg-linear-to-r from-brand-500 to-accent-500"
               initial={{ scaleX: 0 }}
               whileInView={{ scaleX: Math.max(0.04, t.count / max) }}
               viewport={{ once: true, amount: 0.8 }}
@@ -416,7 +416,7 @@ const AnalysisPage = () => {
                           <span className="text-gray-400">{t.count} ({Math.round(100 * t.count / Math.max(1, insights.total_questions))}%)</span>
                         </div>
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-gradient-to-r from-indigo-500 to-blue-500"
+                          <div className="h-full rounded-full bg-linear-to-r from-indigo-500 to-blue-500"
                             style={{ width: Math.round(100 * t.count / Math.max(1, insights.total_questions)) + '%' }} />
                         </div>
                       </div>

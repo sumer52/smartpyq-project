@@ -36,7 +36,7 @@ const UploadPage = () => {
   return (
     <motion.div className="min-h-screen bg-white/[0.02]" variants={stagger} initial="hidden" animate="visible">
       <motion.div variants={fadeUp} className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-b from-purple-900/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-b from-purple-900/10 via-transparent to-transparent" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 text-center">
           <motion.div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm font-medium mb-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
             <ArrowUpTrayIcon className="h-4 w-4" />
@@ -54,7 +54,7 @@ const UploadPage = () => {
               {uploadSuccess && (
                 <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}
                   className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
-                  <SparklesIcon className="h-5 w-5 text-green-400 flex-shrink-0" />
+                  <SparklesIcon className="h-5 w-5 text-green-400 shrink-0" />
                   <div><p className="text-green-300 font-medium text-sm">Upload successful!</p>
                   <p className="text-green-400/70 text-xs mt-0.5">Saved as DRAFT — publish it from the Admin Dashboard when reviewed.</p></div>
                 </motion.div>
@@ -88,7 +88,7 @@ const UploadPage = () => {
                   { step: 3, title: 'Publish from the dashboard', desc: 'Drafts go public only after you click Publish' }
                 ].map((item) => (
                   <div key={item.step} className="flex gap-3">
-                    <div className="flex-shrink-0 w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-300 text-xs font-bold">{item.step}</div>
+                    <div className="shrink-0 w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-300 text-xs font-bold">{item.step}</div>
                     <div><p className="text-white text-sm font-medium">{item.title}</p><p className="text-gray-500 text-xs mt-0.5">{item.desc}</p></div>
                   </div>
                 ))}
@@ -114,7 +114,7 @@ const UploadPage = () => {
                 ))}
               </div>
             </div>
-            <div className="bg-gradient-to-br from-purple-900/20 to-blue-900/20 rounded-2xl border border-purple-500/15 p-6">
+            <div className="bg-linear-to-br from-purple-900/20 to-blue-900/20 rounded-2xl border border-purple-500/15 p-6">
               <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
                 <StarIcon className="h-5 w-5 text-yellow-400" /> Why Contribute?
               </h3>
@@ -150,7 +150,7 @@ const UploadPage = () => {
                 <button className="w-full px-6 py-4 flex items-center justify-between text-left hover:bg-white/[0.02] transition-colors"
                   onClick={() => setExpandedFaq(expandedFaq === index ? null : index)}>
                   <span className="text-white font-medium text-sm pr-4">{faq.q}</span>
-                  {expandedFaq === index ? <ChevronUpIcon className="h-5 w-5 text-gray-400 flex-shrink-0" /> : <ChevronDownIcon className="h-5 w-5 text-gray-400 flex-shrink-0" />}
+                  {expandedFaq === index ? <ChevronUpIcon className="h-5 w-5 text-gray-400 shrink-0" /> : <ChevronDownIcon className="h-5 w-5 text-gray-400 shrink-0" />}
                 </button>
                 <AnimatePresence>
                   {expandedFaq === index && (
