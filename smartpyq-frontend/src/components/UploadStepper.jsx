@@ -68,6 +68,9 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
   const streams = Object.entries(streamsData).map(([key, stream]) => ({
     key, name: stream.name, displayName: stream.displayName
   }));
+  // Papers must store the display name ("B.Sc") the PYQ Hub browses by,
+  // not the catalog key ("bsc").
+  const streamDisplayName = (key) => streams.find(s => s.key === key)?.displayName || key;
 
   // Cascading: available semesters for selected stream
   const availableSemesters = useMemo(() => {
@@ -107,7 +110,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
     if (!uploadData.stream || !uploadData.semester || !uploadData.subject) { setYearSuggestions([]); return; }
     try {
       const res = await apiClient.getPapers({
-        stream: uploadData.stream, semester: uploadData.semester,
+        stream: streamDisplayName(uploadData.stream), semester: uploadData.semester,
         subject: uploadData.subject, university: uploadData.university, limit: 100
       });
       const papers = res.papers || res || [];
@@ -358,7 +361,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
       formData.append('title', uploadData.title);
       formData.append('subject', uploadData.subject);
       formData.append('university', uploadData.university);
-      formData.append('stream', uploadData.stream);
+      formData.append('stream', streamDisplayName(uploadData.stream));
       formData.append('semester', uploadData.semester);
       formData.append('exam', 'University Exam');
       formData.append('year', uploadData.year.toString());

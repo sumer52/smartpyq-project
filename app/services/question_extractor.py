@@ -293,3 +293,21 @@ def extract_questions_from_pdf(pdf_path: str):
     if not raw_text.strip():
         raise ValueError("No text could be extracted from the PDF (it may be a scanned/image-only file)")
     return extract_questions_from_text(raw_text), detect_paper_metadata(raw_text), page_count
+
+
+IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp", ".bmp"}
+
+
+def extract_questions_from_file(path: str):
+    """Dispatch on file extension: PDFs get text-layer extraction,
+    images get OCR. Returns (questions, metadata, page_count) like
+    extract_questions_from_pdf. Raises ValueError when no text can
+    be recovered from the file."""
+    ext = os.path.splitext(path)[1].lower()
+    if ext in IMAGE_EXTENSIONS:
+        from app.services.document_analyzer import ocr_image
+        text = ocr_image(path)
+        if not text or not text.strip():
+            raise ValueError("No text could be read from the image (photo may be blurry, dark, or handwritten without enough contrast).")
+        return extract_questions_from_text(text), detect_paper_metadata(text), 1
+    return extract_questions_from_pdf(path)

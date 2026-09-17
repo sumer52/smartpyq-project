@@ -24,7 +24,7 @@ from app.models.question import (
     Question, QuestionGroup, QuestionGroupMember,
     AnalysisResult, AnalysisStatus, SimilarityMethod,
 )
-from app.services.question_extractor import extract_questions_from_pdf
+from app.services.question_extractor import extract_questions_from_pdf, extract_questions_from_file
 
 logger = logging.getLogger(__name__)
 
@@ -97,7 +97,8 @@ def _resolve_pdf_path(paper: Paper) -> Tuple[Optional[str], bool]:
     after extraction (use try/finally). Returns (None, False) when the
     file cannot be located or downloaded.
     """
-    if not paper.file_url or (paper.file_type or "") != "application/pdf":
+    file_type = (paper.file_type or "").lower()
+    if file_type != "application/pdf" and not file_type.startswith("image/"):
         return None, False
 
     url = paper.file_url
@@ -140,7 +141,8 @@ def _resolve_pdf_path(paper: Paper) -> Tuple[Optional[str], bool]:
             if admin:
                 data = admin.storage.from_(settings.SUPABASE_STORAGE_BUCKET).download(rel)
                 if data:
-                    fd, tmp = tempfile.mkstemp(suffix=".pdf")
+                    ext = os.path.splitext(rel)[1].lower() or ".pdf"
+                    fd, tmp = tempfile.mkstemp(suffix=ext)
                     with os.fdopen(fd, "wb") as f:
                         f.write(data)
                     return tmp, True
@@ -161,7 +163,7 @@ async def extract_and_store(db: AsyncSession, paper: Paper) -> int:
         raise FileNotFoundError(f"PDF not found for paper {paper.id}: {paper.file_url}")
 
     try:
-        extracted, _meta, _pages = await asyncio.to_thread(extract_questions_from_pdf, pdf_path)
+        extracted, _meta, _pages = await asyncio.to_thread(extract_questions_from_file, pdf_path)
     finally:
         if is_temp:
             try:
@@ -301,6 +303,10 @@ async def find_completed_analysis(db: AsyncSession, paper_ids: List[int]) -> Opt
         select(AnalysisResult).filter(
             AnalysisResult.status == AnalysisStatus.COMPLETED,
             AnalysisResult.paper_count == len(ids),
+            # A COMPLETED result with zero questions is stale: extraction
+            # previously had nothing to read (image papers were skipped
+            # before OCR support existed). Re-run it instead of reusing.
+            AnalysisResult.questions_extracted > 0,
         )
     )).scalars().all()
     for ar in rows:
@@ -348,6 +354,7 @@ async def run_analysis_for_papers(
     )
     db.add(ar)
     await db.flush()
+    ar_id = ar.id  # ORM identity survives rollbacks only if captured early
 
     try:
         ar.status = AnalysisStatus.EXTRACTING
@@ -373,7 +380,7 @@ async def run_analysis_for_papers(
                 continue
             try:
                 extracted, _meta, _pages = await asyncio.to_thread(
-                    extract_questions_from_pdf, pdf_path
+                    extract_questions_from_file, pdf_path
                 )
                 subject = paper.subject or "Unknown"
                 for eq in extracted:
@@ -396,10 +403,13 @@ async def run_analysis_for_papers(
                 # One unreadable paper must not fail the whole batch.
                 logger.warning(f"Analysis: extraction failed for paper {pid}: {ext_err}")
                 await db.rollback()
-                # Re-fetch the analysis row after the rollback that discarded
-                # the poisoned transaction (it carries our progress state).
+                # The rollback expired every ORM object in the session,
+                # including `ar` - touching ar.id now would trigger a
+                # synchronous refresh and crash (MissingGreenlet) in async
+                # context. Remember the id BEFORE the rollback, then re-fetch.
+                # (ar_id is captured when the row is first created.)
                 ar = (await db.execute(
-                    select(AnalysisResult).filter(AnalysisResult.id == ar.id)
+                    select(AnalysisResult).filter(AnalysisResult.id == ar_id)
                 )).scalar_one()
                 ar.status = AnalysisStatus.EXTRACTING
                 await db.commit()
@@ -413,8 +423,9 @@ async def run_analysis_for_papers(
         if not extracted_any:
             raise AnalysisError(
                 "No questions could be extracted from the selected papers. "
-                "The files may be missing, unreadable, or scanned images "
-                "without a text layer."
+                "The files may be missing, unreadable, too blurry to read, "
+                "or may not contain a question paper at all (for example a "
+                "photo of a signature or a blank page)."
             )
 
         ar.questions_extracted = (await db.execute(

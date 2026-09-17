@@ -184,12 +184,15 @@ class TestNormalizeMetadataFuzz:
             assert result["subject"] == expected, f"'{input_val}' should normalize to '{expected}'"
 
     def test_known_stream_normalizes(self):
-        """Known streams should normalize to canonical keys."""
+        """Known streams should normalize to the canonical display name."""
         test_cases = ["B.Sc", "BSC", "b.sc", "b com", "BCA", "bba"]
         for stream in test_cases:
             metadata = {"stream": stream}
             result, corrections = normalize_metadata(metadata)
-            assert result["stream"] in CANONICAL_STREAMS, f"'{stream}' should normalize to a canonical stream key"
+            # Canonical stored form is the display name ("B.Sc") - what the
+            # PYQ Hub browses by and the UI displays.
+            expected = {v[0] for v in CANONICAL_STREAMS.values()}
+            assert result["stream"] in expected, f"'{stream}' should normalize to a canonical stream display name"
 
     def test_known_semester_normalizes(self):
         """Known semesters should normalize to canonical IDs."""

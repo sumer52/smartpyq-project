@@ -276,6 +276,24 @@ def ocr_pdf(pdf_path: str) -> Tuple[str, int]:
     return "\n\n".join(text_parts), page_count
 
 
+def _rapidocr_image_to_text(img) -> str:
+    """OCR via RapidOCR (self-contained ONNX engine, no system binary)."""
+    try:
+        from rapidocr_onnxruntime import RapidOCR
+    except ImportError:
+        raise ValueError(
+            "OCR processing requires pytesseract (with the Tesseract binary)"
+            " or rapidocr-onnxruntime. Neither is installed.")
+    import numpy as np
+
+    engine = RapidOCR()
+    result, _elapsed = engine(np.asarray(img))
+    if not result:
+        return ""
+    # result rows: [box, text, confidence] - join text lines in order.
+    lines = [row[1] for row in result if len(row) >= 2 and row[1]]
+    return chr(10).join(lines)
+
 def ocr_image(image_path: str) -> str:
     """OCR an image file using pytesseract."""
     try:
@@ -302,11 +320,16 @@ def ocr_image(image_path: str) -> str:
 
         # OCR with pytesseract
         custom_config = r'--oem 3 --psm 6'
-        text = pytesseract.image_to_string(img, config=custom_config)
-        return text
+        try:
+            return pytesseract.image_to_string(img, config=custom_config)
+        except pytesseract.TesseractNotFoundError:
+            # Tesseract binary is not installed (common on Windows and
+            # most PaaS images) - fall back to the self-contained RapidOCR
+            # engine (ONNX models ship with the package; no system dep).
+            return _rapidocr_image_to_text(img)
     except ImportError:
         logger.error("pytesseract not available")
-        raise ValueError("OCR processing requires pytesseract. Please install it.")
+        raise ValueError("OCR processing requires pytesseract or rapidocr. Please install one.")
     except Exception as e:
         logger.error(f"Image OCR failed: {e}")
         raise ValueError(f"Failed to process image: {str(e)}")

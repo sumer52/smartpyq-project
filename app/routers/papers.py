@@ -35,6 +35,7 @@ from ..core.exceptions import (
     NotFoundError,
     ConflictError
 )
+from ..utils.metadata_normalizer import normalize_stream, normalize_semester
 from ..models.user import User
 from ..models.tenant import Tenant
 from ..models.paper import PaperStatus, ExamType
@@ -528,14 +529,16 @@ async def upload_student_paper(
                 anon_token = _secrets.token_urlsafe(32)
 
         tenant_id = (current_user.tenant_id if current_user else None) or uploader.tenant_id or 1
+        # Canonical metadata: the hub browses by display names ("B.Sc", "sem2"),
+        # so catalog keys ("bsc") or alt spellings must never reach the DB.
         paper_data = PaperCreateRequest(
             title=title,
             subject=subject,
             university=university if university else "Not Specified",
-            stream=stream,
+            stream=normalize_stream(stream),
             specialization=specialization,
             year=year,
-            semester=semester,
+            semester=normalize_semester(semester),
             exam_type=ExamType.FINAL,
             tags=[],
             description=description,
@@ -859,14 +862,15 @@ async def upload_paper(
         elif 'quiz' in exam.lower():
             exam_type_value = ExamType.QUIZ
         
+        # Canonical metadata (see upload-student): store display names.
         paper_data = PaperCreateRequest(
             title=title,
             subject=subject,
             university=university if university else "Not Specified",
-            stream=stream,
+            stream=normalize_stream(stream),
             specialization=specialization,
             year=year,
-            semester=semester,
+            semester=normalize_semester(semester),
             exam_type=exam_type_value,
             tags=tag_list,
             tenant_id=current_user.tenant_id or 1

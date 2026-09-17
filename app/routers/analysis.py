@@ -75,7 +75,7 @@ async def start_analysis(
         status=AnalysisStatus.PENDING)
     db.add(ar); await db.flush()
     try:
-        from app.services.question_extractor import extract_questions_from_pdf
+        from app.services.question_extractor import extract_questions_from_file
         from app.core.config import settings
 
         def _resolve_pdf(paper):
@@ -90,7 +90,8 @@ async def start_analysis(
             prefix in file_url can drift from where the file physically landed
             (it stores the uploader id), so fall back to a basename scan.
             """
-            if not paper.file_url or (paper.file_type or "") != "application/pdf":
+            file_type = (paper.file_type or "").lower()
+            if file_type != "application/pdf" and not file_type.startswith("image/"):
                 return None, False
             url = paper.file_url
             if url.startswith("http"):
@@ -123,7 +124,8 @@ async def start_analysis(
                         data = admin.storage.from_(settings.SUPABASE_STORAGE_BUCKET).download(rel)
                         if data:
                             import tempfile
-                            fd, tmp = tempfile.mkstemp(suffix=".pdf")
+                            ext = os.path.splitext(rel)[1].lower() or ".pdf"
+                            fd, tmp = tempfile.mkstemp(suffix=ext)
                             with os.fdopen(fd, "wb") as f:
                                 f.write(data)
                             return tmp, True
@@ -146,7 +148,7 @@ async def start_analysis(
                 logger.warning(f"Analysis: no readable PDF for paper {pid} (file_type={paper.file_type})")
                 continue
             try:
-                extracted, _meta, _pages = extract_questions_from_pdf(pdf_path)
+                extracted, _meta, _pages = extract_questions_from_file(pdf_path)
             except Exception as ext_err:
                 # One unreadable paper must not fail the whole batch.
                 logger.warning(f"Analysis: extraction failed for paper {pid}: {ext_err}")

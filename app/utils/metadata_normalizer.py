@@ -213,14 +213,17 @@ def normalize_metadata(metadata: Dict) -> Tuple[Dict, List[Dict]]:
         stream_input = metadata['stream'].strip().lower()
         for canonical_key, aliases in CANONICAL_STREAMS.items():
             if stream_input in [a.lower() for a in aliases] or stream_input == canonical_key:
-                if metadata['stream'] != canonical_key:
+                # Canonical STORED form is the display name ("B.Sc") - the
+                # PYQ Hub browses by display name, and papers display it.
+                display = aliases[0]
+                if metadata['stream'] != display:
                     corrections.append({
                         'field': 'stream',
                         'original': metadata['stream'],
-                        'corrected': canonical_key,
+                        'corrected': display,
                         'confidence': 1.0,
                     })
-                    metadata['stream'] = canonical_key
+                    metadata['stream'] = display
                 break
         else:
             # Fuzzy match against all aliases
@@ -231,14 +234,15 @@ def normalize_metadata(metadata: Dict) -> Tuple[Dict, List[Dict]]:
             match = find_best_match(metadata['stream'], [a for a, _ in all_aliases], threshold=0.55)
             if match:
                 canonical_key = next(key for a, key in all_aliases if a.lower() == match.lower())
-                if metadata['stream'] != canonical_key:
+                display = CANONICAL_STREAMS[canonical_key][0]
+                if metadata['stream'] != display:
                     corrections.append({
                         'field': 'stream',
                         'original': metadata['stream'],
-                        'corrected': canonical_key,
+                        'corrected': display,
                         'confidence': similarity(metadata['stream'], match),
                     })
-                    metadata['stream'] = canonical_key
+                    metadata['stream'] = display
 
     # Normalize Semester
     if metadata.get('semester'):
@@ -314,3 +318,38 @@ def normalize_metadata(metadata: Dict) -> Tuple[Dict, List[Dict]]:
             pass
 
     return metadata, corrections
+
+
+def normalize_stream(value: Optional[str]) -> Optional[str]:
+    """Map any stream spelling/catalog id to the canonical display name.
+
+    The canonical STORED form is the display name ("B.Sc") because the
+    PYQ Hub browses by display name and the UI shows it verbatim.
+    """
+    if not value:
+        return value
+    v = str(value).strip()
+    key = v.lower()
+    for canonical_key, aliases in CANONICAL_STREAMS.items():
+        if key == canonical_key or key in [a.lower() for a in aliases]:
+            return aliases[0]
+    return v  # unknown program - store as given
+
+
+def normalize_semester(value: Optional[str]) -> Optional[str]:
+    """Map any semester spelling to the canonical "semN" id.
+
+    The hub filters papers with semester="semN", so that is the stored form.
+    """
+    if not value:
+        return value
+    v = str(value).strip()
+    key = v.lower().replace(" ", "")
+    for canonical_id, aliases in CANONICAL_SEMESTERS.items():
+        if key == canonical_id or key in [a.lower().replace(" ", "") for a in aliases]:
+            return canonical_id
+    # Generic fallback: "Semester 3", "sem 3", "3" -> sem3 (not years).
+    digits = "".join(ch for ch in key if ch.isdigit())
+    if digits and not key.startswith("20"):
+        return "sem" + digits
+    return v
