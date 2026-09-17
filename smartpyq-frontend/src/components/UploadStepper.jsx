@@ -367,9 +367,9 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
       formData.append('year', uploadData.year.toString());
       formData.append('tags', uploadData.tags.join(','));
       if (uploadData.description) formData.append('description', uploadData.description);
-      // DRAFT-by-default publishing model: the admin reviews the AI analysis
-      // and publishes from the dashboard. (publish_now=true skips that.)
-      formData.append('publish_now', 'false');
+      // Admin uploads publish immediately — they appear in the PYQ Hub and
+      // are analyzable right away, no separate dashboard step.
+      formData.append('publish_now', 'true');
 
       const response = await apiClient.uploadPaper(formData);
       clearInterval(interval);

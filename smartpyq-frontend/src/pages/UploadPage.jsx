@@ -31,7 +31,7 @@ const UploadPage = () => {
     { q: 'Can I upload answer keys?', a: 'No, we only accept original question papers. Answer keys, solutions, and study materials are not accepted at this time.' },
     { q: 'Is there a file size limit?', a: 'You can upload files up to 50MB in size. Most question papers are well under this limit.' },
     { q: 'Who can upload papers?', a: 'Uploads are managed by SmartPYQ administrators to guarantee quality and correctness. Students never need an account — every paper in the PYQ Hub is freely accessible without login.' },
-    { q: 'When do uploads become public?', a: 'New uploads start as DRAFT and are reviewed by an administrator. Only after the admin clicks Publish does the paper appear in the public PYQ Hub and search.' },
+    { q: 'When do uploads become public?', a: 'Administrators\' uploads are published instantly and appear in the PYQ Hub, search, and analysis right away. Papers uploaded by students (no account needed) go to a verification queue and become public after an admin approves them.' },
   ];
   return (
     <motion.div className="min-h-screen bg-white/[0.02]" variants={stagger} initial="hidden" animate="visible">
