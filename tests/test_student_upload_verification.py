@@ -96,16 +96,104 @@ class TestStudentUpload:
         )
         assert resp.status_code == 400
 
-    async def test_upload_requires_auth(self, client):
+    async def test_anonymous_upload_creates_pending_with_token(self, client, db_session, tenant, test_user):
+        """Signed-out visitors can upload; the paper lands in the admin queue."""
         resp = await client.post(
             "/api/v1/papers/upload-student",
-            files={"file": ("paper.pdf", io.BytesIO(make_pdf_bytes()), "application/pdf")},
+            files={"file": ("anon.pdf", io.BytesIO(make_pdf_bytes()), "application/pdf")},
             data={
-                "title": "Anon upload", "subject": "X", "stream": "bca",
-                "semester": "4", "exam": "Final", "year": "2022",
+                "title": "Anonymous Community Paper",
+                "subject": "Operating Systems",
+                "stream": "bsc",
+                "semester": "5",
+                "exam": "Final",
+                "year": "2023",
             },
         )
-        assert resp.status_code in (401, 403)
+        assert resp.status_code == 201, resp.text
+        data = resp.json()
+        assert data["status"] == "pending"
+        token = data.get("anon_token")
+        assert token, "anonymous upload must return an anon_token"
+
+        from app.models.paper import Paper, PaperStatus
+        row = (await db_session.execute(select(Paper).filter(Paper.id == data["id"]))).scalar_one()
+        assert row.status == PaperStatus.PENDING
+        assert row.anon_token == token
+        # The system uploader owns it (demo account in the seeded test DB).
+        from app.models.user import User
+        up = (await db_session.execute(select(User).filter(User.id == row.uploader_id))).scalar_one()
+        assert up is not None
+
+    async def test_anon_token_lists_own_submissions(self, client, db_session, tenant, test_user):
+        """GET /mine?anon_token=... shows the paper uploaded with that token."""
+        up = await client.post(
+            "/api/v1/papers/upload-student",
+            files={"file": ("t.pdf", io.BytesIO(make_pdf_bytes()), "application/pdf")},
+            data={"title": "Token Roundtrip Paper", "subject": "Compilers", "stream": "bsc",
+                  "semester": "6", "exam": "Final", "year": "2023"},
+        )
+        token = up.json()["anon_token"]
+
+        mine = await client.get("/api/v1/papers/mine", params={"anon_token": token})
+        assert mine.status_code == 200, mine.text
+        rows = mine.json()["papers"]
+        assert any(x["id"] == up.json()["id"] for x in rows)
+
+        wrong = await client.get("/api/v1/papers/mine", params={"anon_token": "not-a-real-token"})
+        assert wrong.status_code == 200
+        assert not any(x["id"] == up.json()["id"] for x in wrong.json()["papers"])
+
+    async def test_mine_requires_identity(self, client):
+        """Neither signed in nor a token -> 401, not an empty list."""
+        resp = await client.get("/api/v1/papers/mine")
+        assert resp.status_code == 401
+
+    async def test_rate_limit_blocks_upload_spam(self, client, db_session, tenant, test_user, monkeypatch):
+        """Signed-out uploads beyond the hourly per-IP budget get 429."""
+        import app.routers.papers as papers_mod
+        monkeypatch.setattr(papers_mod, "_UPLOAD_RATE_LIMIT", 3)
+        papers_mod._upload_rate_store.clear()
+
+        payload = {
+            "files": {"file": ("r.pdf", io.BytesIO(make_pdf_bytes()), "application/pdf")},
+            "data": {"title": "Rate Paper", "subject": "Networks", "stream": "bsc",
+                     "semester": "5", "exam": "Final", "year": "2023"},
+        }
+        codes = []
+        for _ in range(5):
+            resp = await client.post("/api/v1/papers/upload-student", **payload)
+            codes.append(resp.status_code)
+        assert codes[:3] == [201, 201, 201]
+        assert codes[3] == 429
+        assert codes[4] == 429
+
+    async def test_admin_upload_via_community_endpoint_approved_directly(
+        self, admin_client, db_session, tenant, admin_user
+    ):
+        """Admins bypass the verification queue: status APPROVED on arrival."""
+        resp = await admin_client.post(
+            "/api/v1/papers/upload-student",
+            files={"file": ("admin-direct.pdf", io.BytesIO(make_pdf_bytes()), "application/pdf")},
+            data={
+                "title": "Admin Direct Publish",
+                "subject": "Databases",
+                "stream": "bsc",
+                "semester": "5",
+                "exam": "Final",
+                "year": "2023",
+            },
+        )
+        assert resp.status_code == 201, resp.text
+        data = resp.json()
+        assert data["status"] == "approved"
+        assert "anon_token" not in data
+
+        from app.models.paper import Paper, PaperStatus
+        row = (await db_session.execute(select(Paper).filter(Paper.id == data["id"]))).scalar_one()
+        assert row.status == PaperStatus.APPROVED
+        assert row.uploader_id == admin_user.id
+        assert row.anon_token is None
 
 
 # ---------------------------------------------------------------------------

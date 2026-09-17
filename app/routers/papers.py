@@ -53,6 +53,64 @@ logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/papers", tags=["papers"])
 
+# ---------------------------------------------------------------------------
+# Community upload rate limiting (per client IP, sliding 1-hour window).
+# In-memory by design: shields the queue from casual spam without external
+# infrastructure. Restarting the process resets it — acceptable here.
+# ---------------------------------------------------------------------------
+_UPLOAD_WINDOW_SECONDS = 3600
+_UPLOAD_RATE_LIMIT = int(os.environ.get("ANON_UPLOAD_RATE_LIMIT", "10"))
+_upload_rate_store: dict = {}
+
+
+def _check_upload_rate(client_ip: str) -> None:
+    """Raise 429 when this IP exceeded the hourly community-upload budget."""
+    import time as _time
+
+    now = _time.time()
+    hits = [t for t in _upload_rate_store.get(client_ip, []) if now - t < _UPLOAD_WINDOW_SECONDS]
+    if len(hits) >= _UPLOAD_RATE_LIMIT:
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail="Too many papers uploaded from this network in the last hour. Please try again later.",
+        )
+    hits.append(now)
+    _upload_rate_store[client_ip] = hits
+
+
+async def _resolve_system_uploader(db: AsyncSession) -> User:
+    """Pick the account that owns community uploads from signed-out visitors.
+
+    Preference: the seeded demo account, then any admin, then any user.
+    An empty users table is a deployment problem — surface it clearly.
+    """
+    from sqlalchemy import select as _select
+    from app.models.user import User as UserModel, UserRole
+
+    demo = (await db.execute(
+        _select(UserModel).filter(UserModel.email == "demo@smartpyq.com")
+    )).scalars().first()
+    if demo:
+        return demo
+    admin = (await db.execute(
+        _select(UserModel).filter(UserModel.role.in_([UserRole.ADMIN, UserRole.TENANT_ADMIN, UserRole.SUPER_ADMIN])).limit(1)
+    )).scalars().first()
+    if admin:
+        return admin
+    any_user = (await db.execute(_select(UserModel).limit(1))).scalars().first()
+    if any_user:
+        return any_user
+    raise HTTPException(
+        status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+        detail="Uploads are temporarily unavailable. Please try again later.",
+    )
+
+
+def _is_admin_user(user: Optional[User]) -> bool:
+    _raw_role = getattr(user, "role", "")
+    _role_str = str(getattr(_raw_role, "value", _raw_role) or "").lower()
+    return _role_str in ["admin", "tenant_admin", "super_admin"]
+
 # Request/Response Models
 class PaperResponse(BaseModel):
     """Paper response model"""
@@ -396,18 +454,32 @@ async def upload_student_paper(
     year: int = Form(..., ge=2000, le=2030),
     university: str = Form("", max_length=100),
     description: str = Form("", max_length=1000),
-    current_user: User = Depends(get_current_active_user),
+    anon_token: str = Form("", max_length=128),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     client_ip: str = Depends(get_client_ip),
     db: AsyncSession = Depends(get_db)
 ):
-    """Student community upload of a PYQ paper.
+    """Community upload of a PYQ paper — no account required.
 
-    The paper is stored with status PENDING and is NOT visible to anyone
-    except its uploader and admins until an admin approves it. Visibility is
-    enforced at the database layer (public queries filter APPROVED only), not
-    in the frontend.
+    Signed-out visitors can contribute; every submission is stored with
+    status PENDING and is NOT visible to anyone except its uploader and
+    admins until an admin approves it. Visibility is enforced at the
+    database layer (public queries filter APPROVED only), not in the
+    frontend.
+
+    Admins uploading here bypass the queue: their paper is APPROVED
+    immediately.
+
+    Anonymous uploads receive a random ``anon_token`` (also stored on the
+    paper row) so the uploader can list their own submissions via
+    ``GET /papers/mine?anon_token=...`` without an account.
     """
     try:
+        # Per-IP budget for signed-out visitors (authenticated admins/students
+        # are exempt — they are already accountable accounts).
+        if current_user is None:
+            _check_upload_rate(client_ip)
+
         filename_lower = file.filename.lower() if file.filename else ""
         allowed_extensions = {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}
         file_ext = os.path.splitext(filename_lower)[1]
@@ -424,25 +496,38 @@ async def upload_student_paper(
         if len(file_content) > 50 * 1024 * 1024:
             raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="File size exceeds 50MB limit. Please upload a smaller file.")
 
-        # Stream authorization: students can only contribute to their enrolled stream.
-        user_stream = (current_user.course or "").lower()
-        paper_stream = stream.lower()
-        stream_map = {
-            'bsc': 'bsc', 'b.sc': 'bsc', 'b.sc computer science': 'bsc',
-            'bcom': 'bcom', 'b.com': 'bcom',
-            'bca': 'bca', 'bba': 'bba'
-        }
-        user_stream_id = stream_map.get(user_stream, user_stream)
-        paper_stream_id = stream_map.get(paper_stream, paper_stream)
-        _raw_role = getattr(current_user, 'role', '')
-        _role_str = str(getattr(_raw_role, 'value', _raw_role) or '').lower()
-        is_admin = _role_str in ['admin', 'tenant_admin', 'super_admin']
-        if not is_admin and user_stream_id and paper_stream_id and user_stream_id != paper_stream_id:
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail=f"You can only upload papers for your enrolled stream: {current_user.course}"
-            )
+        # Uploader: the signed-in account when present, otherwise the system
+        # account that owns community uploads. No stream restriction — there
+        # is no enrolled account to check for anonymous contributors.
+        if current_user is not None:
+            uploader = current_user
+        else:
+            uploader = await _resolve_system_uploader(db)
 
+        # Admins publish directly; everyone else enters the verification queue.
+        admin_upload = _is_admin_user(current_user)
+        initial_status = PaperStatus.APPROVED if admin_upload else PaperStatus.PENDING
+
+        # Anonymous tracking token (stored on the paper + returned to uploader).
+        # The client may pass back a token from an earlier upload so all of its
+        # signed-out submissions stay grouped under one "My Papers" list; an
+        # unknown/empty token gets a fresh one. Possessing a previously issued
+        # token is the capability — 32-byte urlsafe tokens are not guessable.
+        import secrets as _secrets
+        anon_token = None
+        if current_user is None:
+            provided = (anon_token or "").strip()
+            if provided:
+                from sqlalchemy import select as _tok_select
+                from app.models.paper import Paper as PaperModel
+                _known = (await db.execute(
+                    _tok_select(PaperModel.id).where(PaperModel.anon_token == provided).limit(1)
+                )).scalar_one_or_none()
+                anon_token = provided if _known is not None else _secrets.token_urlsafe(32)
+            else:
+                anon_token = _secrets.token_urlsafe(32)
+
+        tenant_id = (current_user.tenant_id if current_user else None) or uploader.tenant_id or 1
         paper_data = PaperCreateRequest(
             title=title,
             subject=subject,
@@ -454,7 +539,7 @@ async def upload_student_paper(
             exam_type=ExamType.FINAL,
             tags=[],
             description=description,
-            tenant_id=current_user.tenant_id or 1
+            tenant_id=tenant_id
         )
 
         svc = PaperService(db=db)
@@ -462,25 +547,43 @@ async def upload_student_paper(
             file_data=file_content,
             filename=file.filename,
             paper_data=paper_data,
-            uploader=current_user,
+            uploader=uploader,
             ip_address=client_ip,
-            initial_status=PaperStatus.PENDING,
+            initial_status=initial_status,
         )
+
+        # Record the anonymous tracking token on the paper row.
+        if anon_token:
+            from sqlalchemy import update as _update
+            from app.models.paper import Paper as PaperModel
+            await db.execute(
+                _update(PaperModel).where(PaperModel.id == result["id"]).values(anon_token=anon_token)
+            )
+            await db.commit()
 
         # Best-effort duplicate flagging for the review screen.
         from sqlalchemy import select as _select
         from app.models.paper import Paper as PaperModel
-        dup_conditions = [PaperModel.subject == subject, PaperModel.year == year, PaperModel.status == PaperStatus.APPROVED]
+        dup_conditions = [PaperModel.subject == subject, PaperModel.year == year, PaperModel.status == PaperStatus.APPROVED, PaperModel.id != result["id"]]
         dup_rows = (await db.execute(_select(PaperModel).filter(*dup_conditions).limit(5))).scalars().all()
         duplicates = [{"paper_id": p.id, "title": p.title, "match_type": "metadata"} for p in dup_rows]
 
-        return {
+        final_status = "approved" if admin_upload else "pending"
+        message = (
+            "Paper uploaded and published."
+            if admin_upload else
+            "Paper uploaded successfully. Your PYQ paper has been submitted for verification. It will be visible to other students only after an admin verifies and approves it."
+        )
+        resp = {
             "id": result["id"],
             "title": result["title"],
-            "status": "pending",
-            "message": "Paper uploaded successfully. Your PYQ paper has been submitted for verification. It will be visible to other students only after an admin verifies and approves it.",
+            "status": final_status,
+            "message": message,
             "possible_duplicates": duplicates,
         }
+        if anon_token:
+            resp["anon_token"] = anon_token
+        return resp
 
     except HTTPException:
         raise
@@ -494,20 +597,35 @@ async def upload_student_paper(
 
 @router.get("/mine")
 async def list_my_submissions(
-    current_user: User = Depends(get_current_active_user),
+    anon_token: Optional[str] = Query(None, max_length=128, description="Tracking token from an anonymous upload"),
+    current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
-    """The authenticated user's own paper submissions with verification status.
+    """The caller's own paper submissions with verification status.
 
+    Identified either by the Authorization header (signed-in users) or by
+    the ``anon_token`` returned when the paper was uploaded anonymously.
     Includes rejection reason (moderation_notes) so students can see why a
     paper was rejected. Only the uploader sees these rows.
     """
-    from sqlalchemy import select as _select, desc as _desc
+    from sqlalchemy import select as _select, desc as _desc, or_ as _or
     from app.models.paper import Paper as PaperModel
+
+    if current_user is None and not anon_token:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sign in, or pass the anon_token you received when uploading.",
+        )
+
+    ownership = []
+    if current_user is not None:
+        ownership.append(PaperModel.uploader_id == current_user.id)
+    if anon_token:
+        ownership.append(PaperModel.anon_token == anon_token)
 
     rows = (await db.execute(
         _select(PaperModel)
-        .filter(PaperModel.uploader_id == current_user.id)
+        .filter(_or(*ownership))
         .order_by(_desc(PaperModel.created_at))
         .limit(100)
     )).scalars().all()

@@ -363,14 +363,14 @@ const AppContent = function AppContent() {
                     </AdminRoute>
                   } 
                 />
+                {/* Public: community uploads need no account; the page
+                    tracks anonymous contributions via a stored token. */}
                 <Route 
                   path="/my-papers" 
                   element={
-                    <ProtectedRoute>
-                      <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                        <MySubmissionsPage />
-                      </motion.div>
-                    </ProtectedRoute>
+                    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
+                      <MySubmissionsPage />
+                    </motion.div>
                   } 
                 />
                 <Route 

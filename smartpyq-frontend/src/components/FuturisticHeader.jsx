@@ -55,16 +55,17 @@ const FuturisticHeader = memo(() => {
   };
 
   // The whole student platform is public — no login needed for any of it.
-  // Upload is the one admin-only entry point (routes to Admin Login).
+  // Signed-in admins work from the Dashboard: the header swaps the Home link
+  // for a prominent Dashboard button instead.
   const navItems = [
-        { name: 'Home', href: '/', icon: HomeIcon },
+        { name: 'Home', href: '/', icon: HomeIcon, hiddenForAdmin: true },
         { name: 'PYQ', href: '/pyq', icon: BookOpenIcon },
         { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
         { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
         { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
         { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
         { name: 'Upload', href: '/upload', icon: CloudArrowUpIcon, adminOnly: true },
-      ].filter(item => !item.adminOnly || isAdmin);
+      ].filter(item => (!item.adminOnly || isAdmin) && (!item.hiddenForAdmin || !isAdmin));
 
   // Only highlight the item whose href exactly matches the current path
   const isActive = (item) => location.pathname === item.href;
@@ -106,7 +107,10 @@ const FuturisticHeader = memo(() => {
 
         <div className='fh__right'>
           {isAuthenticated && isAdmin ? (
-            <div className='relative'>
+            <div className='relative flex items-center gap-2'>
+              <Link to='/admin' className='fh__login' aria-label='Admin Dashboard' style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.2))', borderColor: 'rgba(16,185,129,0.4)', color: '#6ee7b7' }}>
+                DASHBOARD
+              </Link>
               <button onClick={() => setShowUserMenu(!showUserMenu)} className='fh__avatar-btn' aria-label='Admin menu' aria-expanded={showUserMenu}>
                 <div className='fh__avatar'>{user?.name?.charAt(0)?.toUpperCase() || 'A'}</div>
               </button>
@@ -150,6 +154,11 @@ const FuturisticHeader = memo(() => {
             exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.12 } }}
             transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
           >
+            {isAdmin && (
+              <a href='/admin' className='fh__mobile-item fh__mobile-item--in' style={{ animationDelay: '0s', color: '#6ee7b7' }}>
+                <ShieldCheckIcon className='h-4 w-4' /> Dashboard
+              </a>
+            )}
             {navItems.map((item, index) => {
               const Icon = item.icon;
               const active = isActive(item, index);
@@ -157,7 +166,7 @@ const FuturisticHeader = memo(() => {
                 <a key={item.name} href={item.href}
                   onClick={item.name === 'Home' ? handleHomeClick : undefined}
                   className={'fh__mobile-item fh__mobile-item--in' + (active ? ' fh__mobile-item--active' : '')}
-                  style={{ animationDelay: index * 0.03 + 's' }}
+                  style={{ animationDelay: (index + 1) * 0.03 + 's' }}
                 >
                   <Icon className='fh__mobile-icon' />
                   <span>{item.name}</span>

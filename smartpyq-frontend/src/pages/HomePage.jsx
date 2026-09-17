@@ -914,7 +914,7 @@ const HomePage = () => {
                 <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-400" /> AI Verification</span>
                 <span className="flex items-center gap-1"><CheckCircle className="h-3 w-3 text-green-400" /> Community Contribution</span>
               </div>
-              <ShimmerButton className="btn btn-primary btn-lg" onClick={() => navigate('/upload')}>
+              <ShimmerButton className="btn btn-primary btn-lg" onClick={() => navigate('/my-papers')}>
                 <Upload className="h-5 w-5" /> Upload Question Paper
               </ShimmerButton>
             </div>

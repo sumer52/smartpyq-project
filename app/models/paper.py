@@ -108,6 +108,10 @@ class Paper(Base):
     # Status and moderation
     status = Column(SQLEnum(PaperStatus, native_enum=False), default=PaperStatus.DRAFT, nullable=False, index=True)
     moderation_notes = Column(Text, nullable=True)
+    # Community uploads from signed-out visitors: random token recorded on
+    # the paper and returned to the uploader, letting them list their own
+    # submissions from this browser without an account.
+    anon_token = Column(String(64), nullable=True, index=True)
     
     # Relationships
     tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False, index=True)

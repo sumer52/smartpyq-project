@@ -80,7 +80,7 @@ const NotFoundPage = () => {
               { to: '/dashboard', label: 'Dashboard' },
               { to: '/pyq', label: 'PYQ Hub' },
               { to: '/ai', label: 'AI Assistant' },
-              { to: '/upload', label: 'Upload Paper' },
+              { to: '/my-papers', label: 'Upload Paper' },
               { to: '/faq', label: 'FAQ' },
               { to: '/contact', label: 'Contact' },
             ].map((link) => (

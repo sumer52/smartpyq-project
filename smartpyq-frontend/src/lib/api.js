@@ -432,8 +432,9 @@ class ApiClient {
     });
   }
 
-  async getMySubmissions() {
-    return this.request('/api/v1/papers/mine');
+  async getMySubmissions(anonToken) {
+    const qs = anonToken ? `?anon_token=${encodeURIComponent(anonToken)}` : '';
+    return this.request(`/api/v1/papers/mine${qs}`);
   }
 
   async getPendingReview() {
@@ -453,6 +454,15 @@ class ApiClient {
   }
 }
 
+
+// Anonymous upload tracking: the backend returns a token per signed-out
+// upload; storing it lets this browser list "my submissions" without a login.
+const ANON_TOKEN_KEY = 'smartpyq_anon_upload_token';
+
+export const getAnonUploadToken = () => localStorage.getItem(ANON_TOKEN_KEY) || '';
+export const setAnonUploadToken = (token) => {
+  if (token) localStorage.setItem(ANON_TOKEN_KEY, token);
+};
 
 // Export error classes for use in components
 export { ApiError, UnauthorizedError, ForbiddenError, NotFoundError };

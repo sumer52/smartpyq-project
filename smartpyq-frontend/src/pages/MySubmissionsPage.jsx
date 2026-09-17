@@ -2,18 +2,22 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   CloudArrowUpIcon, DocumentIcon, CheckCircleIcon, XCircleIcon,
-  ClockIcon, ExclamationTriangleIcon, EyeIcon, ArrowPathIcon, FunnelIcon,
+  ClockIcon, ExclamationTriangleIcon, EyeIcon, ArrowPathIcon, FunnelIcon, ShieldCheckIcon,
 } from '@heroicons/react/24/outline';
-import api, { ApiError } from '../lib/api';
+import api, { ApiError, getAnonUploadToken, setAnonUploadToken } from '../lib/api';
 import { getStreams, getSemesterOptions, getAllSubjectsForStreamSemester } from '../data/pyqData';
+import { useAuth } from '../contexts/AuthContext';
 
 /**
- * My Submissions — /my-papers (login required).
+ * My Submissions — /my-papers (public; no account needed).
  *
- * Student community uploads: choose the paper's metadata, attach the file,
- * submit → the paper is stored as PENDING VERIFICATION and is invisible to
- * everyone except its uploader and admins until an admin approves it.
- * Below the form, students track their own submissions' status.
+ * Community uploads: choose the paper's metadata, attach the file, submit →
+ * the paper is stored as PENDING VERIFICATION and is invisible to everyone
+ * except its uploader and admins until an admin approves it. Below the form,
+ * contributors track their own submissions' status.
+ *
+ * Signed-out visitors are tracked by an anon_token the backend returns with
+ * each upload (kept in localStorage). Signed-in admins get instant approval.
  */
 
 const STATUS_META = {
@@ -35,6 +39,7 @@ const StatusBadge = ({ status }) => {
 };
 
 const MySubmissionsPage = () => {
+  const { isAuthenticated, isAdmin } = useAuth();
   // Catalog options (streams/semesters/subjects) come from the same data the
   // PYQ Hub uses, so students contribute to real categories.
   const [catalog, setCatalog] = useState({ streams: [], semesters: [], subjects: [] });
@@ -71,15 +76,22 @@ const MySubmissionsPage = () => {
   const loadSubmissions = useCallback(async () => {
     setSubsLoading(true);
     try {
-      const res = await api.getMySubmissions();
+      // Signed-out visitors: identify via the stored anon upload token.
+      const anonToken = !isAuthenticated ? getAnonUploadToken() : undefined;
+      if (!isAuthenticated && !anonToken) {
+        setSubmissions([]);
+        return;
+      }
+      const res = await api.getMySubmissions(anonToken);
       setSubmissions(res?.papers || []);
     } catch (e) {
       setSubmissions([]);
-      if (e instanceof ApiError && e.status === 401) setError('Please sign in to view your submissions.');
+      // A missing/expired anon token is not an error worth shouting about —
+      // the empty state below invites the first upload.
     } finally {
       setSubsLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => { loadSubmissions(); }, [loadSubmissions]);
 
@@ -124,12 +136,23 @@ const MySubmissionsPage = () => {
     fd.append('exam', form.exam || 'Final Exam');
     fd.append('year', String(form.year));
     fd.append('description', form.description || '');
+    // Signed-out: send any token from an earlier upload so all of this
+    // browser's submissions stay grouped under one "My Papers" list.
+    if (!isAuthenticated) fd.append('anon_token', getAnonUploadToken());
 
     setUploading(true);
     setProgress(0);
     try {
       const res = await api.uploadStudentPaper(fd, setProgress);
-      setNotice({ kind: 'ok', text: res?.message || 'Paper uploaded successfully and submitted for verification.' });
+      // Signed-out: persist the tracking token so "My Submissions" works
+      // in this browser without an account.
+      if (!isAuthenticated && res?.anon_token) setAnonUploadToken(res.anon_token);
+      setNotice({
+        kind: 'ok',
+        text: isAdmin
+          ? 'Paper uploaded and published — it is live in the PYQ Hub now.'
+          : (res?.message || 'Paper uploaded successfully and submitted for verification.'),
+      });
       if (res?.possible_duplicates?.length) {
         setDupes(res.possible_duplicates);
         setNotice({ kind: 'warn', text: 'Possible duplicate detected — an admin will double-check before approving.' });
@@ -155,9 +178,14 @@ const MySubmissionsPage = () => {
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Upload a PYQ Paper</h1>
           <p className="text-gray-400 max-w-3xl">
-            Contribute a previous-year question paper you have. Every submission is reviewed by an
-            admin before it becomes visible to other students — help grow the PYQ Hub for everyone.
+            Contribute a previous-year question paper you have — no account needed. Every submission is
+            reviewed by an admin before it becomes visible to other students — help grow the PYQ Hub for everyone.
           </p>
+          {isAdmin && (
+            <p className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1.5">
+              <ShieldCheckIcon className="h-4 w-4" /> Admin upload — papers you submit here are published immediately.
+            </p>
+          )}
         </motion.div>
 
         {error && (
@@ -268,7 +296,11 @@ const MySubmissionsPage = () => {
             {uploading ? 'Submitting…' : 'Upload Paper'}
           </button>
           <p className="text-[11px] text-gray-500 mt-3">
-            Your submission starts as <span className="text-yellow-300">Pending Verification</span> and is only visible to you and the admins until it is approved.
+            {isAdmin
+              ? 'As an admin, your uploads skip the queue and are published immediately.'
+              : (isAuthenticated
+                ? 'Your submission starts as Pending Verification and is only visible to you and the admins until it is approved.'
+                : 'No account needed — your submission starts as Pending Verification and becomes public once an admin approves it. This browser keeps a private link to track it.')}
           </p>
         </form>
 
