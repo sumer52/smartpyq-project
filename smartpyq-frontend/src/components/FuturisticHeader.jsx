@@ -64,7 +64,9 @@ const FuturisticHeader = memo(() => {
         { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
         { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
         { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
-        { name: 'Upload', href: '/upload', icon: CloudArrowUpIcon, adminOnly: true },
+        // Everyone can upload: visitors hit the public upload page; admins
+        // get the full upload wizard (their papers publish without review).
+        { name: 'Upload', href: isAdmin ? '/upload' : '/my-papers', icon: CloudArrowUpIcon },
       ].filter(item => (!item.adminOnly || isAdmin) && (!item.hiddenForAdmin || !isAdmin));
 
   // Only highlight the item whose href exactly matches the current path
