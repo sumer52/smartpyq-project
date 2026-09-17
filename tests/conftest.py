@@ -293,20 +293,24 @@ async def sample_question_group(db_session, sample_question):
 # ---------------------------------------------------------------------------
 
 def make_pdf_bytes(title: str = "Test PDF") -> bytes:
-    """Return a minimal valid PDF as bytes."""
-    return (
-        b"%PDF-1.4\n"
-        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n"
-        b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n"
+    """Return a minimal valid PDF that contains a real text layer.
+
+    Upload endpoints run a readable-text gate (UPLOAD_TEXT_CHECK), so
+    the shared fixture must produce text-extractable content - a blank
+    page PDF would be rejected as a signature/blank-photo upload.
+    """
+    stream = b"BT /F1 16 Tf 72 720 Td (Question 1. What is a DBMS?) Tj ET"
+    body = b"".join([
+        b"%PDF-1.4\n",
+        b"1 0 obj<</Type/Catalog/Pages 2 0 R>>endobj\n",
+        b"2 0 obj<</Type/Pages/Kids[3 0 R]/Count 1>>endobj\n",
         b"3 0 obj<</Type/Page/MediaBox[0 0 612 792]/Parent 2 0 R"
-        b"/Resources<</Font<</F1 4 0 R>>>>>>endobj\n"
-        b"4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n"
-        b"xref\n0 5\n"
-        b"0000000000 65535 f \n"
-        b"0000000009 00000 n \n"
-        b"0000000058 00000 n \n"
-        b"0000000115 00000 n \n"
-        b"0000000266 00000 n \n"
-        b"trailer<</Size 5/Root 1 0 R>>\n"
-        b"startxref\n345\n%%EOF\n"
-    )
+        b"/Resources<</Font<</F1 4 0 R>>>>/Contents 5 0 R>>endobj\n",
+        b"4 0 obj<</Type/Font/Subtype/Type1/BaseFont/Helvetica>>endobj\n",
+        b"5 0 obj<</Length " + str(len(stream)).encode() + b">>stream\n" + stream + b" endstream\nendobj\n",
+    ])
+    # Correct xref offsets, computed from the assembled body.
+    offsets = [body.find(b"%d 0 obj" % i) for i in range(1, 6)]
+    xref = b"xref\n0 6\n" + b"".join(b"%010d 00000 n \n" % off for off in offsets)
+    trailer = b"trailer<</Size 6/Root 1 0 R>>\nstartxref\n" + str(body.find(b"xref")).encode() + b"\n%%EOF\n"
+    return body + xref + trailer

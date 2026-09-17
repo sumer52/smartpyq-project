@@ -37,10 +37,10 @@ flowchart TD
 ## Features
 
 - **PYQ Hub** — Browse previous-year papers by Stream → Specialization → Semester → Subject → Year. Students can also upload papers themselves (see below).
-- **Paper Analysis** — A real data pipeline: reads the PDF, extracts each question with part/section, marks, type, and topic, then computes priority tiers (🔥 A / B / C from repetition × marks), repeated questions with per-year variants, topic frequency, marks weightage, year-wise breakdowns, exam focus, and a filterable Question Explorer. Single-paper analyses clearly show that repetition insights need multiple papers.
+- **Paper Analysis** — A real data pipeline: reads the PDF (or OCRs an uploaded photo), extracts each question with part/section, marks, type, and topic, then computes priority tiers (🔥 A / B / C from repetition × marks), repeated questions with per-year variants, topic frequency, marks weightage, year-wise breakdowns, exam focus, and a filterable Question Explorer. Single-paper analyses clearly show that repetition insights need multiple papers.
 - **Standard paper pattern** — The platform understands the common university pattern out of the box: **Part A: 8 × 4 = 32 marks (short answers)** + **Part B: 6 × 8 = 48 marks (long answers), 80 marks total**. Uploaded papers with part headers get their sections and per-question marks detected automatically; the upload wizard offers a one-click "apply standard pattern" helper. Questions carry only **4 or 8 marks** — there are no 12-mark questions; the engine reads whatever scheme each paper declares. See [the pattern reference](docs/QUESTION_PAPER_PATTERN.md).
 - **Exam Practice Mode** — Practice with questions extracted from actual papers. Each question can carry a **teacher answer in its original format**: formatted text, an image (with zoom lightbox), or a PDF document (inline preview + open-in-new-tab). Answers are never converted to text — students study from exactly what the teacher provided. Read-only for students; managed by admins.
-- **Student Paper Upload + Verification** — Students upload their own PYQ papers through a guided wizard; submissions enter an admin verification queue (with automatic duplicate detection) and only become public after approval. Students track their submission status on a "My Submissions" page.
+- **Student Paper Upload + Verification** — Students upload their own PYQ papers through a guided wizard; submissions enter an admin verification queue (with automatic duplicate detection) and only become public after approval. Students track their submission status on a "My Submissions" page. A pre-upload gate rejects files with no readable text (photos of signatures, blank pages, or unreadable scans) with a clear error message; disable it with `UPLOAD_TEXT_CHECK=false`.
 - **Repeated Questions** — See which questions and topics recur across exam years, with per-year evidence.
 - **AI Study Assistant** — Chat assistant for concepts, programming, and exam strategy.
 - **Search** — Full-text search across papers and extracted questions.
@@ -182,6 +182,7 @@ Names only — set real values in your host's environment, never in the repo.
 - AI: `GEMINI_API_KEY` **or** `OPENAI_API_KEY` + `OPENAI_BASE_URL` + `OPENAI_MODEL`; `AI_DEFAULT_MODEL`, `AI_MAX_TOKENS`, `AI_TEMPERATURE`, `AI_TIMEOUT_SECONDS`
 - Storage: `STORAGE_BACKEND`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWKS_URL`, `SUPABASE_STORAGE_BUCKET` (or Firebase/AWS equivalents)
 - Admin account: `ADMIN_EMAIL`, `ADMIN_PASSWORD` (used by the seed script only — the admin password is never stored in the repo)
+- Uploads: `UPLOAD_TEXT_CHECK` (default `true` — rejects files with no readable text, e.g. signature photos; OCR runs locally via RapidOCR, no external service)
 - Demo data: `ENABLE_DEMO_ACCOUNT` (auto-on in development, off in production; enable explicitly in production with `true`)
 - Email: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`
 

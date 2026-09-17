@@ -1,4 +1,5 @@
 import os
+import asyncio
 import logging as _plog
 import tempfile
 import logging
@@ -36,6 +37,8 @@ from ..core.exceptions import (
     ConflictError
 )
 from ..utils.metadata_normalizer import normalize_stream, normalize_semester
+from ..utils.upload_text_check import check_upload_readable
+from app.core.config import settings
 from ..models.user import User
 from ..models.tenant import Tenant
 from ..models.paper import PaperStatus, ExamType
@@ -545,6 +548,26 @@ async def upload_student_paper(
             tenant_id=tenant_id
         )
 
+        # Reject files with no readable text (signature photos, blank pages,
+        # scans of empty sheets) before they enter the verification queue.
+        if settings.UPLOAD_TEXT_CHECK:
+            import tempfile as _tempfile
+            _fd, _tmp = _tempfile.mkstemp(suffix=file_ext or ".tmp")
+            try:
+                with os.fdopen(_fd, "wb") as _f:
+                    _f.write(file_content)
+                _reason = await asyncio.to_thread(check_upload_readable, _tmp)
+            finally:
+                try:
+                    os.remove(_tmp)
+                except OSError:
+                    pass
+            if _reason:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=_reason,
+                )
+
         svc = PaperService(db=db)
         result = await svc.upload_paper(
             file_data=file_content,
@@ -876,6 +899,26 @@ async def upload_paper(
             tenant_id=current_user.tenant_id or 1
         )
         
+        # Same readable-text gate as community uploads: an admin pasting a
+        # signature photo by mistake gets an immediate, clear error.
+        if settings.UPLOAD_TEXT_CHECK:
+            import tempfile as _tempfile
+            _fd, _tmp = _tempfile.mkstemp(suffix=file_ext or ".tmp")
+            try:
+                with os.fdopen(_fd, "wb") as _f:
+                    _f.write(file_content)
+                _reason = await asyncio.to_thread(check_upload_readable, _tmp)
+            finally:
+                try:
+                    os.remove(_tmp)
+                except OSError:
+                    pass
+            if _reason:
+                raise HTTPException(
+                    status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                    detail=_reason,
+                )
+
         result = await svc.upload_paper(
             file_data=file_content,
             filename=file.filename,

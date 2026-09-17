@@ -268,6 +268,7 @@ const MySubmissionsPage = () => {
                 <label className="flex flex-col items-center justify-center gap-2 p-8 rounded-xl border-2 border-dashed border-white/15 hover:border-indigo-500/50 hover:bg-white/5 cursor-pointer transition-colors">
                   <CloudArrowUpIcon className="h-8 w-8 text-gray-500" />
                   <span className="text-gray-400 text-sm">Click to choose the question paper file</span>
+                  <span className="text-gray-500 text-xs">Use a clear photo or PDF — photos with no readable text (signatures, blank pages) are rejected.</span>
                   <input ref={fileInputRef} type="file" accept=".pdf,.jpg,.jpeg,.png,.webp" onChange={onPickFile} className="hidden" />
                 </label>
               ) : (

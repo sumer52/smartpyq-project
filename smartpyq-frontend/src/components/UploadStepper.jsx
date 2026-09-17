@@ -117,7 +117,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
       const years = [...new Set(papers.map(p => p.year).filter(Boolean))].sort((a, b) => b - a);
       setYearSuggestions(years);
     } catch { setYearSuggestions([]); }
-  }, [uploadData.stream, uploadData.semester, uploadData.subject, uploadData.university]);
+  }, [uploadData.stream, uploadData.semester, uploadData.subject, uploadData.university, streamDisplayName]);
 
   useEffect(() => { fetchYearSuggestions(); }, [fetchYearSuggestions]);
 
@@ -533,6 +533,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                     </div>
                     <p className="text-white font-medium text-sm">Drop your file here or click to browse</p>
                     <p className="text-gray-500 text-xs mt-1">PDF, JPG, JPEG, PNG, or WEBP &bull; Up to 50MB</p>
+                    <p className="text-gray-600 text-xs mt-0.5">Files must contain readable text — photos of signatures or blank pages are rejected.</p>
                   </div>
                 )}
               </div>

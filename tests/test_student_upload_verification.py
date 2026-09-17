@@ -85,6 +85,46 @@ class TestStudentUpload:
         assert row.status == PaperStatus.PENDING
         assert row.uploader_id == test_user.id
 
+    async def test_upload_rejects_textless_image(self, student_client):
+        """Photos with no readable text (signatures, blank pages) are rejected
+        with a clear 422 instead of entering the queue and failing analysis."""
+        # 1x1 white PNG - a real image, but no text in it.
+        tiny_png = bytes.fromhex(
+            "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
+            "0000000d4944415478da63f8cfc0f01f0005050202edb5c8ec0000000049454e44ae426082"
+        )
+        resp = await student_client.post(
+            "/api/v1/papers/upload-student",
+            files={"file": ("signature.png", io.BytesIO(tiny_png), "image/png")},
+            data={
+                "title": "Signature Photo", "subject": "Botany", "stream": "B.Sc",
+                "semester": "sem2", "exam": "Final", "year": "2025",
+            },
+        )
+        assert resp.status_code == 422
+        assert "no readable text" in resp.json()["detail"].lower()
+
+    async def test_upload_accepts_text_image(self, student_client, db_session, tenant, test_user):
+        """A photo that OCRs to enough text passes the gate."""
+        from PIL import Image, ImageDraw
+
+        buf = io.BytesIO()
+        img = Image.new("RGB", (900, 220), "white")
+        d = ImageDraw.Draw(img)
+        d.text((30, 40), "PART A Answer all questions", fill="black")
+        d.text((30, 120), "1. Explain DBMS normalization. (4 marks)", fill="black")
+        img.save(buf, format="PNG")
+        buf.seek(0)
+        resp = await student_client.post(
+            "/api/v1/papers/upload-student",
+            files={"file": ("paper_photo.png", buf, "image/png")},
+            data={
+                "title": "Photo Paper 2025", "subject": "Computer Science",
+                "stream": "B.Sc", "semester": "sem5", "exam": "Final", "year": "2025",
+            },
+        )
+        assert resp.status_code == 201, resp.text
+
     async def test_upload_rejects_bad_extension(self, student_client):
         resp = await student_client.post(
             "/api/v1/papers/upload-student",

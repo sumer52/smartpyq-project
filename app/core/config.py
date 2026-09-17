@@ -68,6 +68,9 @@ class Settings(BaseSettings):
     LOCAL_STORAGE_URL: str = "http://localhost:8000/files"
     SIGNED_URL_TTL_SECONDS: int = 300  # 5 minutes
     MAX_FILE_SIZE: int = 52428800  # 50MB in bytes
+    # Reject uploads whose file carries no readable text (blank photos,
+    # signatures, scans of empty pages). Disable with UPLOAD_TEXT_CHECK=false.
+    UPLOAD_TEXT_CHECK: bool = True
     
     # Redis and Celery
     REDIS_URL: str = "redis://localhost:6379/0"
