@@ -167,8 +167,23 @@ app.add_middleware(
 if settings.ALLOWED_HOSTS:
     # In development, allow all hosts to avoid blocking frontend requests
     trusted_hosts = ["*"] if settings.ENV == "development" else settings.ALLOWED_HOSTS
+
+    class _HealthBypassTrustedHost(TrustedHostMiddleware):
+        """Skip the host allowlist for health endpoints.
+
+        Platform health probes (Render's internal load balancer) send
+        their own Host header; rejecting them 400s the probe, fails the
+        deploy's health gate, and rolls the release back.
+        """
+
+        async def __call__(self, scope, receive, send):
+            if scope.get("type") == "http" and scope.get("path") in ("/health", "/ready"):
+                await self.app(scope, receive, send)
+                return
+            await super().__call__(scope, receive, send)
+
     app.add_middleware(
-        TrustedHostMiddleware,
+        _HealthBypassTrustedHost,
         allowed_hosts=trusted_hosts
     )
 
