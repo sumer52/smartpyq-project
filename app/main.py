@@ -165,8 +165,16 @@ app.add_middleware(
 
 # Add trusted host middleware
 if settings.ALLOWED_HOSTS:
+    # Normalize patterns: Starlette only matches "*", exact hosts, or
+    # "*.domain" wildcards. A leading-dot form like ".onrender.com"
+    # (as stored in env vars) silently matches NOTHING and 400s every
+    # public request, so rewrite it to the wildcard form Starlette wants.
+    normalized_hosts = [
+        ("*" + host) if host.startswith(".") else host
+        for host in settings.ALLOWED_HOSTS
+    ]
     # In development, allow all hosts to avoid blocking frontend requests
-    trusted_hosts = ["*"] if settings.ENV == "development" else settings.ALLOWED_HOSTS
+    trusted_hosts = ["*"] if settings.ENV == "development" else normalized_hosts
 
     class _HealthBypassTrustedHost(TrustedHostMiddleware):
         """Skip the host allowlist for health endpoints.
