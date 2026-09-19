@@ -10,6 +10,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from fastapi.security import HTTPBearer
 from pydantic import BaseModel, EmailStr, Field
+from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
@@ -219,6 +220,14 @@ async def login(
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
             detail=str(e)
+        )
+    except PydanticValidationError:
+        # EmailStr rejected the identifier (e.g. a bare admin ID) — that is a
+        # client input problem, not a server fault. 422 before any hashing
+        # or lookup happens.
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Please enter a valid email address."
         )
     except Exception as e:
         import logging as _log
