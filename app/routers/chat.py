@@ -12,6 +12,7 @@ from fastapi import (
     Depends,
     HTTPException,
     status,
+    Request,
 )
 
 from pydantic import BaseModel, Field
@@ -19,6 +20,7 @@ from sse_starlette import EventSourceResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
+from ..core.limiter import limiter
 from ..core.dependencies import (
     get_current_active_user,
     get_current_tenant,
@@ -104,14 +106,15 @@ class SimpleChatResponse(BaseModel):
     session_id: Optional[str] = None
 
 @router.post("/simple", response_model=SimpleChatResponse)
-async def simple_chat(request: SimpleChatRequest):
+@limiter.limit("20/hour")
+async def simple_chat(payload: SimpleChatRequest, request: Request):
     """Simple chat endpoint - no authentication required"""
     try:
         from app.utils.ai import get_ai_response, ai_service
         has_ai = (ai_service.gemini_client is not None) or (ai_service.openai_client is not None)
 
         if not has_ai:
-            prompt_lower = request.prompt.lower()
+            prompt_lower = payload.prompt.lower()
             if any(w in prompt_lower for w in ["paper", "pyq", "previous", "question"]):
                 response = "You can find previous year papers in the PYQ Hub! Navigate to the PYQ Hub section to browse papers by stream, semester, and subject."
             elif any(w in prompt_lower for w in ["upload", "submit", "add"]):
@@ -122,13 +125,13 @@ async def simple_chat(request: SimpleChatRequest):
                 response = "Study tips: 1. Practice with PYQs 2. Focus on repeated questions 3. Time management 4. Revise regularly 5. Analyze patterns"
             else:
                 response = "I am in basic mode (AI API not configured). I can help you navigate: PYQ Hub for papers, Upload to share papers, Search to find papers, Analysis for exam patterns."
-            return SimpleChatResponse(response=response, session_id=request.session_id)
+            return SimpleChatResponse(response=response, session_id=payload.session_id)
 
-        result = await get_ai_response(prompt=request.prompt)
-        return SimpleChatResponse(response=result.content, session_id=request.session_id)
+        result = await get_ai_response(prompt=payload.prompt)
+        return SimpleChatResponse(response=result.content, session_id=payload.session_id)
     except (ImportError, Exception):
         # AI not configured or API keys invalid - provide helpful fallback
-        prompt_lower = request.prompt.lower()
+        prompt_lower = payload.prompt.lower()
         if any(w in prompt_lower for w in ["paper", "pyq", "previous", "question"]):
             response = "You can find previous year papers in the PYQ Hub! Navigate to browse papers by stream, semester, and subject."
         elif any(w in prompt_lower for w in ["upload", "submit", "add"]):
@@ -139,11 +142,13 @@ async def simple_chat(request: SimpleChatRequest):
             response = "Study tips: 1. Practice with PYQs 2. Focus on repeated questions 3. Time management 4. Revise regularly 5. Analyze patterns"
         else:
             response = "I am in basic mode. I can help navigate: PYQ Hub for papers, Upload to share, Search to find papers, Analysis for patterns."
-        return SimpleChatResponse(response=response, session_id=request.session_id)
+        return SimpleChatResponse(response=response, session_id=payload.session_id)
 
 @router.post("/", response_model=ChatResponse)
+@limiter.limit("60/hour")
 async def chat(
-    request: ChatRequest,
+    payload: ChatRequest,
+    request: Request,
     chat_service: ChatService = Depends(get_chat_service),
     current_user: User = Depends(get_current_active_user),
     current_tenant: Tenant = Depends(get_current_tenant),
@@ -157,9 +162,9 @@ async def chat(
     try:
         result = await chat_service.chat(
             chat_request=ChatRequestSchema(
-                prompt=request.prompt,
-                session_id=request.session_id,
-                metadata=request.metadata
+                prompt=payload.prompt,
+                session_id=payload.session_id,
+                metadata=payload.metadata
             ),
             user=current_user,
             ip_address=client_ip
@@ -191,8 +196,10 @@ async def chat(
         )
 
 @router.post("/stream")
+@limiter.limit("60/hour")
 async def chat_stream(
-    request: ChatRequest,
+    payload: ChatRequest,
+    request: Request,
     chat_service: ChatService = Depends(get_chat_service),
     current_user: User = Depends(get_current_active_user),
     current_tenant: Tenant = Depends(get_current_tenant),
@@ -204,13 +211,13 @@ async def chat_stream(
     Each chunk contains partial response content.
     """
     async def generate_stream() -> AsyncGenerator[str, None]:
-        stream_session_id = request.session_id or "unknown"
+        stream_session_id = payload.session_id or "unknown"
         try:
             async for chunk in chat_service.stream_chat(
                 chat_request=ChatRequestSchema(
-                    prompt=request.prompt,
-                    session_id=request.session_id,
-                    metadata=request.metadata
+                    prompt=payload.prompt,
+                    session_id=payload.session_id,
+                    metadata=payload.metadata
                 ),
                 user=current_user,
                 ip_address=client_ip
