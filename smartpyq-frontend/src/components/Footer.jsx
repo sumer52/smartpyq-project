@@ -129,7 +129,7 @@ const Footer = ({ className = "" }) => {
           {/* PYQ Portal - Brand Column */}
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <div className="mb-6">
-              <Link to="/" className="flex items-center group">
+              <Link to="/" viewTransition className="flex items-center group">
                 <img src="/logo.png" alt="SmartPYQ" className="h-12 sm:h-14 md:h-16 w-auto object-contain group-hover:scale-105 transition-transform"  />
               </Link>
             </div>
@@ -177,6 +177,7 @@ const Footer = ({ className = "" }) => {
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link
+                    viewTransition
                     to={link.to}
                     className="text-gray-400 hover:text-white transition-colors flex items-center group"
                   >
@@ -196,6 +197,7 @@ const Footer = ({ className = "" }) => {
               {supportLinks.map((link) => (
                 <li key={link.name}>
                   <Link
+                    viewTransition
                     to={link.to}
                     className="text-gray-300 hover:text-white transition-colors flex items-center group"
                   >
@@ -212,9 +214,9 @@ const Footer = ({ className = "" }) => {
               <h4 className="font-medium text-white mb-2">Need Help?</h4>
               <p className="text-sm text-gray-300 mb-3">
                 Our team is here to help with any questions about SmartPYQ.
-              </p>
-              <Link
-                to="/contact"
+              </p>                <Link
+                  viewTransition
+                  to="/contact"
                 className="inline-flex items-center text-sm text-brand-400 hover:text-brand-300 transition-colors"
               >
                 Contact Support
@@ -265,23 +267,24 @@ const Footer = ({ className = "" }) => {
                 © {currentYear} SmartPYQ. All rights reserved.
               </p>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1">
-                <Link to="/privacy" className="hover:text-white transition-colors">
+                <Link to="/privacy" viewTransition className="hover:text-white transition-colors">
+                
                   Privacy
                 </Link>
                 <span>•</span>
-                <Link to="/terms" className="hover:text-white transition-colors">
+                <Link to="/terms" viewTransition className="hover:text-white transition-colors">
                   Terms
                 </Link>
                 <span>•</span>
-                <Link to="/cookies" className="hover:text-white transition-colors">
+                <Link to="/cookies" viewTransition className="hover:text-white transition-colors">
                   Cookies
                 </Link>
                 <span>•</span>
-                <Link to="/accessibility" className="hover:text-white transition-colors">
+                <Link to="/accessibility" viewTransition className="hover:text-white transition-colors">
                   Accessibility
                 </Link>
                 <span>•</span>
-                <Link to="/acceptable-use" className="hover:text-white transition-colors">
+                <Link to="/acceptable-use" viewTransition className="hover:text-white transition-colors">
                   Acceptable Use
                 </Link>
               </div>

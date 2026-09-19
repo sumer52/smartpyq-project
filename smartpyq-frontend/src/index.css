@@ -1660,3 +1660,54 @@ input:focus-visible, select:focus-visible, textarea:focus-visible {
 .login-form input:hover {
   border-color: rgba(255, 255, 255, 0.2) !important;
 }
+
+/* ===== View Transitions (native View Transition API, via React Router) =====
+   Route changes tagged with `viewTransition` cross-fade the page content;
+   the persistent header is isolated so it stays put. Unsupported browsers
+   skip all of this and swap instantly. */
+:root {
+  --duration-exit: 150ms;
+  --duration-enter: 210ms;
+}
+
+@keyframes vt-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Keep clicks/hovers live under the snapshot overlay during transitions. */
+::view-transition {
+  pointer-events: none;
+}
+
+/* Root cross-fade: page content fades between routes. */
+::view-transition-old(root) {
+  animation: var(--duration-exit) ease-in vt-fade reverse;
+}
+::view-transition-new(root) {
+  animation: var(--duration-enter) ease-out var(--duration-exit) both vt-fade;
+}
+
+/* Persistent header: it renders identically on both sides of every route
+   change, so freeze its group and hide the stale snapshot. (It uses
+   backdrop-filter, which flickers if cross-faded — hiding old() avoids it.) */
+::view-transition-group(site-header) {
+  animation: none;
+  z-index: 100;
+}
+::view-transition-old(site-header) {
+  display: none;
+}
+::view-transition-new(site-header) {
+  animation: none;
+}
+
+/* Respect reduced-motion: skip all view-transition animation. */
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(*),
+  ::view-transition-new(*),
+  ::view-transition-group(*) {
+    animation-duration: 0s !important;
+    animation-delay: 0s !important;
+  }
+}

@@ -15,7 +15,7 @@ const FuturisticHeader = memo(() => {
   const handleHomeClick = useCallback(
     (e) => {
       e.preventDefault();
-      navigate('/');
+      navigate('/', { viewTransition: true });
     },
     [navigate]
   );
@@ -51,7 +51,7 @@ const FuturisticHeader = memo(() => {
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
-    navigate('/');
+    navigate('/', { viewTransition: true });
   };
 
   // The whole student platform is public — no login needed for any of it.
@@ -73,7 +73,8 @@ const FuturisticHeader = memo(() => {
   const isActive = (item) => location.pathname === item.href;
 
   return (
-    <header className={'fh ' + (entered ? 'fh--entered' : '') + (scrolled ? ' fh--scrolled' : '')} role='banner'>
+    <header className={'fh ' + (entered ? 'fh--entered' : '') + (scrolled ? ' fh--scrolled' : '')} role='banner'
+      style={{ viewTransitionName: 'site-header' }}>
       <div className='fh__pill'>
         <Link to='/' onClick={handleHomeClick} className='fh__logo' aria-label='SmartPYQ Home'>
           <img src='/logo.png' alt='SmartPYQ' className='fh__logo-img' />
@@ -84,7 +85,7 @@ const FuturisticHeader = memo(() => {
             const Icon = item.icon;
             const active = isActive(item, index);
             return (
-              <Link key={item.name} to={item.href}
+              <Link key={item.name} to={item.href} viewTransition
                 onClick={item.name === 'Home' ? handleHomeClick : undefined}
                 className={'fh__nav-item' + (active ? ' fh__nav-item--active' : '')}
                 aria-current={active ? 'page' : undefined}>
@@ -110,7 +111,7 @@ const FuturisticHeader = memo(() => {
         <div className='fh__right'>
           {isAuthenticated && isAdmin ? (
             <div className='relative flex items-center gap-2'>
-              <Link to='/admin' className='fh__login' aria-label='Admin Dashboard' style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.2))', borderColor: 'rgba(16,185,129,0.4)', color: '#6ee7b7' }}>
+              <Link to='/admin' viewTransition className='fh__login' aria-label='Admin Dashboard' style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.2))', borderColor: 'rgba(16,185,129,0.4)', color: '#6ee7b7' }}>
                 DASHBOARD
               </Link>
               <button onClick={() => setShowUserMenu(!showUserMenu)} className='fh__avatar-btn' aria-label='Admin menu' aria-expanded={showUserMenu}>
@@ -123,8 +124,8 @@ const FuturisticHeader = memo(() => {
                       <p className='fh__dd-name'>{user?.name}</p>
                       <p className='fh__dd-course'>Administrator</p>
                     </div>
-                    <Link to='/admin' className='fh__dd-item text-emerald-400' onClick={() => setShowUserMenu(false)}><ShieldCheckIcon className='h-4 w-4' /> Admin Dashboard</Link>
-                    <Link to='/upload' className='fh__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload PDF</Link>
+                    <Link to='/admin' viewTransition className='fh__dd-item text-emerald-400' onClick={() => setShowUserMenu(false)}><ShieldCheckIcon className='h-4 w-4' /> Admin Dashboard</Link>
+                    <Link to='/upload' viewTransition className='fh__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload PDF</Link>
                     <hr className='border-white/[0.06] my-1' />
                     <button onClick={handleLogout} className='fh__dd-item text-red-400 hover:bg-red-500/10'><ArrowRightOnRectangleIcon className='h-4 w-4' /> Logout</button>
                   </motion.div>
@@ -138,7 +139,7 @@ const FuturisticHeader = memo(() => {
           ) : (
             /* Public visitors see no login chrome at all. Admin entry lives
                in the footer (Admin Login) and behind Upload. */
-            <Link to='/admin/login' className='fh__login' aria-label='Admin login'>ADMIN</Link>
+            <Link to='/admin/login' viewTransition className='fh__login' aria-label='Admin login'>ADMIN</Link>
           )}
         </div>
       </div>

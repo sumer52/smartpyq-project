@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from 'react';
-import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Outlet, RouterProvider, Navigate, useLocation, createBrowserRouter } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 
 import FuturisticHeader from './components/FuturisticHeader';
@@ -52,31 +51,6 @@ const SkipLink = () => (
   </a>
 );
 
-const pageVariants = {
-  initial: { opacity: 0, y: 20 },
-  in: { opacity: 1, y: 0 },
-  out: { opacity: 0, y: -20 },
-};
-
-const pageTransition = {
-  type: 'tween',
-  ease: 'anticipate',
-  duration: 0.3,
-};
-
-const ProtectedRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  const location = useLocation();
-  if (isLoading) return <SpinLoader />;
-  return isAuthenticated ? children : <Navigate to="/login" state={{ from: location }} replace />;
-};
-
-const PublicRoute = ({ children }) => {
-  const { isAuthenticated, isLoading } = useAuth();
-  if (isLoading) return <SpinLoader />;
-  return !isAuthenticated ? children : <Navigate to="/dashboard" replace />;
-};
-
 // Admin area guard: REQUIRES authentication AND an admin role. Students and
 // guests are bounced to /admin/login. Backend authorization is the real
 // enforcement layer — this is UX, not security.
@@ -90,331 +64,104 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+// Route element helper: optional auth guard + per-route Suspense around the
+// lazy page. Route changes animate via the native View Transition API
+// (navigations tagged with `viewTransition`); no per-page motion wrappers.
+function pageElement(Guard, Page) {
+  const content = (
+    <Suspense fallback={<SpinLoader />}>
+      <Page />
+    </Suspense>
+  );
+  return Guard ? <Guard>{content}</Guard> : content;
+}
 
-const AppContent = function AppContent() {
+const REDIRECTS_TO_HOME = ['/login', '/register', '/signup', '/forgot-password', '/dashboard', '/profile'];
 
+const router = createBrowserRouter([
+  {
+    // Pathless layout: persistent chrome renders once, <Outlet /> swaps pages.
+    element: <AppLayout />,
+    children: [
+      { path: '/', element: pageElement(null, HomePage) },
+      // Student auth removed — the platform is fully public.
+      // Old auth URLs redirect instead of showing login screens.
+      ...REDIRECTS_TO_HOME.map((p) => ({ path: p, element: <Navigate to="/" replace /> })),
+
+      { path: '/pyq', element: pageElement(null, PYQPage) },
+      { path: '/repeated-questions', element: pageElement(null, RepeatedQuestionsPage) },
+      { path: '/analyze', element: pageElement(null, AnalysisPage) },
+      { path: '/practice', element: pageElement(null, PracticePage) },
+      { path: '/search', element: pageElement(null, SearchPage) },
+      { path: '/analysis-history', element: pageElement(null, AnalysisHistoryPage) },
+      // Upload: admin-only content management. Non-admins are
+      // routed to the admin login ("Upload PDF -> Admin Login").
+      { path: '/upload', element: pageElement(AdminRoute, UploadPage) },
+      { path: '/ai', element: pageElement(null, AIPage) },
+      { path: '/contact', element: pageElement(null, ContactPage) },
+      { path: '/faq', element: pageElement(null, FAQPage) },
+      { path: '/privacy', element: pageElement(null, PrivacyPage) },
+      { path: '/terms', element: pageElement(null, TermsPage) },
+      { path: '/report-issue', element: pageElement(null, ReportIssuePage) },
+      { path: '/cookies', element: pageElement(null, CookiePolicyPage) },
+      { path: '/error/:code', element: pageElement(null, ErrorPage) },
+      { path: '/accessibility', element: pageElement(null, AccessibilityStatementPage) },
+      { path: '/acceptable-use', element: pageElement(null, AcceptableUsePage) },
+      // Admin area — separate UI, backend-enforced authorization
+      { path: '/admin/login', element: pageElement(null, AdminLoginPage) },
+      { path: '/admin', element: pageElement(AdminRoute, AdminDashboardPage) },
+      { path: '/admin/answers', element: pageElement(AdminRoute, AdminAnswersPage) },
+      // Public: community uploads need no account; the page
+      // tracks anonymous contributions via a stored token.
+      { path: '/my-papers', element: pageElement(null, MySubmissionsPage) },
+      { path: '*', element: pageElement(null, NotFoundPage) },
+    ],
+  },
+]);
+
+function AppLayout() {
   return (
-    <div className="App min-h-screen" style={{position:"relative",zIndex:10}}>
-      <SkipLink />
-      <ScrollProgress />
-      
-      
-      {/* Ambient background orbs - wrapped in overflow:hidden to prevent mobile horizontal scroll */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-        <div className="ambient-orb ambient-orb--purple" style={{width:'600px',height:'600px',top:'-200px',right:'-200px'}} />
-        <div className="ambient-orb ambient-orb--blue" style={{width:'500px',height:'500px',bottom:'-150px',left:'-150px'}} />
-        <div className="ambient-orb ambient-orb--pink" style={{width:'400px',height:'400px',top:'40%',left:'30%'}} />
-      </div>
-      <FuturisticHeader />
-      <ScrollToTop />
-      <SessionExpiredBanner />
-      <OfflineBanner />
-      <MaintenanceBanner />
-      
-      
-      <main id="main-content" className="flex-1 relative" style={{zIndex:10, paddingTop: "70px"}}>
-      {/* Main Content */}
-        <AnimatePresence mode="wait">
-          <Suspense fallback={<SpinLoader />}>
-            <Routes>
-                <Route 
-                  path="/" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <HomePage />
-                    </motion.div>
-                  } 
-                />
-                {/* Student auth removed — the platform is fully public.
-                    Old auth URLs redirect instead of showing login screens. */}
-                <Route path="/login" element={<Navigate to="/" replace />} />
-                <Route path="/register" element={<Navigate to="/" replace />} />
-                <Route path="/signup" element={<Navigate to="/" replace />} />
-                <Route path="/forgot-password" element={<Navigate to="/" replace />} />
-                <Route path="/dashboard" element={<Navigate to="/" replace />} />
-                <Route path="/profile" element={<Navigate to="/" replace />} />
+    <AuthProvider>
+      <div className="App min-h-screen" style={{position:"relative",zIndex:10}}>
+        <SkipLink />
+        <ScrollProgress />
 
-                <Route 
-                  path="/pyq" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <PYQPage />
-                    </motion.div>
-                  }
-                 />
-                 <Route 
-                   path="/repeated-questions" 
-                   element={
-                     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                       <RepeatedQuestionsPage />
-                     </motion.div>
-                   }
-                 />
-                 <Route 
-                   path="/analyze"
-                   element={
-                     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                       <AnalysisPage />
-                     </motion.div>
-                   }
-                 />                 <Route 
-                   path="/practice" 
-                   element={
-                     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                       <PracticePage />
-                     </motion.div>
-                   }
-                 />                 <Route 
-                   path="/search" 
-                   element={
-                     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                       <SearchPage />
-                     </motion.div>
-                   }
-                 />
-                 <Route 
-                   path="/analysis-history"
-                   element={
-                     <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                       <AnalysisHistoryPage />
-                     </motion.div>
-                   }
-                 />
-                {/* Upload: admin-only content management. Non-admins are
-                    routed to the admin login ("Upload PDF -> Admin Login"). */}
-                <Route 
-                  path="/upload" 
-                  element={
-                    <AdminRoute>
-                      <motion.div
-                        initial="initial"
-                        animate="in"
-                        exit="out"
-                        variants={pageVariants}
-                        transition={pageTransition}
-                      >
-                        <UploadPage />
-                      </motion.div>
-                    </AdminRoute>
-                  } 
-                />
-                <Route 
-                  path="/ai" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <AIPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/contact" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <ContactPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/faq" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <FAQPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/privacy" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <PrivacyPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/terms" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <TermsPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/report-issue" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <ReportIssuePage />
-                    </motion.div>
-                  } 
-                />
-                {/* forgot-password removed — redirects above */}
-                <Route 
-                  path="/cookies" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <CookiePolicyPage />
-                    </motion.div>
-                  } 
-                />
-                {/* register removed — redirects above */}
-                <Route 
-                  path="/error/:code" 
-                  element={
-                    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <ErrorPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/accessibility" 
-                  element={
-                    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <AccessibilityStatementPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/acceptable-use" 
-                  element={
-                    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <AcceptableUsePage />
-                    </motion.div>
-                  } 
-                />
-                {/* Admin area — separate UI, backend-enforced authorization */}
-                <Route 
-                  path="/admin/login" 
-                  element={
-                    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <AdminLoginPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="/admin" 
-                  element={
-                    <AdminRoute>
-                      <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                        <AdminDashboardPage />
-                      </motion.div>
-                    </AdminRoute>
-                  } 
-                />
-                <Route 
-                  path="/admin/answers" 
-                  element={
-                    <AdminRoute>
-                      <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                        <AdminAnswersPage />
-                      </motion.div>
-                    </AdminRoute>
-                  } 
-                />
-                {/* Public: community uploads need no account; the page
-                    tracks anonymous contributions via a stored token. */}
-                <Route 
-                  path="/my-papers" 
-                  element={
-                    <motion.div initial="initial" animate="in" exit="out" variants={pageVariants} transition={pageTransition}>
-                      <MySubmissionsPage />
-                    </motion.div>
-                  } 
-                />
-                <Route 
-                  path="*" 
-                  element={
-                    <motion.div
-                      initial="initial"
-                      animate="in"
-                      exit="out"
-                      variants={pageVariants}
-                      transition={pageTransition}
-                    >
-                      <NotFoundPage />
-                    </motion.div>
-                  } 
-                />
-              </Routes>
-            </Suspense>
-          </AnimatePresence>
+        {/* Ambient background orbs - wrapped in overflow:hidden to prevent mobile horizontal scroll */}
+        <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+          <div className="ambient-orb ambient-orb--purple" style={{width:'600px',height:'600px',top:'-200px',right:'-200px'}} />
+          <div className="ambient-orb ambient-orb--blue" style={{width:'500px',height:'500px',bottom:'-150px',left:'-150px'}} />
+          <div className="ambient-orb ambient-orb--pink" style={{width:'400px',height:'400px',top:'40%',left:'30%'}} />
+        </div>
+        <FuturisticHeader />
+        <ScrollToTop />
+        <SessionExpiredBanner />
+        <OfflineBanner />
+        <MaintenanceBanner />
+
+        <main id="main-content" className="flex-1 relative" style={{zIndex:10, paddingTop: "70px"}}>
+          <Outlet />
         </main>
-        
+
         {/* Footer */}
         <Footer />
-        
+
         {/* Chat Widget */}
         <ChatWidget />
-        
+
         {/* Live Region for Screen Readers */}
-        <div 
-          id="live-region" 
-          aria-live="polite" 
-          aria-atomic="true" 
+        <div
+          id="live-region"
+          aria-live="polite"
+          aria-atomic="true"
           className="sr-only"
         ></div>
       </div>
-  );
-};
-
-function App() {
-  return (
-    <AuthProvider>
-      <AppContent />
     </AuthProvider>
   );
+}
+
+function App() {
+  return <RouterProvider router={router} />;
 }
 
 export default App;
