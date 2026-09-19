@@ -234,7 +234,7 @@ const AdminDashboardPage = () => {
           </div>
           <div className="flex items-center gap-2">
             <Link
-              to="/upload"
+              to="/my-papers"
               className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-emerald-400 hover:to-teal-500"
             >
               <ArrowUpTrayIcon className="h-4 w-4" /> Upload PDF
