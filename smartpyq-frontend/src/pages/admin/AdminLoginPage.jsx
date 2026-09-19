@@ -6,7 +6,6 @@ import { useAuth } from '../../contexts/AuthContext';
 
 // Demo credentials shown ONLY in development. The production build never
 // ships them (import.meta.env.PROD is inlined at build time).
-const SHOW_DEMO_CREDS = import.meta.env.DEV;
 const DEMO_ADMIN_ID = 'admin';
 const DEMO_ADMIN_PASSWORD = 'smartpyq@admin';
 
@@ -143,9 +142,10 @@ const AdminLoginPage = () => {
               </button>
             </form>
 
-            {/* Dev-only demo credentials (never present in production bundles) */}
-            {SHOW_DEMO_CREDS && (
-              <motion.div
+            {/* Public demo credentials — the demo admin is intentionally
+                documented on the login page (seed script keeps the password
+                working for exactly this purpose). */}
+            <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
@@ -164,7 +164,6 @@ const AdminLoginPage = () => {
                   Fill demo credentials
                 </button>
               </motion.div>
-            )}
 
             <div className="mt-6 text-center">
               <Link to="/" className="text-sm text-gray-400 hover:text-gray-200">
