@@ -14,6 +14,7 @@ import ScrollProgress from './components/ui/ScrollProgress';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PYQPage = lazy(() => import('./pages/PYQPage'));
+const UploadPage = lazy(() => import('./pages/UploadPage'));
 const AIPage = lazy(() => import('./pages/AIPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
 const FAQPage = lazy(() => import('./pages/FAQPage'));
@@ -191,14 +192,23 @@ const AppContent = function AppContent() {
                      </motion.div>
                    }
                  />
-                {/* Upload: single unified upload page for everyone —
-                    /my-papers handles both students (pending verification)
-                    and admins (instant publish). */}
-                <Route
-                  path="/upload"
+                {/* Upload: admin-only content management. Non-admins are
+                    routed to the admin login ("Upload PDF -> Admin Login"). */}
+                <Route 
+                  path="/upload" 
                   element={
-                    <Navigate to="/my-papers" replace />
-                  }
+                    <AdminRoute>
+                      <motion.div
+                        initial="initial"
+                        animate="in"
+                        exit="out"
+                        variants={pageVariants}
+                        transition={pageTransition}
+                      >
+                        <UploadPage />
+                      </motion.div>
+                    </AdminRoute>
+                  } 
                 />
                 <Route 
                   path="/ai" 

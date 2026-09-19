@@ -178,9 +178,8 @@ const MySubmissionsPage = () => {
         <motion.div initial={{ opacity: 0, y: -16 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <h1 className="text-3xl font-bold text-white mb-2">Upload a PYQ Paper</h1>
           <p className="text-gray-400 max-w-3xl">
-            {isAdmin
-              ? 'Add a previous-year question paper to the PYQ Hub. As an admin, papers you upload here are published immediately — no review step.'
-              : 'Contribute a previous-year question paper you have — no account needed. Every submission is reviewed by an admin before it becomes visible to other students — help grow the PYQ Hub for everyone.'}
+            Contribute a previous-year question paper you have — no account needed. Every submission is
+            reviewed by an admin before it becomes visible to other students — help grow the PYQ Hub for everyone.
           </p>
           {isAdmin && (
             <p className="mt-3 inline-flex items-center gap-2 text-xs font-semibold text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded-full px-3 py-1.5">

@@ -84,7 +84,7 @@ const Footer = ({ className = "" }) => {
     }
   ];
   const quickLinks = [
-    { name: 'Upload Paper', to: '/my-papers' },
+    { name: 'Upload Paper', to: '/upload' },
     { name: 'My Uploaded Papers', to: '/my-papers' },
     { name: 'AI Assistant', to: '/ai' },
     { name: 'Search', to: '/search' },

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 const FuturisticHeader = memo(() => {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -63,9 +63,10 @@ const FuturisticHeader = memo(() => {
         { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
         { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
         { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
-        // Single unified upload page: submit a paper (no account needed) and
-        // track your submissions; admins publish instantly from here too.
-        { name: 'Upload', href: '/my-papers', icon: CloudArrowUpIcon },
+        { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
+        // Everyone can upload: visitors hit the public upload page; admins
+        // get the full upload wizard (their papers publish without review).
+        { name: 'Upload', href: isAdmin ? '/upload' : '/my-papers', icon: CloudArrowUpIcon },
       ].filter(item => (!item.adminOnly || isAdmin) && (!item.hiddenForAdmin || !isAdmin));
 
   // Only highlight the item whose href exactly matches the current path
@@ -123,7 +124,7 @@ const FuturisticHeader = memo(() => {
                       <p className='fh__dd-course'>Administrator</p>
                     </div>
                     <Link to='/admin' className='fh__dd-item text-emerald-400' onClick={() => setShowUserMenu(false)}><ShieldCheckIcon className='h-4 w-4' /> Admin Dashboard</Link>
-                    <Link to='/my-papers' className='fh__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload Paper</Link>
+                    <Link to='/upload' className='fh__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload PDF</Link>
                     <hr className='border-white/[0.06] my-1' />
                     <button onClick={handleLogout} className='fh__dd-item text-red-400 hover:bg-red-500/10'><ArrowRightOnRectangleIcon className='h-4 w-4' /> Logout</button>
                   </motion.div>
