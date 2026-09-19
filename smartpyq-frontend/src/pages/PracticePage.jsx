@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import api from '../lib/api';
 import practiceQuestions from '../data/practiceQuestions.json';
 import { Counter } from '../components/ui/Loaders';
+import { Button } from '@/components/ui/button';
 import AnswerView from '../components/AnswerView';
 import { stagger, cardUp, EASE } from '../lib/motion';
 
@@ -283,29 +284,28 @@ const PracticePage = () => {
                           placeholder="Write your own answer here to test your understanding..."
                           className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-none" />
                         <div className="flex flex-col sm:flex-row gap-3">
-                          <button onClick={() => handlePractice('reviewed')}
-                            className="btn btn-sm btn-primary flex-1">I Knew This</button>
-                          <button onClick={() => handlePractice('attempted')}
-                            className="btn btn-sm btn-primary flex-1 bg-orange-600 hover:bg-orange-700">Needs Practice</button>
+                          <Button onClick={() => handlePractice('reviewed')} size="sm"
+                            className="flex-1">I Knew This</Button>
+                          <Button onClick={() => handlePractice('attempted')} size="sm"
+                            className="flex-1 bg-linear-to-b from-orange-600 to-orange-700 shadow-none hover:from-orange-500 hover:to-orange-600">Needs Practice</Button>
                         </div>
                       </div>
                     ) : (
-                      <button onClick={handleRevealAnswer}
-                        className="btn btn-secondary btn-block">
+                      <Button onClick={handleRevealAnswer} variant="secondary" className="w-full">
                         Show Answer
-                      </button>
+                      </Button>
                     )}
                   </motion.div>
                   </AnimatePresence>
                 )}
 
                 <div className="flex gap-3 justify-center">
-                  <button onClick={() => { if (currentIdx > 0) { setCurrentIdx(currentIdx - 1); setShowAnswer(false); } }}
+                  <Button onClick={() => { if (currentIdx > 0) { setCurrentIdx(currentIdx - 1); setShowAnswer(false); } }}
                     disabled={currentIdx === 0}
-                    className="btn btn-secondary">Previous</button>
-                  <button onClick={() => { if (currentIdx < questions.length - 1) { setCurrentIdx(currentIdx + 1); setShowAnswer(false); } }}
+                    variant="secondary">Previous</Button>
+                  <Button onClick={() => { if (currentIdx < questions.length - 1) { setCurrentIdx(currentIdx + 1); setShowAnswer(false); } }}
                     disabled={currentIdx >= questions.length - 1}
-                    className="btn btn-secondary">Next</button>
+                    variant="secondary">Next</Button>
                 </div>
               </>
             )}
