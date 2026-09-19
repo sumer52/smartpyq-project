@@ -159,6 +159,10 @@ def _paper_pdf_path(year: int) -> str:
 
 async def seed() -> None:
     # Owner: any existing admin (created by seed_demo_user or the operator).
+    # The default tenant row must exist first: papers carry a tenant FK.
+    from app.utils.bootstrap import ensure_default_tenant
+
+    await ensure_default_tenant()
     async with AsyncSessionLocal() as db:
         admin = (await db.execute(
             select(User).filter(User.role.in_([UserRole.ADMIN, UserRole.TENANT_ADMIN, UserRole.SUPER_ADMIN]))

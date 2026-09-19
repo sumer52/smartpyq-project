@@ -71,8 +71,11 @@ async def lifespan(app: FastAPI):
 
     # Seed demo content once per boot (idempotent, cheap no-op when the
     # papers already exist). Runs after migrations in the start command have
-    # applied the schema; never blocks startup on failure.
+    # applied the schema; never blocks startup on failure. The default
+    # tenant row is created first because users/papers reference it.
     try:
+        from app.utils.bootstrap import ensure_default_tenant
+        await ensure_default_tenant()
         from app.scripts.seed_demo_papers import seed as _seed_papers
         await _seed_papers()
         logger.info("Demo paper seed checked")

@@ -105,6 +105,9 @@ async def _upsert_user(db, *, email: str, username: str, full_name: str,
 
 async def seed_demo_user() -> None:
     """Legacy entry point: demo (student) + admin seeding."""
+    from app.utils.bootstrap import ensure_default_tenant
+
+    await ensure_default_tenant()
     auth_mgr = AuthManager()
 
     async with AsyncSessionLocal() as db:
