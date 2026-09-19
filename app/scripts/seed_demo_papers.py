@@ -149,8 +149,12 @@ def _write_pdf(path: str, year: int) -> None:
 
 
 def _paper_pdf_path(year: int) -> str:
-    os.makedirs(settings.LOCAL_STORAGE_PATH or "./storage", exist_ok=True)
-    return os.path.join(settings.LOCAL_STORAGE_PATH or "./storage", f"demo_pyq_{year}.pdf")
+    # Use the same base the download endpoint resolves against
+    # (LOCAL_STORAGE_PATH, ./uploads fallback) so seeded PDFs are
+    # downloadable — not just analyzable.
+    base = settings.LOCAL_STORAGE_PATH or "./storage"
+    os.makedirs(base, exist_ok=True)
+    return os.path.join(base, f"demo_pyq_{year}.pdf")
 
 
 async def seed() -> None:
@@ -172,8 +176,19 @@ async def seed() -> None:
                     Paper.semester == SEMESTER,
                     Paper.status == PaperStatus.APPROVED,
                 )
-            )).scalar_one_or_none()
+            )).scalars().first()
             if existing:
+                # The filesystem may be ephemeral (Render): regenerate the
+                # PDF when it is gone, and normalize legacy "./storage/..."
+                # file_url values to the bare storage key the download
+                # endpoint actually resolves.
+                pdf_path = _paper_pdf_path(year)
+                if not os.path.isfile(pdf_path):
+                    _write_pdf(pdf_path, year)
+                bare = f"demo_pyq_{year}.pdf"
+                if existing.file_url != bare:
+                    existing.file_url = bare
+                    await db.commit()
                 print(f"[OK] Paper ready: {SUBJECT} {YEAR_LABELS[year]} (id={existing.id})")
                 continue
 
@@ -195,7 +210,7 @@ async def seed() -> None:
                 max_marks=MAX_MARKS,
                 difficulty_level=None,
                 tags=["demo", "pyq"],
-                file_url=pdf_path.replace("\\", "/"),
+                file_url=f"demo_pyq_{year}.pdf",
                 file_name=os.path.basename(pdf_path),
                 file_size=size,
                 file_type="application/pdf",
