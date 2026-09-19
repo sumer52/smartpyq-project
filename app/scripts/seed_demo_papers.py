@@ -8,7 +8,7 @@ Pattern (applies to every subject):
 
 Creates three approved demo papers (2023 / 2024 / 2025) for Computer Science,
 generating a matching PDF for each. Idempotent — existing papers are skipped.
-Requires ENABLE_DEMO_ACCOUNT=1 and an admin from seed_demo_user. Run:
+Requires an admin user to exist (seed_demo_user creates one). Run:
     python -m app.scripts.seed_demo_papers
 """
 
@@ -22,9 +22,9 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspa
 from sqlalchemy import select
 
 from app.core.database import AsyncSessionLocal
-from app.core.config import settings, demo_account_enabled
+from app.core.config import settings
 from app.models.paper import Paper, PaperStatus, ExamType
-from app.models.user import User
+from app.models.user import User, UserRole
 
 TENANT_ID = 1
 
@@ -158,13 +158,14 @@ def _paper_pdf_path(year: int) -> str:
 
 
 async def seed() -> None:
-    # Owner: demo admin (created by seed_demo_user)
+    # Owner: any existing admin (created by seed_demo_user or the operator).
     async with AsyncSessionLocal() as db:
         admin = (await db.execute(
-            select(User).filter(User.email == "admin@smartpyq.com")
-        )).scalar_one_or_none()
+            select(User).filter(User.role.in_([UserRole.ADMIN, UserRole.TENANT_ADMIN, UserRole.SUPER_ADMIN]))
+            .order_by(User.id).limit(1)
+        )).scalars().first()
         if admin is None:
-            print("[SKIP] admin@smartpyq.com not found — run seed_demo_user first")
+            print("[SKIP] no admin user found — run seed_demo_user first")
             return
 
         created = 0
@@ -230,9 +231,8 @@ async def seed() -> None:
 
 
 async def main() -> None:
-    if not demo_account_enabled():
-        print("[SKIP] Demo account disabled (ENABLE_DEMO_ACCOUNT) - seed skipped")
-        return
+    # Papers are product content, not the demo login: seed them whenever an
+    # admin exists, regardless of ENABLE_DEMO_ACCOUNT.
     try:
         await seed()
     except Exception:

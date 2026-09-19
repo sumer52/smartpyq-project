@@ -68,7 +68,17 @@ async def lifespan(app: FastAPI):
             logger.warning("No database engine available")
     except Exception as e:
         logger.warning(f"Could not verify database connection: {e}")
-    
+
+    # Seed demo content once per boot (idempotent, cheap no-op when the
+    # papers already exist). Runs after migrations in the start command have
+    # applied the schema; never blocks startup on failure.
+    try:
+        from app.scripts.seed_demo_papers import seed as _seed_papers
+        await _seed_papers()
+        logger.info("Demo paper seed checked")
+    except Exception as e:
+        logger.warning(f"Demo paper seed skipped: {e}")
+
     logger.info("Smart PYQ application started successfully")
     
     yield
