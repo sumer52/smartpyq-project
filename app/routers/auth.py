@@ -13,6 +13,7 @@ from pydantic import BaseModel, EmailStr, Field
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
+from ..core.limiter import limiter
 from ..core.dependencies import (
     get_current_user,
     get_current_active_user,
@@ -114,8 +115,10 @@ _email_svc = EmailService()
 auth_service = AuthService(email_service=_email_svc)
 
 @router.post("/signup", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 async def signup(
-    request: SignupRequest,
+    payload: SignupRequest,
+    request: Request,
     client_ip: str = Depends(get_client_ip),
     context: dict = Depends(get_request_context),
     db: AsyncSession = Depends(get_db)
@@ -133,11 +136,11 @@ async def signup(
         auth_svc = AuthService(db=db, email_service=_email_svc)
         from app.schemas.auth import UserSignupRequest
         signup_data = UserSignupRequest(
-            name=request.name,
-            email=request.email,
-            password=request.password,
+            name=payload.name,
+            email=payload.email,
+            password=payload.password,
             tenant_slug="smartpyq",
-            access_code=request.tenant_access_code
+            access_code=payload.tenant_access_code
         )
         await auth_svc.signup(
             signup_data=signup_data,
@@ -166,8 +169,10 @@ async def signup(
         )
 
 @router.post("/login", response_model=AuthResponse)
+@limiter.limit("10/minute")
 async def login(
-    request: LoginRequest,
+    payload: LoginRequest,
+    request: Request,
     client_ip: str = Depends(get_client_ip),
     context: dict = Depends(get_request_context),
     db: AsyncSession = Depends(get_db)
@@ -183,7 +188,7 @@ async def login(
     try:
         auth_svc = AuthService(db=db, email_service=_email_svc)
         from app.schemas.auth import UserLoginRequest
-        login_data = UserLoginRequest(email=request.email, password=request.password)
+        login_data = UserLoginRequest(email=payload.email, password=payload.password)
         result = await auth_svc.login(
             login_data=login_data,
             ip_address=client_ip,
@@ -224,8 +229,10 @@ async def login(
         )
 
 @router.post("/admin-login", response_model=AuthResponse)
+@limiter.limit("10/minute")
 async def admin_login(
-    request: LoginRequest,
+    payload: LoginRequest,
+    request: Request,
     client_ip: str = Depends(get_client_ip),
     db: AsyncSession = Depends(get_db)
 ):
@@ -238,7 +245,7 @@ async def admin_login(
     """
     try:
         # Bare admin-ID convenience: "admin" -> seeded admin account.
-        email_input = (request.email or "").strip()
+        email_input = (payload.email or "").strip()
         if email_input and "@" not in email_input:
             from app.core.config import settings as _settings
             env_admin = os.environ.get("ADMIN_EMAIL", "admin@smartpyq.com").strip().lower()
@@ -247,7 +254,7 @@ async def admin_login(
 
         auth_svc = AuthService(db=db, email_service=_email_svc)
         from app.schemas.auth import UserLoginRequest
-        login_data = UserLoginRequest(email=email_input, password=request.password)
+        login_data = UserLoginRequest(email=email_input, password=payload.password)
         result = await auth_svc.login(
             login_data=login_data,
             ip_address=client_ip,
@@ -350,8 +357,10 @@ async def refresh_token(
         )
 
 @router.post("/send-otp", response_model=MessageResponse)
+@limiter.limit("5/minute")
 async def send_otp(
-    request: SendOTPRequest,
+    payload: SendOTPRequest,
+    request: Request,
     client_ip: str = Depends(get_client_ip)
 ):
     """Send OTP code to user email
@@ -364,13 +373,13 @@ async def send_otp(
     """
     try:
         dev_otp = await auth_service.send_otp(
-            email=request.email,
-            purpose=request.purpose,
+            email=payload.email,
+            purpose=payload.purpose,
             client_ip=client_ip
         )
         
         return MessageResponse(
-            message=f"OTP code sent to {request.email}. Please check your inbox.",
+            message=f"OTP code sent to {payload.email}. Please check your inbox.",
             dev_otp=dev_otp
         )
         

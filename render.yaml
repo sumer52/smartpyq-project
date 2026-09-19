@@ -38,7 +38,7 @@ services:
       # Public demo login (demo@smartpyq.com / demo123); set to false to disable
       - key: ENABLE_DEMO_ACCOUNT
         value: "true"
-      # Supabase (private file storage) — all values set in Render dashboard
+      # Supabase (private file storage) — secrets set in Render dashboard
       - key: SUPABASE_URL
         sync: false
       - key: SUPABASE_ANON_KEY
@@ -47,8 +47,10 @@ services:
         sync: false
       - key: SUPABASE_STORAGE_BUCKET
         value: question-papers
+      # Uploads persist to Supabase Storage (Render disk is ephemeral).
+      # Requires SUPABASE_URL + service-role key in the dashboard.
       - key: USE_SUPABASE_STORAGE
-        value: "false"
+        value: "true"
       - key: LOG_LEVEL
         value: INFO
       - key: LOG_FORMAT
