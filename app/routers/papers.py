@@ -64,22 +64,21 @@ router = APIRouter(prefix="/papers", tags=["papers"])
 # ---------------------------------------------------------------------------
 _UPLOAD_WINDOW_SECONDS = 3600
 _UPLOAD_RATE_LIMIT = int(os.environ.get("ANON_UPLOAD_RATE_LIMIT", "10"))
+_ANALYZE_RATE_LIMIT = int(os.environ.get("ANALYZE_RATE_LIMIT", "20"))
 _upload_rate_store: dict = {}
+_analyze_rate_store: dict = {}
 
 
-def _check_upload_rate(client_ip: str) -> None:
-    """Raise 429 when this IP exceeded the hourly community-upload budget."""
+def _check_rate(store: dict, limit: int, client_ip: str, detail: str) -> None:
+    """Raise 429 when this IP exceeded its sliding 1-hour budget."""
     import time as _time
 
     now = _time.time()
-    hits = [t for t in _upload_rate_store.get(client_ip, []) if now - t < _UPLOAD_WINDOW_SECONDS]
-    if len(hits) >= _UPLOAD_RATE_LIMIT:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Too many papers uploaded from this network in the last hour. Please try again later.",
-        )
+    hits = [t for t in store.get(client_ip, []) if now - t < _UPLOAD_WINDOW_SECONDS]
+    if len(hits) >= limit:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=detail)
     hits.append(now)
-    _upload_rate_store[client_ip] = hits
+    store[client_ip] = hits
 
 
 async def _resolve_system_uploader(db: AsyncSession) -> User:
@@ -333,20 +332,19 @@ async def get_available_years(
     except Exception as e:
         return {"years": [], "year_counts": [], "error": str(e)}
 
-@router.post("/analyze", response_model=AnalyzeResponse,
-             dependencies=[Depends(require_roles(["admin", "tenant_admin"]))])
+@router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_paper(
     file: UploadFile = File(..., description="PDF or image file to analyze"),
-    current_user: User = Depends(get_current_active_user),
+    client_ip: str = Depends(get_client_ip),
 ):
     """Analyze an uploaded document before submission.
 
-    Accepts PDF, JPG, JPEG, PNG, or WEBP files.
-    Extracts metadata (title, stream, semester, subject, year, etc.)
-    and questions from the document using text extraction and OCR.
-    
-    Returns detected information for user review before final upload.
+    Public: no account required — community uploaders get the same
+    AI-assisted flow as admins. Rate-limited per IP (extraction and
+    OCR are expensive); authenticated callers share the same budget.
     """
+    _check_rate(_analyze_rate_store, _ANALYZE_RATE_LIMIT, client_ip,
+                "Too many analysis requests from this network in the last hour. Please try again later.")
     try:
         # Read file content
         file_content = await file.read()
@@ -458,6 +456,7 @@ async def upload_student_paper(
     year: int = Form(..., ge=2000, le=2030),
     university: str = Form("", max_length=100),
     description: str = Form("", max_length=1000),
+    tags: str = Form("", max_length=500),
     anon_token: str = Form("", max_length=128),
     current_user: Optional[User] = Depends(get_current_user_optional),
     client_ip: str = Depends(get_client_ip),
@@ -482,7 +481,8 @@ async def upload_student_paper(
         # Per-IP budget for signed-out visitors (authenticated admins/students
         # are exempt — they are already accountable accounts).
         if current_user is None:
-            _check_upload_rate(client_ip)
+            _check_rate(_upload_rate_store, _UPLOAD_RATE_LIMIT, client_ip,
+                        "Too many papers uploaded from this network in the last hour. Please try again later.")
 
         filename_lower = file.filename.lower() if file.filename else ""
         allowed_extensions = {'.pdf', '.jpg', '.jpeg', '.png', '.webp'}
@@ -543,7 +543,7 @@ async def upload_student_paper(
             year=year,
             semester=normalize_semester(semester),
             exam_type=ExamType.FINAL,
-            tags=[],
+            tags=[t.strip() for t in tags.split(',') if t.strip()][:10],
             description=description,
             tenant_id=tenant_id
         )

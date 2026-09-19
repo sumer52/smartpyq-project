@@ -14,6 +14,8 @@ import {
   getAllSubjectsForStreamSemester, getAvailableSemesters, getPyqYears
 } from '../data/pyqData';
 import { checkMetadata, applyCorrections, getConfidenceLabel } from '../lib/spellCheck';
+import { getAnonUploadToken, setAnonUploadToken } from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const universities = [
   'Osmania University',
@@ -29,7 +31,11 @@ const universities = [
 const ALLOWED_EXTENSIONS = new Set(['.pdf', '.jpg', '.jpeg', '.png', '.webp']);
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
 
-const UploadStepper = ({ onUploadComplete, onCancel }) => {
+const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
+  // mode 'student' submits to the public endpoint (pending verification,
+  // anon-token tracked); 'admin' publishes instantly. Flow is otherwise identical.
+  const isStudent = mode === 'student';
+  const { isAuthenticated } = useAuth();
   const [currentStep, setCurrentStep] = useState(1);
   const [uploadData, setUploadData] = useState({
     file: null, title: '', stream: '', semester: '',
@@ -367,11 +373,21 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
       formData.append('year', uploadData.year.toString());
       formData.append('tags', uploadData.tags.join(','));
       if (uploadData.description) formData.append('description', uploadData.description);
-      // Admin uploads publish immediately — they appear in the PYQ Hub and
-      // are analyzable right away, no separate dashboard step.
-      formData.append('publish_now', 'true');
 
-      const response = await apiClient.uploadPaper(formData);
+      let response;
+      if (isStudent) {
+        if (!isAuthenticated) {
+          const existing = getAnonUploadToken();
+          if (existing) formData.append('anon_token', existing);
+        }
+        response = await apiClient.uploadStudentPaper(formData);
+        if (!isAuthenticated && response?.anon_token) setAnonUploadToken(response.anon_token);
+      } else {
+        // Admin uploads publish immediately — they appear in the PYQ Hub and
+        // are analyzable right away, no separate dashboard step.
+        formData.append('publish_now', 'true');
+        response = await apiClient.uploadPaper(formData);
+      }
       clearInterval(interval);
       setUploadProgress(100);
       setTimeout(() => {
@@ -903,7 +919,11 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
             <motion.div key="step3" variants={stepAnim} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
               <div className="text-center mb-6">
                 <h3 className="text-base font-semibold text-white mb-1">Confirm Your Upload</h3>
-                <p className="text-sm text-gray-400">Double-check the details before uploading to the PYQ Hub</p>
+                <p className="text-sm text-gray-400">
+                  {isStudent
+                    ? 'Double-check the details — an admin will verify this paper before it goes public'
+                    : 'Double-check the details before uploading to the PYQ Hub'}
+                </p>
               </div>
 
               <div className="bg-white/[0.03] rounded-xl border border-white/5 p-5 mb-6">
@@ -962,7 +982,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                 <motion.div className="mb-5 p-4 bg-purple-500/5 border border-purple-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="flex items-center gap-2 mb-2">
                     <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-400 border-t-transparent"></div>
-                    <span className="text-purple-300 text-sm font-medium">{uploadProgress < 100 ? 'Uploading to PYQ Hub...' : 'Upload complete!'}</span>
+                    <span className="text-purple-300 text-sm font-medium">{uploadProgress < 100 ? 'Uploading…' : 'Upload complete!'}</span>
                   </div>
                   <div className="w-full bg-white/5 rounded-full h-1.5">
                     <motion.div className="bg-purple-500 h-1.5 rounded-full" animate={{ width: uploadProgress + '%' }} transition={{ duration: 0.3 }} />
@@ -990,7 +1010,7 @@ const UploadStepper = ({ onUploadComplete, onCancel }) => {
                   <button onClick={handleSubmit} disabled={isUploading}
                     className="btn btn-primary disabled:opacity-50 flex items-center gap-2">
                     {isUploading ? (<><div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>Uploading...</>)
-                    : (<><CloudArrowUpIcon className="h-4 w-4" /> Confirm & Upload</>)}
+                    : (<><CloudArrowUpIcon className="h-4 w-4" /> {isStudent ? 'Submit for Verification' : 'Confirm & Upload'}</>)}
                   </button>
                 </div>
               </div>
