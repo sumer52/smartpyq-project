@@ -159,7 +159,7 @@ const Footer = ({ className = "" }) => {
             <div className="mt-6 space-y-2 text-sm text-gray-500">
               <div className="flex items-center">
                 <EnvelopeIcon className="h-4 w-4 mr-2" />
-                <a href="mailto:smartpyq@gmail.com" className="hover:text-white transition-colors">
+                <a href="mailto:smartpyq@gmail.com" className="relative inline-block hover:text-white transition-colors after:content-[''] after:absolute after:inset-x-0 after:-inset-y-3">
                   smartpyq@gmail.com
                 </a>
               </div>
@@ -179,7 +179,7 @@ const Footer = ({ className = "" }) => {
                   <Link
                     viewTransition
                     to={link.to}
-                    className="text-gray-400 hover:text-white transition-colors flex items-center group"
+                    className="text-gray-400 hover:text-white transition-colors flex items-center group relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5"
                   >
                     <span className="group-hover:translate-x-1 transition-transform">
                       {link.name}
@@ -199,7 +199,7 @@ const Footer = ({ className = "" }) => {
                   <Link
                     viewTransition
                     to={link.to}
-                    className="text-gray-300 hover:text-white transition-colors flex items-center group"
+                    className="text-gray-300 hover:text-white transition-colors flex items-center group relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5"
                   >
                     <span className="group-hover:translate-x-1 transition-transform">
                       {link.name}

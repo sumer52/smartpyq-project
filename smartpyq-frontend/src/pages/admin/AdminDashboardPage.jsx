@@ -347,7 +347,7 @@ const AdminDashboardPage = () => {
             <div className="px-5 py-10 text-center text-gray-400 text-sm">No student submissions waiting for verification.</div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 text-xs uppercase tracking-wide border-b border-yellow-500/20">
                     <th className="px-5 py-3 font-medium">Student</th>
@@ -390,7 +390,7 @@ const AdminDashboardPage = () => {
               <DocumentTextIcon className="h-5 w-5 text-indigo-400" /> Uploaded PDFs
               <span className="ml-1 rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs text-indigo-300">{papersTotal}</span>
             </h2>
-            <div className="flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1">
+            <div className="flex flex-wrap items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1 max-w-full">
               {['APPROVED', 'DRAFT', 'ARCHIVED', 'PENDING', 'REJECTED'].map((s) => (
                 <button
                   key={s}
@@ -413,7 +413,7 @@ const AdminDashboardPage = () => {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full min-w-[560px] text-sm">
                 <thead>
                   <tr className="text-left text-gray-400 text-xs uppercase tracking-wide border-b border-white/10">
                     <th className="px-5 py-3 font-medium">PDF / Title</th>
