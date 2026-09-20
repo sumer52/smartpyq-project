@@ -23,6 +23,9 @@ class UserResponse(BaseModel):
 	email: EmailStr
 	username: Optional[str] = None
 	full_name: Optional[str] = None
+	# Legacy login payloads exposed `name`; kept so consumers reading either
+	# key keep working under the consolidated login path.
+	name: Optional[str] = None
 	role: str
 	status: str
 	tenant_id: Optional[int] = None
@@ -33,11 +36,21 @@ class UserResponse(BaseModel):
 	university: Optional[str] = None
 	course: Optional[str] = None
 	year_of_study: Optional[int] = None
+	# Academic-profile fields surfaced for login responses (frontend reads
+	# them from the login payload to restore the dashboard state).
+	academic_year: Optional[str] = None
+	semester: Optional[str] = None
+	onboarding_completed: bool = False
 	preferences: dict = Field(default_factory=dict)
 
 	@classmethod
 	def from_orm(cls, obj):
-		return cls.model_validate(obj)
+		# Derive the legacy `name` exactly as the old hand-built login dicts
+		# did: full_name, then username, then the email prefix.
+		name = obj.full_name or obj.username or (obj.email or "").split("@")[0]
+		data = cls.model_validate(obj).model_dump()
+		data["name"] = name
+		return cls(**data)
 
 
 class TokenResponse(BaseModel):

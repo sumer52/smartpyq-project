@@ -849,12 +849,11 @@ class TestSecurityRegression:
             "password": "AnyPassword1!",
         })
         assert resp.status_code == 401
-        # The current implementation returns "User not found" which is a
-        # security issue - it should return a generic error message
+        # Consolidated login: unknown user is indistinguishable from a wrong
+        # password — the generic /login message, no enumeration.
         detail = resp.json().get("detail", "")
-        # Document the finding: this reveals user existence
-        # In production, should return "Invalid email or password"
-        assert len(detail) > 0
+        assert detail == "Invalid email or password"
+        assert "User not found" not in detail
 
 
 # ===================================================================

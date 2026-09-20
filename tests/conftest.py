@@ -84,9 +84,14 @@ async def db_session(db_engine):
 @pytest_asyncio.fixture(scope="function")
 async def client(db_engine):
     # Reset the process-global TTL cache so results from a previous test
-    # (with a different in-memory DB) cannot leak into this one.
+    # (with a different in-memory DB) cannot leak into one.
     from app.utils.cache import app_cache
     app_cache.clear()
+    # Reset rate-limiter counters for the same isolation reason — all tests
+    # share one client IP, so login/OTP/chat limits would cascade into 429s
+    # once suites share an endpoint (e.g. consolidated login routes).
+    from app.core.limiter import limiter
+    limiter.reset()
     session_factory = async_sessionmaker(
         db_engine, class_=AsyncSession, expire_on_commit=False
     )

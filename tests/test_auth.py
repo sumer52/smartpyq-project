@@ -28,7 +28,10 @@ class TestSimpleLogin:
         assert "access_token" in data
         assert "refresh_token" in data
         assert data["token_type"] == "bearer"
-        assert data["expires_in"] == 900
+        # Unified with /login: expiry comes from the shared service setting,
+        # not the old hard-coded 900 (which may coincide with the env value).
+        from app.core.config import settings
+        assert data["expires_in"] == settings.JWT_ACCESS_EXPIRE_SECONDS
         # User info
         assert data["user"]["email"] == "testuser@test.edu"
         assert data["user"]["name"] == "Test User"
@@ -41,7 +44,9 @@ class TestSimpleLogin:
             json={"email": "testuser@test.edu", "password": "WrongPassword!"},
         )
         assert resp.status_code == 401
-        assert "Invalid password" in resp.json()["detail"]
+        # Consolidated path: same generic message as /login (no password-specific
+        # error, no user enumeration).
+        assert "Invalid email or password" in resp.json()["detail"]
 
     async def test_login_nonexistent_user(self, client, tenant):
         """Email not in database returns 401."""
@@ -50,7 +55,9 @@ class TestSimpleLogin:
             json={"email": "nobody@test.edu", "password": "AnyPassword1!"},
         )
         assert resp.status_code == 401
-        assert "User not found" in resp.json()["detail"]
+        # Consolidated path: unknown user is indistinguishable from a wrong
+        # password (the old endpoint leaked "User not found").
+        assert "Invalid email or password" in resp.json()["detail"]
 
     async def test_login_missing_email(self, client):
         """Missing email field returns 422 validation error."""

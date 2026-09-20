@@ -88,6 +88,22 @@ class AuthResponse(BaseModel):
     expires_in: int
     user: dict
 
+def _issue_tokens(result) -> dict:
+    """Normalize the service login result into AuthResponse kwargs."""
+    if hasattr(result, "model_dump"):
+        result_dict = result.model_dump()
+    elif isinstance(result, dict):
+        result_dict = result
+    else:
+        result_dict = dict(result)
+    return {
+        "access_token": result_dict["access_token"],
+        "refresh_token": result_dict["refresh_token"],
+        "expires_in": result_dict["expires_in"],
+        "user": result_dict.get("user", {}),
+    }
+
+
 class MessageResponse(BaseModel):
     """Generic message response"""
     message: str
@@ -195,21 +211,7 @@ async def login(
             ip_address=client_ip,
             user_agent=context.get("user_agent", "")
         )
-        
-        # Handle both dict and Pydantic model responses
-        if hasattr(result, 'model_dump'):
-            result_dict = result.model_dump()
-        elif isinstance(result, dict):
-            result_dict = result
-        else:
-            result_dict = dict(result)
-        
-        return AuthResponse(
-            access_token=result_dict["access_token"],
-            refresh_token=result_dict["refresh_token"],
-            expires_in=result_dict["expires_in"],
-            user=result_dict.get("user", {})
-        )
+        return AuthResponse(**_issue_tokens(result))
         
     except AuthenticationError as e:
         raise HTTPException(
@@ -270,24 +272,11 @@ async def admin_login(
             user_agent="admin-login"
         )
 
-        result_dict = result.model_dump() if hasattr(result, 'model_dump') else (
-            result if isinstance(result, dict) else dict(result)
-        )
-
-        user_info = result_dict.get("user", {})
-        role = str(user_info.get("role", "")).lower()
+        result_dict = _issue_tokens(result)
+        role = str(result_dict["user"].get("role", "")).lower()
         if role not in ("admin", "tenant_admin", "super_admin"):
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="Admin access required"
-            )
-
-        return AuthResponse(
-            access_token=result_dict["access_token"],
-            refresh_token=result_dict["refresh_token"],
-            expires_in=result_dict["expires_in"],
-            user=user_info
-        )
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Admin access required")
+        return AuthResponse(**result_dict)
 
     except HTTPException:
         raise
@@ -613,64 +602,47 @@ async def verify_token(
         "role": current_user.role
     }
 
-@router.post("/simple-login")
+@router.post("/simple-login", response_model=AuthResponse, responses=RATE_LIMITED)
+@limiter.limit("10/minute")
 async def simple_login(
-    request: LoginRequest,
+    payload: LoginRequest,
+    request: Request,
+    client_ip: str = Depends(get_client_ip),
     db: AsyncSession = Depends(get_db)
 ):
-    """Simple direct login endpoint -- BLOCKED in production."""
-    from app.core.config import settings as _cfg
-    if _cfg.ENV == "production":
-        raise HTTPException(status_code=404, detail="Endpoint not available")
-    from sqlalchemy import select
-    from app.models.user import User
-    from app.core.auth import AuthManager
-    
-    auth_mgr = AuthManager()
-    
-    # Trim whitespace from credentials
-    clean_email = (request.email or "").strip().lower()
-    clean_password = (request.password or "").strip()
-    
-    # Find user
-    query = select(User).where(User.email == clean_email)
-    result = await db.execute(query)
-    user = result.scalar_one_or_none()
-    
-    if not user:
-        raise HTTPException(status_code=401, detail="User not found")
-    
-    # Verify password
-    if not auth_mgr.verify_password(clean_password, user.password_hash):
-        raise HTTPException(status_code=401, detail="Invalid password")
-    
-    # Generate tokens
-    access_token = auth_mgr.create_access_token(
-        subject=str(user.id),
-        user_id=user.id,
-        role=user.role.value if hasattr(user.role, 'value') else user.role,
-        tenant_id=user.tenant_id
-    )
-    refresh_token = auth_mgr.create_refresh_token(subject=str(user.id), user_id=user.id)
-    
-    return {
-        "access_token": access_token,
-        "refresh_token": refresh_token,
-        "token_type": "bearer",
-        "expires_in": 900,
-        "user": {
-            "id": user.id,
-            "email": user.email,
-            "name": user.full_name or user.username or user.email.split('@')[0],
-            "role": user.role.value if hasattr(user.role, 'value') else user.role,
-            "tenant_id": user.tenant_id,
-            "course": user.course,
-            "specialization": user.specialization,
-            "academic_year": user.academic_year,
-            "semester": user.semester,
-            "onboarding_completed": user.onboarding_completed
-        }
-    }
+    """Legacy login route kept for older clients — same core as /login.
+
+    Previously a separate unvalidated implementation (no rate limit, no
+    lockout, user-enumeration errors, hard-coded 900s tokens). It is now a
+    thin alias over the real login path so both routes share one credential
+    check and audit story.
+    """
+    try:
+        auth_svc = AuthService(db=db, email_service=_email_svc)
+        from app.schemas.auth import UserLoginRequest
+        login_data = UserLoginRequest(email=payload.email, password=payload.password)
+        result = await auth_svc.login(
+            login_data=login_data,
+            ip_address=client_ip,
+            user_agent="simple-login"
+        )
+        return AuthResponse(**_issue_tokens(result))
+    except AuthenticationError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except RateLimitError as e:
+        raise HTTPException(status_code=status.HTTP_429_TOO_MANY_REQUESTS, detail=str(e))
+    except PydanticValidationError:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="Please enter a valid email address."
+        )
+    except Exception as e:
+        import logging as _log
+        _log.getLogger(__name__).error(f"Simple login error: {type(e).__name__}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Login failed. Please try again."
+        )
 
 @router.post("/simple-signup")
 async def simple_signup(
