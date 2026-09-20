@@ -221,13 +221,14 @@ const PYQNavigator = () => {
           return (<motion.div key={y} variants={card}
             className={`card-nav p-5 cursor-pointer text-center relative transition-colors ${isSelected ? 'ring-2 ring-brand-400 bg-brand-500/10' : ''} ${count === 0 ? 'opacity-50' : ''}`}
             onClick={(e) => {
-              // Checkbox zone toggles analysis selection; the rest of the
-              // card keeps the original single-year browse behavior.
-              if (e.target.closest('[data-year-checkbox]')) { toggleYearSelect(y); return; }
+              // Checkbox zone: the input's onChange owns the toggle (the
+              // label forwards clicks to it). Do nothing here or every click
+              // toggles twice. The rest of the card keeps browse behavior.
+              if (e.target.closest('[data-year-checkbox]')) return;
               handleYearSelect(y);
             }}>
-            <label data-year-checkbox className="absolute top-2 right-2 z-10 cursor-pointer" aria-label={`Select ${y} for analysis`}>
-              <input type="checkbox" className="sr-only" checked={isSelected} onChange={() => toggleYearSelect(y)} />
+            <label data-year-checkbox className="absolute top-0 right-0 z-10 cursor-pointer rounded-bl-lg bg-black/40 p-2 hover:bg-black/60 transition-colors">
+              <input type="checkbox" className="sr-only" checked={isSelected} onChange={() => toggleYearSelect(y)} aria-label={`Select ${y} for analysis`} />
               <span className={`inline-flex items-center justify-center w-7 h-7 rounded-md border-2 transition-colors ${isSelected ? 'bg-brand-500 border-brand-400 text-white' : 'border-white/40 bg-white/10 text-transparent hover:border-brand-300'}`}>
                 <CheckSquare className="w-5 h-5" strokeWidth={3} />
               </span>
@@ -286,7 +287,10 @@ const PYQNavigator = () => {
                   </div>
                   <div className="flex gap-2">
                     <MagneticButton className="btn btn-sm btn-primary flex-1 justify-center" onClick={(e) => { e.stopPropagation(); handleDownload(p); }}><Download className="h-4 w-4" /> <span>Download</span></MagneticButton>
-                    <button className="btn btn-sm btn-secondary flex-1 justify-center" onClick={(e) => { e.stopPropagation(); navigate('/analyze?paper=' + p.id); }}><Flame className="h-4 w-4" /> <span>Analyze</span></button>
+                    <button className="btn btn-sm btn-secondary flex-1 justify-center" onClick={(e) => {
+                      e.stopPropagation();
+                      navigate('/analyze?papers=' + p.id, { state: { context: { stream: selectedStream?.displayName, spec: selectedSpec?.displayName, semester: selectedSem?.displayName, subject: selectedSubject, years: [p.year] } } });
+                    }}><Flame className="h-4 w-4" /> <span>Analyze</span></button>
                     <button className="btn btn-icon btn-sm btn-secondary" onClick={(e) => { e.stopPropagation(); setPreviewPaper(p); }}><Eye className="h-4 w-4" /></button>
                   </div>
                 </motion.div>

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import api from '../lib/api';
 import { stagger, cardUp, EASE } from '../lib/motion';
 
@@ -91,7 +91,11 @@ const AnalysisPage = () => {
   const [stageIdx, setStageIdx] = useState(0);
   const [reused, setReused] = useState(false);
   const [error, setError] = useState('');
+  const location = useLocation();
+  // Context arrives via router state (PYQ Hub analyze flows); ?ctx= is the
+  // legacy shareable-URL fallback.
   const [context] = useState(() => {
+    if (location.state?.context) return location.state.context;
     const c = searchParams.get('ctx');
     try { return c ? JSON.parse(c) : null; } catch { return null; }
   });
