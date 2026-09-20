@@ -20,7 +20,7 @@ from sse_starlette import EventSourceResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
-from ..core.limiter import limiter
+from ..core.limiter import limiter, RATE_LIMITED
 from ..core.dependencies import (
     get_current_active_user,
     get_current_tenant,
@@ -105,7 +105,7 @@ class SimpleChatResponse(BaseModel):
     response: str
     session_id: Optional[str] = None
 
-@router.post("/simple", response_model=SimpleChatResponse)
+@router.post("/simple", response_model=SimpleChatResponse, responses=RATE_LIMITED)
 @limiter.limit("20/hour")
 async def simple_chat(payload: SimpleChatRequest, request: Request):
     """Simple chat endpoint - no authentication required"""
@@ -144,7 +144,7 @@ async def simple_chat(payload: SimpleChatRequest, request: Request):
             response = "I am in basic mode. I can help navigate: PYQ Hub for papers, Upload to share, Search to find papers, Analysis for patterns."
         return SimpleChatResponse(response=response, session_id=payload.session_id)
 
-@router.post("/", response_model=ChatResponse)
+@router.post("/", response_model=ChatResponse, responses=RATE_LIMITED)
 @limiter.limit("60/hour")
 async def chat(
     payload: ChatRequest,
@@ -195,7 +195,7 @@ async def chat(
             detail="Chat processing failed. Please try again."
         )
 
-@router.post("/stream")
+@router.post("/stream", responses=RATE_LIMITED)
 @limiter.limit("60/hour")
 async def chat_stream(
     payload: ChatRequest,

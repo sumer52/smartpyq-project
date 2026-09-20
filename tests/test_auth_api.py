@@ -945,3 +945,38 @@ class TestHealthCheck:
         data = resp.json()
         assert data["status"] == "healthy"
         assert "version" in data
+
+
+class TestLoginIdentifierValidation:
+    """POST /auth/login — non-email identifiers must 422, not 500.
+
+    Regression guard: the handler builds UserLoginRequest (email: EmailStr)
+    internally. Before the explicit pydantic ValidationError handler, a bare
+    admin ID like "admin" escaped to the generic 500 path.
+    """
+
+    async def test_non_email_identifier_returns_422(self, client):
+        """A bare admin ID is a client input error -> 422, before any lookup."""
+        resp = await client.post("/api/v1/auth/login", json={
+            "email": "admin",
+            "password": "whatever",
+        })
+        assert resp.status_code == 422
+        assert "valid email" in resp.json()["detail"].lower()
+
+    async def test_wrong_password_valid_email_returns_401(self, client, test_user):
+        """A well-formed email with a bad password stays 401, not 422."""
+        resp = await client.post("/api/v1/auth/login", json={
+            "email": "testuser@test.edu",
+            "password": "WrongPassword!",
+        })
+        assert resp.status_code == 401
+
+    async def test_valid_login_returns_200(self, client, test_user):
+        """Happy path untouched: valid credentials return tokens."""
+        resp = await client.post("/api/v1/auth/login", json={
+            "email": "testuser@test.edu",
+            "password": "SecurePass123!",
+        })
+        assert resp.status_code == 200
+        assert resp.json()["access_token"]

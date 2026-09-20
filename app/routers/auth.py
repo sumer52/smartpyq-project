@@ -14,7 +14,7 @@ from pydantic import ValidationError as PydanticValidationError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
-from ..core.limiter import limiter
+from ..core.limiter import limiter, RATE_LIMITED
 from ..core.dependencies import (
     get_current_user,
     get_current_active_user,
@@ -115,7 +115,7 @@ class UserProfileResponse(BaseModel):
 _email_svc = EmailService()
 auth_service = AuthService(email_service=_email_svc)
 
-@router.post("/signup", response_model=MessageResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/signup", response_model=MessageResponse, status_code=status.HTTP_201_CREATED, responses=RATE_LIMITED)
 @limiter.limit("10/minute")
 async def signup(
     payload: SignupRequest,
@@ -169,7 +169,7 @@ async def signup(
             detail="Registration failed. Please try again."
         )
 
-@router.post("/login", response_model=AuthResponse)
+@router.post("/login", response_model=AuthResponse, responses=RATE_LIMITED)
 @limiter.limit("10/minute")
 async def login(
     payload: LoginRequest,
@@ -237,7 +237,7 @@ async def login(
             detail="Login failed. Please try again."
         )
 
-@router.post("/admin-login", response_model=AuthResponse)
+@router.post("/admin-login", response_model=AuthResponse, responses=RATE_LIMITED)
 @limiter.limit("10/minute")
 async def admin_login(
     payload: LoginRequest,
@@ -365,7 +365,7 @@ async def refresh_token(
             detail="Token refresh failed. Please login again."
         )
 
-@router.post("/send-otp", response_model=MessageResponse)
+@router.post("/send-otp", response_model=MessageResponse, responses=RATE_LIMITED)
 @limiter.limit("5/minute")
 async def send_otp(
     payload: SendOTPRequest,
