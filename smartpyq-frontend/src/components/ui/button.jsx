@@ -7,27 +7,27 @@ import { cn } from "@/lib/utils"
  * shadcn/ui Button — SmartPYQ theme.
  *
  * Variant tokens map onto the existing design system:
- *   default     → brand violet primary (btn-primary equivalent)
- *   secondary   → glassy surface on the dark bg (btn-secondary equivalent)
+ *   default     → solid accent primary (btn-primary equivalent)
+ *   secondary   → white surface with hairline border (btn-secondary equivalent)
  *   ghost       → transparent, hover surface only
- *   outline     → hairline border, violet on hover
- *   destructive → red-500 surface for destructive confirmations
+ *   outline     → hairline border, accent on hover
+ *   destructive → error-500 surface for destructive confirmations
  */
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#0b0620] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl text-sm font-medium transition-colors focus-visible:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60 focus-visible:ring-offset-2 focus-visible:ring-offset-[#FAF9F5] disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
         default:
-          "bg-linear-to-b from-brand-500 to-brand-600 text-primary shadow-[0_6px_30px_rgba(108,78,246,0.25)] hover:from-brand-400 hover:to-brand-500",
+          "bg-brand-500 text-white hover:bg-brand-600",
         secondary:
           "bg-white border border-line text-primary hover:bg-muted-100 hover:border-muted-300",
-        ghost: "text-secondary hover:bg-white hover:text-primary",
+        ghost: "text-secondary hover:bg-muted-100 hover:text-primary",
         outline:
-          "border border-brand-500/40 text-brand-300 hover:bg-brand-500/10 hover:text-brand-200",
+          "border border-brand-500/40 text-brand-600 hover:bg-brand-50 hover:text-brand-700",
         destructive:
-          "bg-red-500/90 text-primary hover:bg-red-500",
-        link: "text-brand-300 underline-offset-4 hover:underline",
+          "bg-error-500 text-white hover:bg-error-600",
+        link: "text-brand-600 underline-offset-4 hover:underline",
       },
       size: {
         default: "h-10 px-5 py-2",
