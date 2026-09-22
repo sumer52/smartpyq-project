@@ -254,9 +254,15 @@ def ocr_pdf_page(pdf_path: str, page_num: int) -> str:
         return ""
 
 
+# OCR is CPU- and memory-heavy: cap the pages OCR'd per document so a huge
+# scanned PDF cannot exhaust the instance (extracted text is truncated
+# downstream for search indexing anyway).
+MAX_OCR_PAGES = 8
+
+
 def ocr_pdf(pdf_path: str) -> Tuple[str, int]:
     """
-    OCR all pages of a scanned/image-based PDF.
+    OCR the first MAX_OCR_PAGES of a scanned/image-based PDF.
     Returns (text, page_count).
     """
     try:
@@ -268,7 +274,7 @@ def ocr_pdf(pdf_path: str) -> Tuple[str, int]:
         page_count = 0
 
     text_parts = []
-    for i in range(page_count):
+    for i in range(min(page_count, MAX_OCR_PAGES)):
         page_text = ocr_pdf_page(pdf_path, i)
         if page_text.strip():
             text_parts.append(page_text)
@@ -276,17 +282,41 @@ def ocr_pdf(pdf_path: str) -> Tuple[str, int]:
     return "\n\n".join(text_parts), page_count
 
 
+# RapidOCR's ONNX models cost ~100-150MB resident. Load the engine once and
+# reuse it: constructing one per page repeatedly peaked past the 512MB
+# container on Render's free tier and OOM-killed the service mid-upload,
+# which surfaced in the browser as "Network error during upload".
+_rapidocr_engine = None
+
+
+def _get_rapidocr():
+    global _rapidocr_engine
+    if _rapidocr_engine is None:
+        from rapidocr_onnxruntime import RapidOCR
+        _rapidocr_engine = RapidOCR()
+    return _rapidocr_engine
+
+
+def _downscale_for_ocr(img, max_side: int = 2000):
+    """Cap the longest image side so OCR buffers stay small on low-RAM hosts."""
+    w, h = img.size
+    if max(w, h) <= max_side:
+        return img
+    scale = max_side / max(w, h)
+    return img.resize((max(1, int(w * scale)), max(1, int(h * scale))))
+
+
 def _rapidocr_image_to_text(img) -> str:
     """OCR via RapidOCR (self-contained ONNX engine, no system binary)."""
     try:
-        from rapidocr_onnxruntime import RapidOCR
+        engine = _get_rapidocr()
     except ImportError:
         raise ValueError(
             "OCR processing requires pytesseract (with the Tesseract binary)"
             " or rapidocr-onnxruntime. Neither is installed.")
     import numpy as np
 
-    engine = RapidOCR()
+    img = _downscale_for_ocr(img)
     result, _elapsed = engine(np.asarray(img))
     if not result:
         return ""

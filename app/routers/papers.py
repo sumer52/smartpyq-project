@@ -369,8 +369,8 @@ async def analyze_paper(
             tmp_path = tmp.name
 
         try:
-            # Run document analysis
-            analysis = analyze_document(tmp_path, file.filename)
+            # Run document analysis (CPU-bound; keep the event loop free)
+            analysis = await asyncio.to_thread(analyze_document, tmp_path, file.filename)
 
             return AnalyzeResponse(
                 success=analysis.success,

@@ -421,8 +421,11 @@ class PaperService:
                             tf.write(file_data)
                         tmp_fd = None  # ownership transferred to analysis_target
                         made_temp = True
+                    import asyncio
                     from app.services.document_analyzer import analyze_document
-                    analysis = analyze_document(analysis_target, filename)
+                    # CPU-bound; keep the event loop free (see document_analyzer note)
+                    analysis = await asyncio.to_thread(
+                        analyze_document, analysis_target, filename)
                     if analysis.success:
                         extracted_text = analysis.raw_text[:10000] if analysis.raw_text else ""
                 except Exception as e:
