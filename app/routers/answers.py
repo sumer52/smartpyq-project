@@ -18,6 +18,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_active_user, get_current_user_optional, require_roles
+from app.core.exceptions import UNAUTHORIZED, FORBIDDEN, NOT_FOUND
 from app.models.paper import Paper, PaperStatus
 from app.models.question import Question
 from app.models.user import User
@@ -51,7 +52,7 @@ async def _paper_for_question(db: AsyncSession, question_id: int) -> Optional[Pa
     return (await db.execute(select(Paper).filter(Paper.id == q.paper_id))).scalar_one_or_none()
 
 
-@router.post("/questions/{question_id}/answer")
+@router.post("/questions/{question_id}/answer", responses={**UNAUTHORIZED, **FORBIDDEN, **NOT_FOUND})
 async def set_question_answer(
     question_id: int,
     answer_type: str = Form(..., description="text | image | pdf"),
@@ -126,7 +127,7 @@ async def set_question_answer(
         raise HTTPException(status_code=500, detail="Failed to save answer")
 
 
-@router.delete("/questions/{question_id}/answer")
+@router.delete("/questions/{question_id}/answer", responses={**UNAUTHORIZED, **FORBIDDEN, **NOT_FOUND})
 async def delete_question_answer(
     question_id: int,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
@@ -150,7 +151,7 @@ async def delete_question_answer(
     return {"message": "Answer deleted"}
 
 
-@router.get("/questions/{question_id}/answer-file")
+@router.get("/questions/{question_id}/answer-file", responses=NOT_FOUND)
 async def get_answer_file(
     question_id: int,
     current_user: Optional[User] = Depends(get_current_user_optional),
@@ -187,7 +188,7 @@ async def get_answer_file(
     return FileResponse(path, media_type=mime, filename=filename)
 
 
-@router.get("/questions/{question_id}/answer")
+@router.get("/questions/{question_id}/answer", responses=NOT_FOUND)
 async def get_question_answer(
     question_id: int,
     current_user: Optional[User] = Depends(get_current_user_optional),

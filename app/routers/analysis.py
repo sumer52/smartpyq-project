@@ -13,6 +13,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.database import get_db
 from app.core.dependencies import get_current_active_user, require_roles
+from app.core.exceptions import UNAUTHORIZED, NOT_FOUND, FORBIDDEN
 from app.models.user import User
 from app.models.paper import Paper
 from app.models.question import (
@@ -317,12 +318,12 @@ async def analyze_public(
     }
 
 
-@router.get("/analyses")
+@router.get("/analyses", responses=UNAUTHORIZED)
 async def list_analyses(db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     r = await db.execute(select(AnalysisResult).filter(AnalysisResult.user_id == cu.id).order_by(desc(AnalysisResult.created_at)))
     return [{"id": x.id, "subject": x.subject, "paper_count": x.paper_count, "questions_extracted": x.questions_extracted, "repeated_groups": x.repeated_groups, "status": x.status.value, "created_at": x.created_at.isoformat() if x.created_at else None} for x in r.scalars().all()]
 
-@router.get("/analyses/{aid}")
+@router.get("/analyses/{aid}", responses={**UNAUTHORIZED, **NOT_FOUND})
 async def get_analysis(aid: int, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     r = await db.execute(select(AnalysisResult).filter(AnalysisResult.id == aid, AnalysisResult.user_id == cu.id))
     ar = r.scalar_one_or_none()
@@ -344,7 +345,7 @@ async def get_analysis_insights(aid: int, db: AsyncSession = Depends(get_db)):
     from app.services.insights_service import build_insights
     return await build_insights(db, ar.paper_ids or [], analysis_id=aid)
 
-@router.delete("/analyses/{aid}")
+@router.delete("/analyses/{aid}", responses={**UNAUTHORIZED, **NOT_FOUND})
 async def delete_analysis(aid: int, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     r = await db.execute(select(AnalysisResult).filter(AnalysisResult.id == aid, AnalysisResult.user_id == cu.id))
     ar = r.scalar_one_or_none()
@@ -668,7 +669,7 @@ async def list_bookmarks(db: AsyncSession = Depends(get_db), cu: User = Depends(
         items.append(item)
     return items
 
-@router.delete("/bookmarks/{bid}")
+@router.delete("/bookmarks/{bid}", responses={**UNAUTHORIZED, **NOT_FOUND})
 async def delete_bookmark(bid: int, db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     r = await db.execute(select(Bookmark).filter(Bookmark.id == bid, Bookmark.user_id == cu.id))
     bm = r.scalar_one_or_none()
@@ -698,7 +699,7 @@ async def practice_history(db: AsyncSession = Depends(get_db), cu: User = Depend
         items.append({"id": at.id, "question_id": at.question_id, "question_text": q.question_text if q else None, "subject": q.subject if q else None, "status": at.status})
     return items
 
-@router.put("/practice/{aid}")
+@router.put("/practice/{aid}", responses={**UNAUTHORIZED, **NOT_FOUND})
 async def update_practice(aid: int, new_status: str = "reviewed", db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     r = await db.execute(select(PracticeAttempt).filter(PracticeAttempt.id == aid, PracticeAttempt.user_id == cu.id))
     at = r.scalar_one_or_none()
@@ -706,7 +707,7 @@ async def update_practice(aid: int, new_status: str = "reviewed", db: AsyncSessi
     at.status = new_status; await db.commit()
     return {"message": "Updated"}
 
-@router.get("/dashboard")
+@router.get("/dashboard", responses=UNAUTHORIZED)
 async def get_dashboard(db: AsyncSession = Depends(get_db), cu: User = Depends(get_current_active_user)):
     cache_key = f"dashboard:{cu.id}"
     cached = app_cache.get(cache_key)

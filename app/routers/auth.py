@@ -15,6 +15,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
 from ..core.limiter import limiter, RATE_LIMITED
+from ..core.exceptions import UNAUTHORIZED
 from ..core.dependencies import (
     get_current_user,
     get_current_active_user,
@@ -298,7 +299,7 @@ async def admin_login(
             detail="Login failed. Please try again."
         )
 
-@router.post("/refresh", response_model=AuthResponse)
+@router.post("/refresh", response_model=AuthResponse, responses=UNAUTHORIZED)
 async def refresh_token(
     request: RefreshTokenRequest,
     db: AsyncSession = Depends(get_db)
@@ -537,7 +538,7 @@ async def reset_password(
         return MessageResponse(message="If an account with that email exists, the password has been reset.")
 
 
-@router.post("/logout", response_model=MessageResponse)
+@router.post("/logout", response_model=MessageResponse, responses=UNAUTHORIZED)
 async def logout(
     current_user: User = Depends(get_current_user),
     client_ip: str = Depends(get_client_ip),
@@ -564,7 +565,7 @@ async def logout(
             message="Logged out successfully."
         )
 
-@router.get("/profile", response_model=UserProfileResponse)
+@router.get("/profile", response_model=UserProfileResponse, responses=UNAUTHORIZED)
 async def get_profile(
     current_user: User = Depends(get_current_active_user)
 ):
@@ -588,7 +589,7 @@ async def get_profile(
         onboarding_completed=current_user.onboarding_completed or False
     )
 
-@router.get("/verify-token")
+@router.get("/verify-token", responses=UNAUTHORIZED)
 async def verify_token(
     current_user: User = Depends(get_current_user)
 ):

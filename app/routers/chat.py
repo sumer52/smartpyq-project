@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from ..core.database import get_db
 from ..core.limiter import limiter, RATE_LIMITED
+from ..core.exceptions import UNAUTHORIZED, NOT_FOUND
 from ..core.dependencies import (
     get_current_active_user,
     get_current_tenant,
@@ -144,7 +145,7 @@ async def simple_chat(payload: SimpleChatRequest, request: Request):
             response = "I am in basic mode. I can help navigate: PYQ Hub for papers, Upload to share, Search to find papers, Analysis for patterns."
         return SimpleChatResponse(response=response, session_id=payload.session_id)
 
-@router.post("/", response_model=ChatResponse, responses=RATE_LIMITED)
+@router.post("/", response_model=ChatResponse, responses={**RATE_LIMITED, **UNAUTHORIZED})
 @limiter.limit("60/hour")
 async def chat(
     payload: ChatRequest,
@@ -195,7 +196,7 @@ async def chat(
             detail="Chat processing failed. Please try again."
         )
 
-@router.post("/stream", responses=RATE_LIMITED)
+@router.post("/stream", responses={**RATE_LIMITED, **UNAUTHORIZED})
 @limiter.limit("60/hour")
 async def chat_stream(
     payload: ChatRequest,
@@ -270,7 +271,7 @@ async def chat_stream(
         }
     )
 
-@router.get("/sessions", response_model=SessionListResponse)
+@router.get("/sessions", response_model=SessionListResponse, responses=UNAUTHORIZED)
 async def get_user_sessions(
     page: int = 1,
     per_page: int = 20,
@@ -308,7 +309,7 @@ async def get_user_sessions(
             detail="Failed to retrieve chat sessions"
         )
 
-@router.get("/{session_id}/history", response_model=ChatHistoryResponse)
+@router.get("/{session_id}/history", response_model=ChatHistoryResponse, responses={**UNAUTHORIZED, **NOT_FOUND})
 async def get_chat_history(
     session_id: str,
     chat_service: ChatService = Depends(get_chat_service),
@@ -354,7 +355,7 @@ async def get_chat_history(
             detail="Failed to retrieve chat history"
         )
 
-@router.delete("/{session_id}")
+@router.delete("/{session_id}", responses={**UNAUTHORIZED, **NOT_FOUND})
 async def delete_chat_session(
     session_id: str,
     chat_service: ChatService = Depends(get_chat_service),

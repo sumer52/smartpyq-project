@@ -34,7 +34,12 @@ from ..core.exceptions import (
     ValidationError,
     PermissionError,
     NotFoundError,
-    ConflictError
+    ConflictError,
+    UNAUTHORIZED,
+    FORBIDDEN,
+    NOT_FOUND,
+    PROTECTED,
+    PROTECTED_WITH_NOT_FOUND,
 )
 from ..utils.metadata_normalizer import normalize_stream, normalize_semester
 from ..utils.upload_text_check import check_upload_readable
@@ -621,7 +626,7 @@ async def upload_student_paper(
         _plog.getLogger(__name__).error(f"Student upload error: {type(e).__name__}")
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Upload failed. Please try again.")
 
-@router.get("/mine")
+@router.get("/mine", responses=UNAUTHORIZED)
 async def list_my_submissions(
     anon_token: Optional[str] = Query(None, max_length=128, description="Tracking token from an anonymous upload"),
     current_user: Optional[User] = Depends(get_current_user_optional),
@@ -674,7 +679,7 @@ async def list_my_submissions(
         ]
     }
 
-@router.get("/pending-review")
+@router.get("/pending-review", responses=PROTECTED)
 async def list_pending_review(
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
     db: AsyncSession = Depends(get_db)
@@ -740,7 +745,7 @@ async def list_pending_review(
         })
     return {"papers": out}
 
-@router.get("/{paper_id}", response_model=PaperResponse)
+@router.get("/{paper_id}", response_model=PaperResponse, responses=NOT_FOUND)
 async def get_paper(
     paper_id: int,
     current_user: Optional[User] = Depends(get_current_user_optional),
@@ -785,6 +790,7 @@ async def get_paper(
         )
 
 @router.post("/upload", response_model=PaperUploadResponse, status_code=status.HTTP_201_CREATED,
+             responses=PROTECTED,
              dependencies=[Depends(require_roles(["admin", "tenant_admin"]))])
 async def upload_paper(
     file: UploadFile = File(..., description="PDF file to upload"),
@@ -959,7 +965,7 @@ async def upload_paper(
             detail=f"Upload failed: {type(e).__name__}"
         )
 
-@router.get("/{paper_id}/download")
+@router.get("/{paper_id}/download", responses=NOT_FOUND)
 async def download_paper(
     paper_id: int,
     current_user: Optional[User] = Depends(get_current_user_optional),
@@ -1143,7 +1149,7 @@ async def download_paper(
         filename=f"paper_{paper_id}{ext}"
     )
 
-@router.post("/{paper_id}/stamp", response_model=DownloadUrlResponse)
+@router.post("/{paper_id}/stamp", response_model=DownloadUrlResponse, responses={**UNAUTHORIZED, **NOT_FOUND})
 async def stamp_paper(
     paper_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -1184,7 +1190,7 @@ async def stamp_paper(
         )
 
 # Admin endpoints
-@router.post("/{paper_id}/publish")
+@router.post("/{paper_id}/publish", responses=PROTECTED_WITH_NOT_FOUND)
 async def publish_paper_endpoint(
     paper_id: int,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
@@ -1212,7 +1218,7 @@ async def publish_paper_endpoint(
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to publish paper")
 
-@router.post("/{paper_id}/unpublish")
+@router.post("/{paper_id}/unpublish", responses=PROTECTED_WITH_NOT_FOUND)
 async def unpublish_paper_endpoint(
     paper_id: int,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
@@ -1241,7 +1247,7 @@ async def unpublish_paper_endpoint(
     except Exception:
         raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Failed to unpublish paper")
 
-@router.post("/{paper_id}/approve")
+@router.post("/{paper_id}/approve", responses=PROTECTED_WITH_NOT_FOUND)
 async def approve_paper(
     paper_id: int,
     note: str = Form("", max_length=500),
@@ -1282,7 +1288,7 @@ async def approve_paper(
             detail="Failed to approve paper"
         )
 
-@router.post("/{paper_id}/reject")
+@router.post("/{paper_id}/reject", responses=PROTECTED_WITH_NOT_FOUND)
 async def reject_paper(
     paper_id: int,
     reason: str = Form(..., min_length=10, max_length=500),
@@ -1322,7 +1328,7 @@ async def reject_paper(
             detail="Failed to reject paper"
         )
 
-@router.delete("/{paper_id}")
+@router.delete("/{paper_id}", responses=PROTECTED_WITH_NOT_FOUND)
 async def delete_paper(
     paper_id: int,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
@@ -1360,7 +1366,7 @@ async def delete_paper(
             detail="Failed to delete paper"
         )
 
-@router.get("/stats/overview", response_model=PaperStatsResponse)
+@router.get("/stats/overview", response_model=PaperStatsResponse, responses=PROTECTED)
 async def get_paper_stats(
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
 ):

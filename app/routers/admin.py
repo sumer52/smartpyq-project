@@ -26,7 +26,9 @@ from ..core.database import get_db
 from ..core.exceptions import (
     ValidationError,
     NotFoundError,
-    PermissionError
+    PermissionError,
+    PROTECTED_WITH_NOT_FOUND,
+    PROTECTED,
 )
 from ..models.user import User, UserRole, UserStatus
 from ..models.paper import Paper, PaperStatus
@@ -120,7 +122,7 @@ paper_repo = PaperRepository()
 audit_repo = AuditLogRepository()
 
 # Tenant Management
-@router.get("/tenants", response_model=List[TenantResponse])
+@router.get("/tenants", response_model=List[TenantResponse], responses=PROTECTED)
 async def get_tenants(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -146,7 +148,7 @@ async def get_tenants(
             detail="Failed to retrieve tenants"
         )
 
-@router.post("/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED)
+@router.post("/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED, responses=PROTECTED)
 async def create_tenant(
     request: TenantCreateRequest,
     current_user: User = Depends(require_roles(["admin"])),
@@ -188,7 +190,7 @@ async def create_tenant(
             detail="Failed to create tenant"
         )
 
-@router.put("/tenants/{tenant_id}/activate")
+@router.put("/tenants/{tenant_id}/activate", responses=PROTECTED_WITH_NOT_FOUND)
 async def activate_tenant(
     tenant_id: int,
     current_user: User = Depends(require_roles(["admin"])),
@@ -220,7 +222,7 @@ async def activate_tenant(
             detail="Failed to activate tenant"
         )
 
-@router.put("/tenants/{tenant_id}/suspend")
+@router.put("/tenants/{tenant_id}/suspend", responses=PROTECTED_WITH_NOT_FOUND)
 async def suspend_tenant(
     tenant_id: int,
     reason: str = Form(..., min_length=10, max_length=500),
@@ -255,7 +257,7 @@ async def suspend_tenant(
         )
 
 # User Management
-@router.get("/users", response_model=List[UserResponse])
+@router.get("/users", response_model=List[UserResponse], responses=PROTECTED)
 async def get_users(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
@@ -289,7 +291,7 @@ async def get_users(
             detail="Failed to retrieve users"
         )
 
-@router.put("/users/{user_id}", response_model=UserResponse)
+@router.put("/users/{user_id}", response_model=UserResponse, responses=PROTECTED_WITH_NOT_FOUND)
 async def update_user(
     user_id: int,
     request: UserUpdateRequest,
@@ -348,7 +350,7 @@ async def update_user(
             detail="Failed to update user"
         )
 
-@router.put("/users/{user_id}/activate")
+@router.put("/users/{user_id}/activate", responses=PROTECTED_WITH_NOT_FOUND)
 async def activate_user(
     user_id: int,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
@@ -389,7 +391,7 @@ async def activate_user(
             detail="Failed to activate user"
         )
 
-@router.put("/users/{user_id}/suspend")
+@router.put("/users/{user_id}/suspend", responses=PROTECTED_WITH_NOT_FOUND)
 async def suspend_user(
     user_id: int,
     reason: str = Form(..., min_length=10, max_length=500),
@@ -433,7 +435,7 @@ async def suspend_user(
         )
 
 # Audit Logs
-@router.get("/audit-logs", response_model=List[AuditLogResponse])
+@router.get("/audit-logs", response_model=List[AuditLogResponse], responses=PROTECTED)
 async def get_audit_logs(
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=200),
@@ -475,7 +477,7 @@ async def get_audit_logs(
         )
 
 # System Statistics
-@router.get("/stats", response_model=SystemStatsResponse)
+@router.get("/stats", response_model=SystemStatsResponse, responses=PROTECTED)
 async def get_system_stats(
     current_user: User = Depends(require_roles(["admin"])),
     db: AsyncSession = Depends(get_db),
@@ -549,7 +551,7 @@ async def get_system_stats(
             detail="Failed to retrieve system statistics"
         )
 
-@router.get("/health")
+@router.get("/health", responses=PROTECTED)
 async def health_check(
     current_user: User = Depends(require_roles(["admin"]))
 ):

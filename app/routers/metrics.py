@@ -15,6 +15,7 @@ from sqlalchemy.orm import Session
 
 from ..core.database import get_db
 from ..core.dependencies import get_current_admin_user
+from ..core.exceptions import UNAUTHORIZED, FORBIDDEN
 from ..models.user import User
 from ..services.audit_service import AuditService
 from ..services.paper_service import PaperService
@@ -239,7 +240,7 @@ async def metrics_health():
     }
 
 
-@router.get("/stats")
+@router.get("/stats", responses={**UNAUTHORIZED, **FORBIDDEN})
 async def get_application_stats(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_admin_user)

@@ -10,6 +10,7 @@ from sqlalchemy import select, and_
 
 from ..core.database import get_db
 from ..core.dependencies import get_current_active_user
+from ..core.exceptions import NOT_FOUND, UNAUTHORIZED, PROTECTED
 from ..models.user import User
 from ..models.paper import Paper
 from ..models.bookmark import Bookmark
@@ -33,7 +34,7 @@ class BookmarkToggleResponse(BaseModel):
     message: str
 
 
-@router.get("/", response_model=List[BookmarkResponse])
+@router.get("/", response_model=List[BookmarkResponse], responses=UNAUTHORIZED)
 async def get_bookmarks(
     current_user: User = Depends(get_current_active_user),
     db: AsyncSession = Depends(get_db)
@@ -57,7 +58,7 @@ async def get_bookmarks(
     return response
 
 
-@router.post("/{paper_id}", response_model=BookmarkToggleResponse)
+@router.post("/{paper_id}", response_model=BookmarkToggleResponse, responses={**UNAUTHORIZED, **NOT_FOUND})
 async def toggle_bookmark(
     paper_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -85,7 +86,7 @@ async def toggle_bookmark(
         return BookmarkToggleResponse(bookmarked=True, message="Paper bookmarked")
 
 
-@router.delete("/{paper_id}", response_model=BookmarkToggleResponse)
+@router.delete("/{paper_id}", response_model=BookmarkToggleResponse, responses={**UNAUTHORIZED, **NOT_FOUND})
 async def remove_bookmark(
     paper_id: int,
     current_user: User = Depends(get_current_active_user),
@@ -102,7 +103,7 @@ async def remove_bookmark(
     return BookmarkToggleResponse(bookmarked=False, message="Bookmark removed")
 
 
-@router.get("/check/{paper_id}")
+@router.get("/check/{paper_id}", responses=UNAUTHORIZED)
 async def check_bookmark(
     paper_id: int,
     current_user: User = Depends(get_current_active_user),

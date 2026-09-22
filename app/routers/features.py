@@ -21,7 +21,9 @@ from ..core.dependencies import (
 )
 from ..core.exceptions import (
     ValidationError,
-    NotFoundError
+    NotFoundError,
+    PROTECTED_WITH_NOT_FOUND,
+    PROTECTED,
 )
 from ..models.user import User
 from ..services.feature_service import FeatureService
@@ -85,7 +87,7 @@ async def get_features(db: AsyncSession = Depends(get_db)):
             detail="Failed to retrieve features"
         )
 
-@router.get("/all", response_model=List[FeatureSchema])
+@router.get("/all", response_model=List[FeatureSchema], responses=PROTECTED)
 async def get_all_features(
     current_user: User = Depends(require_roles(["admin"])),
     db: AsyncSession = Depends(get_db)
@@ -106,7 +108,7 @@ async def get_all_features(
             detail="Failed to retrieve features"
         )
 
-@router.post("/", response_model=FeatureSchema, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=FeatureSchema, status_code=status.HTTP_201_CREATED, responses=PROTECTED)
 async def create_feature(
     request: FeatureCreateSchema,
     current_user: User = Depends(require_roles(["admin"])),
@@ -136,7 +138,7 @@ async def create_feature(
             detail="Failed to create feature"
         )
 
-@router.put("/{feature_id}", response_model=FeatureSchema)
+@router.put("/{feature_id}", response_model=FeatureSchema, responses=PROTECTED_WITH_NOT_FOUND)
 async def update_feature(
     feature_id: int,
     request: FeatureUpdateSchema,
@@ -173,7 +175,7 @@ async def update_feature(
             detail="Failed to update feature"
         )
 
-@router.post("/{feature_id}/toggle")
+@router.post("/{feature_id}/toggle", responses=PROTECTED_WITH_NOT_FOUND)
 async def toggle_feature(
     feature_id: int,
     current_user: User = Depends(require_roles(["admin"])),
@@ -208,7 +210,7 @@ async def toggle_feature(
             detail="Failed to toggle feature"
         )
 
-@router.delete("/{feature_id}")
+@router.delete("/{feature_id}", responses=PROTECTED_WITH_NOT_FOUND)
 async def delete_feature(
     feature_id: int,
     current_user: User = Depends(require_roles(["admin"])),

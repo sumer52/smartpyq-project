@@ -6,6 +6,60 @@ Provides consistent error responses across the application with proper HTTP stat
 from typing import Any, Dict, Optional
 
 
+# ---------------------------------------------------------------------------
+# OpenAPI error declarations
+#
+# Every HTTP error in this app serializes as FastAPI's default
+# {"detail": "..."} body (custom exceptions are caught in routers and
+# re-raised as HTTPException), so these examples document the real wire
+# format. Spread the shared dicts into a route's responses= the same way
+# RATE_LIMITED (app/core/limiter.py) is used for 429s.
+# ---------------------------------------------------------------------------
+
+UNAUTHORIZED = {
+    401: {
+        "description": "Missing, invalid, or expired credentials",
+        "content": {
+            "application/json": {
+                "example": {"detail": "Could not validate credentials"},
+            }
+        },
+    }
+}
+
+FORBIDDEN = {
+    403: {
+        "description": "Authenticated but lacking the required role",
+        "content": {
+            "application/json": {
+                "example": {"detail": "Admin access required"},
+            }
+        },
+    }
+}
+
+NOT_FOUND = {
+    404: {
+        "description": "Requested resource does not exist",
+        "content": {
+            "application/json": {
+                "example": {"detail": "Paper not found"},
+            }
+        },
+    }
+}
+
+# Role-protected routes: a missing token fails at the same dependency chain
+# as a bad one, so callers see both 401 and 403 there.
+PROTECTED = {**UNAUTHORIZED, **FORBIDDEN}
+
+# Role-protected routes that also address a resource by id.
+PROTECTED_WITH_NOT_FOUND = {**PROTECTED, **NOT_FOUND}
+
+# GET-by-id routes where only resource existence can fail (auth happens
+# elsewhere or is optional): use NOT_FOUND alone.
+
+
 class CustomException(Exception):
     """Base custom exception class."""
     
