@@ -291,6 +291,12 @@ _rapidocr_engine = None
 
 def _get_rapidocr():
     global _rapidocr_engine
+    from app.core.config import settings
+    if not settings.ENABLE_OCR:
+        raise ValueError(
+            "OCR is disabled on this deployment (ENABLE_OCR=false) because the "
+            "ONNX models exceed available memory on small instances. Upload a "
+            "PDF with a text layer, or enable OCR on a larger instance.")
     if _rapidocr_engine is None:
         from rapidocr_onnxruntime import RapidOCR
         _rapidocr_engine = RapidOCR()
@@ -786,10 +792,14 @@ def analyze_document(file_path: str, filename: str = "") -> AnalysisResult:
             raw_text, page_count = extract_text_from_pdf(file_path)
             result.page_count = page_count
 
-            # If text extraction yielded little or no text, try OCR
+            # If text extraction yielded little or no text, try OCR (opt-in:
+            # the ONNX engine OOMs 512MB containers, see config.ENABLE_OCR)
             if len(raw_text.strip()) < 50:
-                logger.info("PDF has little extractable text, attempting OCR...")
-                ocr_text, _ = ocr_pdf(file_path)
+                try:
+                    ocr_text, _ = ocr_pdf(file_path)
+                except ValueError as ocr_err:
+                    logger.info(f"OCR skipped: {ocr_err}")
+                    ocr_text = ""
                 if len(ocr_text.strip()) > len(raw_text.strip()):
                     raw_text = ocr_text
                     logger.info(f"OCR yielded {len(ocr_text)} characters")

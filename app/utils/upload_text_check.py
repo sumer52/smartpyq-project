@@ -42,7 +42,14 @@ _ocr_engine = None
 
 
 def _get_ocr_engine():
-    """Return the RapidOCR engine (initialized once per process), or None."""
+    """Return the RapidOCR engine (initialized once per process), or None.
+
+    Returns None when OCR is disabled (ENABLE_OCR=false): callers treat
+    that as "cannot judge" and never block the upload.
+    """
+    from app.core.config import settings
+    if not settings.ENABLE_OCR:
+        return None
     global _ocr_engine
     if _ocr_engine is not None:
         return _ocr_engine

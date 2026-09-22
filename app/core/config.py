@@ -71,6 +71,10 @@ class Settings(BaseSettings):
     # Reject uploads whose file carries no readable text (blank photos,
     # signatures, scans of empty pages). Disable with UPLOAD_TEXT_CHECK=false.
     UPLOAD_TEXT_CHECK: bool = True
+    # OCR (RapidOCR/ONNX) needs ~150-300MB resident on top of the app's
+    # baseline, which OOM-kills a 512MB container (Render free tier) and
+    # dies mid-request. Opt-in so low-RAM hosts skip it entirely.
+    ENABLE_OCR: bool = False
     
     # Redis and Celery
     REDIS_URL: str = "redis://localhost:6379/0"

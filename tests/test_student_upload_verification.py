@@ -85,9 +85,12 @@ class TestStudentUpload:
         assert row.status == PaperStatus.PENDING
         assert row.uploader_id == test_user.id
 
-    async def test_upload_rejects_textless_image(self, student_client):
+    async def test_upload_rejects_textless_image(self, student_client, monkeypatch):
         """Photos with no readable text (signatures, blank pages) are rejected
-        with a clear 422 instead of entering the queue and failing analysis."""
+        with a clear 422 instead of entering the queue and failing analysis.
+        Needs OCR enabled: the readability gate skips judgment when OCR is off."""
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "ENABLE_OCR", True)
         # 1x1 white PNG - a real image, but no text in it.
         tiny_png = bytes.fromhex(
             "89504e470d0a1a0a0000000d49484452000000010000000108060000001f15c489"
@@ -104,8 +107,10 @@ class TestStudentUpload:
         assert resp.status_code == 422
         assert "no readable text" in resp.json()["detail"].lower()
 
-    async def test_upload_accepts_text_image(self, student_client, db_session, tenant, test_user):
-        """A photo that OCRs to enough text passes the gate."""
+    async def test_upload_accepts_text_image(self, student_client, db_session, tenant, test_user, monkeypatch):
+        """A photo that OCRs to enough text passes the gate (OCR enabled)."""
+        from app.core.config import settings
+        monkeypatch.setattr(settings, "ENABLE_OCR", True)
         from PIL import Image, ImageDraw
 
         buf = io.BytesIO()
