@@ -118,7 +118,7 @@ const TermsPage = () => {
   ];
   const lastUpdated = 'January 15, 2024';
   return (
-    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-muted-50">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -128,16 +128,16 @@ const TermsPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <DocumentTextIcon className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <DocumentTextIcon className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Terms of <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Service</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
+              Terms of <span className="text-accent">Service</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
+            <p className="text-xl text-secondary max-w-3xl mx-auto mb-4">
               Please read these Terms of Service carefully before using SmartPYQ. These terms govern your use of our platform and services.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted">
               Last updated: {lastUpdated}
             </p>
           </motion.div>
@@ -148,11 +148,11 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mb-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Welcome to SmartPYQ</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Welcome to SmartPYQ</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               These Terms of Service ("Terms") govern your use of the SmartPYQ platform and services operated by SmartPYQ ("we," "us," or "our"). These Terms apply to all visitors, users, and others who access or use our service.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               By accessing or using our service, you agree to be bound by these Terms. If you disagree with any part of these terms, then you may not access the service.
             </p>
           </motion.div>
@@ -169,10 +169,10 @@ const TermsPage = () => {
                   className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8"
                 >
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center">
-                      <IconComponent className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-brand-500 rounded-lg flex items-center justify-center">
+                      <IconComponent className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">{section.title}</h2>
+                    <h2 className="text-2xl font-bold text-primary">{section.title}</h2>
                   </div>
                   <div className="space-y-6">
                     {section.content.map((item, itemIndex) => (
@@ -182,7 +182,7 @@ const TermsPage = () => {
                             {item.subtitle}
                           </h3>
                         )}
-                        <p className="text-gray-300 leading-relaxed">
+                        <p className="text-secondary leading-relaxed">
                           {item.text}
                         </p>
                       </div>
@@ -199,11 +199,11 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Payment Terms</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Payment Terms</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               SmartPYQ is a free educational platform. There are no subscription fees, paywalls, or premium tiers for accessing previous year question papers or using the AI study assistant.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               We reserve the right to introduce paid features in the future. If we do, existing free features will remain free, and any new pricing will be communicated in advance.
             </p>
           </motion.div>
@@ -214,11 +214,11 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 0.9 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Privacy and Data Protection</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Privacy and Data Protection</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               Your privacy is important to us. Our collection and use of personal information is governed by our Privacy Policy, which is incorporated into these Terms by reference.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               By using our service, you consent to the collection and use of your information as described in our Privacy Policy.
             </p>
           </motion.div>
@@ -229,11 +229,11 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 1.0 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Limitation of Liability</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Limitation of Liability</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               In no event shall SmartPYQ, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               As a  educational platform, our total liability to you for all claims arising from or relating to the service shall not exceed ₹1,000.
             </p>
           </motion.div>
@@ -244,8 +244,8 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 1.1 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Governing Law and Jurisdiction</h2>
-            <p className="text-gray-300 leading-relaxed">
+            <h2 className="text-2xl font-bold text-primary mb-4">Governing Law and Jurisdiction</h2>
+            <p className="text-secondary leading-relaxed">
               These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms or your use of the service shall be subject to the exclusive jurisdiction of the courts in Bangalore, India.
             </p>
           </motion.div>
@@ -256,11 +256,11 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 1.2 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Changes to Terms</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Changes to Terms</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               Your continued use of the service after any such changes constitutes your acceptance of the new Terms.
             </p>
           </motion.div>
@@ -271,8 +271,8 @@ const TermsPage = () => {
             transition={{ duration: 0.6, delay: 1.3 }}
             className="bg-linear-to-r from-brand-500/10 to-accent-500/10 border border-brand-500/20 rounded-2xl p-8 mt-8 text-center"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Questions About These Terms?</h2>
-            <p className="text-gray-300 leading-relaxed mb-6">
+            <h2 className="text-2xl font-bold text-primary mb-4">Questions About These Terms?</h2>
+            <p className="text-secondary leading-relaxed mb-6">
               If you have any questions about these Terms of Service, please contact us. We're here to help clarify any concerns you may have.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

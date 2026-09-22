@@ -9,7 +9,6 @@ import ScrollToTop from './components/ScrollToTop';
 import SessionExpiredBanner from './components/SessionExpiredBanner';
 import OfflineBanner from './components/OfflineBanner';
 import MaintenanceBanner from './components/MaintenanceBanner';
-import ScrollProgress from './components/ui/ScrollProgress';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PYQPage = lazy(() => import('./pages/PYQPage'));
@@ -124,14 +123,6 @@ function AppLayout() {
     <AuthProvider>
       <div className="App min-h-screen" style={{position:"relative",zIndex:10}}>
         <SkipLink />
-        <ScrollProgress />
-
-        {/* Ambient background orbs - wrapped in overflow:hidden to prevent mobile horizontal scroll */}
-        <div className="fixed inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
-          <div className="ambient-orb ambient-orb--purple" style={{width:'600px',height:'600px',top:'-200px',right:'-200px'}} />
-          <div className="ambient-orb ambient-orb--blue" style={{width:'500px',height:'500px',bottom:'-150px',left:'-150px'}} />
-          <div className="ambient-orb ambient-orb--pink" style={{width:'400px',height:'400px',top:'40%',left:'30%'}} />
-        </div>
         <FuturisticHeader />
         <ScrollToTop />
         <SessionExpiredBanner />

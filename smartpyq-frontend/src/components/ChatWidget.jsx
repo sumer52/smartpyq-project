@@ -283,7 +283,7 @@ const ChatWidget = ({ className = "" }) => {
       {
         id: 1,
         type: 'bot',
-        content: "Chat cleared! Ask me anything — I'm here to help.",
+        content: "Chat cleared! Ask me anything. I'm here to help.",
         timestamp: new Date()
       }
     ]);
@@ -322,7 +322,7 @@ const ChatWidget = ({ className = "" }) => {
           />
         ))}
       </div>
-      <span className="text-sm text-gray-500 ml-2">AI is typing...</span>
+      <span className="text-sm text-muted ml-2">AI is typing...</span>
     </motion.div>
   );
   return (
@@ -330,7 +330,7 @@ const ChatWidget = ({ className = "" }) => {
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            className="mb-4 bg-white/5 rounded-2xl shadow-2xl border border-white/10 overflow-hidden"
+            className="mb-4 bg-white rounded-2xl shadow-2xl border border-line overflow-hidden"
             initial={{ opacity: 0, scale: 0.8, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
@@ -338,7 +338,7 @@ const ChatWidget = ({ className = "" }) => {
             style={{ width: 'min(384px, calc(100vw - 48px))', maxHeight: 'min(600px, calc(100vh - 100px))' }}
           >
             {/* Header */}
-            <div className="bg-linear-to-r from-brand-600 to-brand-700 px-4 py-3 flex items-center justify-between">
+            <div className="bg-brand-500 px-4 py-3 flex items-center justify-between">
               <div className="flex items-center">
                 <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center mr-3">
                   <SparklesIcon className="h-5 w-5 text-white" />
@@ -376,7 +376,7 @@ const ChatWidget = ({ className = "" }) => {
                   {/* Messages */}
                   <div 
                     ref={chatContainerRef}
-                    className="h-96 overflow-y-auto p-4 space-y-4 bg-white/5"
+                    className="h-96 overflow-y-auto p-4 space-y-4 bg-white"
                     style={{ scrollbarWidth: 'thin' }}
                   >
                     {messages.map((message) => (
@@ -390,8 +390,8 @@ const ChatWidget = ({ className = "" }) => {
                         <div className={`max-w-[80%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                           <div
                             className={`px-4 py-2 rounded-2xl ${message.type === 'user'
-                              ? 'bg-brand-600 text-white rounded-br-md'
-                              : 'bg-white/5 text-white rounded-bl-md shadow-xs border border-white/10'
+                              ? 'bg-brand-500 text-white rounded-br-md'
+                              : 'bg-white text-primary rounded-bl-md shadow-xs border border-line'
                             }`}
                           >
                             <p className="text-sm whitespace-pre-wrap">{message.content}</p>
@@ -403,13 +403,13 @@ const ChatWidget = ({ className = "" }) => {
                               />
                             )}
                           </div>
-                          <p className={`text-xs text-gray-500 mt-1 ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
+                          <p className={`text-xs text-muted mt-1 ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
                             {formatTime(new Date(message.timestamp))}
                           </p>
                         </div>
                         {message.type === 'bot' && (
                           <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center mr-2 mt-1 order-0">
-                            <SparklesIcon className="h-4 w-4 text-indigo-300" />
+                            <SparklesIcon className="h-4 w-4 text-accent" />
                           </div>
                         )}
                       </motion.div>
@@ -419,9 +419,9 @@ const ChatWidget = ({ className = "" }) => {
                       {isTyping && (
                         <div className="flex justify-start">
                           <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center mr-2">
-                            <SparklesIcon className="h-4 w-4 text-indigo-300" />
+                            <SparklesIcon className="h-4 w-4 text-accent" />
                           </div>
-                          <div className="bg-white/5 rounded-2xl rounded-bl-md shadow-xs border border-white/10">
+                          <div className="bg-white rounded-2xl rounded-bl-md shadow-xs border border-line">
                             <TypingIndicator />
                           </div>
                         </div>
@@ -453,7 +453,7 @@ const ChatWidget = ({ className = "" }) => {
                     )}
                   </AnimatePresence>
                   {/* Input */}
-                  <div className="p-4 bg-white/5 border-t border-white/10">
+                  <div className="p-4 bg-white border-t border-line">
                     <div className="flex items-end space-x-2">
                       <div className="flex-1">
                         <textarea
@@ -462,7 +462,7 @@ const ChatWidget = ({ className = "" }) => {
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyPress={handleKeyPress}
                           placeholder="Ask me anything about studies..."
-                          className="w-full px-3 py-2 border border-white/15 rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 resize-none transition-colors"
+                          className="w-full px-3 py-2 border border-line rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 resize-none transition-colors"
                           rows={1}
                           style={{ minHeight: '40px', maxHeight: '120px' }}
                           disabled={isLoading}
@@ -556,7 +556,7 @@ const ChatWidget = ({ className = "" }) => {
               <ChatBubbleLeftRightIconSolid className="h-6 w-6 text-white" />
               {unreadCount > 0 && (
                 <motion.div
-                  className="absolute -top-2 -right-2 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
+                  className="absolute -top-2 -right-2 w-5 h-5 bg-error-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
                   initial={{ scale: 0 }}
                   animate={{ scale: 1 }}
                   transition={{ type: 'spring', stiffness: 500, damping: 15 }}

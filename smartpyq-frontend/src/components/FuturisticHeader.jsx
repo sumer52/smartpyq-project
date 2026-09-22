@@ -1,17 +1,17 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, ArrowRightOnRectangleIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
-const FuturisticHeader = memo(() => {
+
+const SiteHeader = memo(() => {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [showMobileMenu, setShowMobileMenu] = useState(false);
-  const [entered, setEntered] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isAuthenticated, logout, isDemoUser, isAdmin } = useAuth();
-  
+
   const handleHomeClick = useCallback(
     (e) => {
       e.preventDefault();
@@ -19,20 +19,14 @@ const FuturisticHeader = memo(() => {
     },
     [navigate]
   );
-  
-  useEffect(() => {
-    const t = setTimeout(() => setEntered(true), 100);
-    return () => clearTimeout(t);
-  }, []);
 
-  // Scrolled state: pill gains a stronger surface + shadow once the page
-  // scrolls past the hero fold. rAF-throttled scroll listener.
+  // Hairline rule appears once the page scrolls past the fold.
   useEffect(() => {
     let raf = 0;
     const onScroll = () => {
       if (raf) return;
       raf = requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 24);
+        setScrolled(window.scrollY > 12);
         raf = 0;
       });
     };
@@ -43,11 +37,12 @@ const FuturisticHeader = memo(() => {
       if (raf) cancelAnimationFrame(raf);
     };
   }, []);
-  
+
   useEffect(() => {
     setShowUserMenu(false);
     setShowMobileMenu(false);
   }, [location.pathname, location.search]);
+
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
@@ -58,49 +53,46 @@ const FuturisticHeader = memo(() => {
   // Signed-in admins work from the Dashboard: the header swaps the Home link
   // for a prominent Dashboard button instead.
   const navItems = [
-        { name: 'Home', href: '/', icon: HomeIcon, hiddenForAdmin: true },
-        { name: 'PYQ', href: '/pyq', icon: BookOpenIcon },
-        { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
-        { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
-        { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
-        { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
-        // Everyone can upload: visitors hit the public upload page; admins
-        // get the full upload wizard (their papers publish without review).
-        { name: 'Upload', href: isAdmin ? '/upload' : '/my-papers', icon: CloudArrowUpIcon },
-      ].filter(item => (!item.adminOnly || isAdmin) && (!item.hiddenForAdmin || !isAdmin));
+    { name: 'Home', href: '/', icon: HomeIcon, hiddenForAdmin: true },
+    { name: 'PYQ Hub', href: '/pyq', icon: BookOpenIcon },
+    { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
+    { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
+    { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
+    { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
+    // Everyone can upload: visitors hit the public upload page; admins
+    // get the full upload wizard (their papers publish without review).
+    { name: 'Upload', href: isAdmin ? '/upload' : '/my-papers', icon: CloudArrowUpIcon },
+  ].filter(item => (!item.adminOnly || isAdmin) && (!item.hiddenForAdmin || !isAdmin));
 
   // Only highlight the item whose href exactly matches the current path
   const isActive = (item) => location.pathname === item.href;
 
   return (
-    <header className={'fh ' + (entered ? 'fh--entered' : '') + (scrolled ? ' fh--scrolled' : '')} role='banner'
+    <header className={'site-header' + (scrolled ? ' site-header--scrolled' : '')} role='banner'
       style={{ viewTransitionName: 'site-header' }}>
-      <div className='fh__pill'>
-        <Link to='/' onClick={handleHomeClick} className='fh__logo' aria-label='SmartPYQ Home'>
-          <img src='/logo.png' alt='SmartPYQ' className='fh__logo-img' />
+      <div className='site-header__inner'>
+        <Link to='/' onClick={handleHomeClick} className='site-header__wordmark' aria-label='SmartPYQ Home'>
+          <span className='site-header__mark' aria-hidden='true'>S</span>
+          <span>SmartPYQ</span>
         </Link>
 
-        <nav className='fh__nav' role='navigation' aria-label='Main navigation'>
-          {navItems.map((item, index) => {
-            const Icon = item.icon;
-            const active = isActive(item, index);
+        <nav className='site-header__nav' role='navigation' aria-label='Main navigation'>
+          {navItems.map((item) => {
+            const active = isActive(item);
             return (
               <Link key={item.name} to={item.href} viewTransition
                 onClick={item.name === 'Home' ? handleHomeClick : undefined}
-                className={'fh__nav-item' + (active ? ' fh__nav-item--active' : '')}
+                className={'site-header__nav-item' + (active ? ' site-header__nav-item--active' : '')}
                 aria-current={active ? 'page' : undefined}>
-                <Icon className='fh__nav-icon' />
-                <span className='fh__nav-label'>{item.name}</span>
-                {active && <motion.div className='fh__nav-indicator' layoutId='fh-indicator'
-                  transition={{ type: 'spring', stiffness: 350, damping: 30 }} />}
+                {item.name}
               </Link>
             );
           })}
         </nav>
 
         {/* Mobile hamburger */}
-        <button className='fh__hamburger' onClick={() => setShowMobileMenu(!showMobileMenu)} aria-label='Menu' aria-expanded={showMobileMenu}>
-          <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
+        <button className='site-header__hamburger' onClick={() => setShowMobileMenu(!showMobileMenu)} aria-label='Menu' aria-expanded={showMobileMenu}>
+          <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='1.8'>
             {showMobileMenu
               ? <path d='M18 6L6 18M6 6l12 12' />
               : <path d='M4 6h16M4 12h16M4 18h16' />
@@ -108,26 +100,26 @@ const FuturisticHeader = memo(() => {
           </svg>
         </button>
 
-        <div className='fh__right'>
+        <div className='site-header__right'>
           {isAuthenticated && isAdmin ? (
             <div className='relative flex items-center gap-2'>
-              <Link to='/admin' viewTransition className='fh__login' aria-label='Admin Dashboard' style={{ background: 'linear-gradient(135deg, rgba(16,185,129,0.25), rgba(5,150,105,0.2))', borderColor: 'rgba(16,185,129,0.4)', color: '#6ee7b7' }}>
-                DASHBOARD
+              <Link to='/admin' viewTransition className='site-header__cta' aria-label='Admin Dashboard'>
+                Dashboard
               </Link>
-              <button onClick={() => setShowUserMenu(!showUserMenu)} className='fh__avatar-btn' aria-label='Admin menu' aria-expanded={showUserMenu}>
-                <div className='fh__avatar'>{user?.name?.charAt(0)?.toUpperCase() || 'A'}</div>
+              <button onClick={() => setShowUserMenu(!showUserMenu)} className='site-header__avatar-btn' aria-label='Admin menu' aria-expanded={showUserMenu}>
+                <div className='site-header__avatar'>{user?.name?.charAt(0)?.toUpperCase() || 'A'}</div>
               </button>
               <AnimatePresence>
                 {showUserMenu && (
-                  <motion.div className='fh__dropdown' initial={{ opacity: 0, y: -8, scale: 0.95 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -8, scale: 0.95 }} transition={{ duration: 0.15 }}>
-                    <div className='fh__dd-head'>
-                      <p className='fh__dd-name'>{user?.name}</p>
-                      <p className='fh__dd-course'>Administrator</p>
+                  <motion.div className='site-header__dropdown' initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.15 }}>
+                    <div className='site-header__dd-head'>
+                      <p className='site-header__dd-name'>{user?.name}</p>
+                      <p className='site-header__dd-course'>Administrator</p>
                     </div>
-                    <Link to='/admin' viewTransition className='fh__dd-item text-emerald-400' onClick={() => setShowUserMenu(false)}><ShieldCheckIcon className='h-4 w-4' /> Admin Dashboard</Link>
-                    <Link to='/upload' viewTransition className='fh__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload PDF</Link>
-                    <hr className='border-white/[0.06] my-1' />
-                    <button onClick={handleLogout} className='fh__dd-item text-red-400 hover:bg-red-500/10'><ArrowRightOnRectangleIcon className='h-4 w-4' /> Logout</button>
+                    <Link to='/admin' viewTransition className='site-header__dd-item' onClick={() => setShowUserMenu(false)}><ShieldCheckIcon className='h-4 w-4' /> Admin Dashboard</Link>
+                    <Link to='/upload' viewTransition className='site-header__dd-item' onClick={() => setShowUserMenu(false)}><CloudArrowUpIcon className='h-4 w-4' /> Upload PDF</Link>
+                    <hr className='border-muted-200 my-1' />
+                    <button onClick={handleLogout} className='site-header__dd-item text-error'><ArrowRightOnRectangleIcon className='h-4 w-4' /> Logout</button>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -135,43 +127,39 @@ const FuturisticHeader = memo(() => {
           ) : isAuthenticated && !isAdmin ? (
             /* Legacy signed-in student session: offer sign-out, no student
                dashboard/profile destinations exist anymore. */
-            <button onClick={handleLogout} className='fh__login' aria-label='Sign out legacy session'>SIGN&nbsp;OUT</button>
+            <button onClick={handleLogout} className='site-header__cta' aria-label='Sign out legacy session'>Sign&nbsp;out</button>
           ) : (
-            /* Public visitors see no login chrome at all. Admin entry lives
-               in the footer (Admin Login) and behind Upload. */
-            <Link to='/admin/login' viewTransition className='fh__login' aria-label='Admin login'>ADMIN</Link>
+            /* Public visitors see no login chrome. Admin entry lives in the
+               footer (Admin Login) and behind Upload. */
+            <Link to='/admin/login' viewTransition className='site-header__cta' aria-label='Admin login'>Admin</Link>
           )}
         </div>
       </div>
-      {/* Mobile menu dropdown — animated open/close.
-          Parent-only framer animation (children stagger via CSS); a
-          parent/child variant chain can freeze mid-flight if rAF is
-          throttled, leaving the menu stuck invisible. */}
+      {/* Mobile menu — plain list below the bar. */}
       <AnimatePresence>
         {showMobileMenu && (
           <motion.div
-            className='fh__mobile-menu'
+            className='site-header__mobile'
             onClick={(e) => { if (e.target.closest('a')) setShowMobileMenu(false); }}
-            initial={{ opacity: 0, y: -12, scale: 0.96 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -12, scale: 0.96, transition: { duration: 0.12 } }}
-            transition={{ duration: 0.18, ease: [0.22, 1, 0.36, 1] }}
+            initial={{ opacity: 0, y: -8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -8, transition: { duration: 0.12 } }}
+            transition={{ duration: 0.16, ease: [0.22, 1, 0.36, 1] }}
           >
             {isAdmin && (
-              <a href='/admin' className='fh__mobile-item fh__mobile-item--in' style={{ animationDelay: '0s', color: '#6ee7b7' }}>
+              <a href='/admin' className='site-header__mobile-item'>
                 <ShieldCheckIcon className='h-4 w-4' /> Dashboard
               </a>
             )}
-            {navItems.map((item, index) => {
+            {navItems.map((item) => {
               const Icon = item.icon;
-              const active = isActive(item, index);
+              const active = isActive(item);
               return (
                 <a key={item.name} href={item.href}
                   onClick={item.name === 'Home' ? handleHomeClick : undefined}
-                  className={'fh__mobile-item fh__mobile-item--in' + (active ? ' fh__mobile-item--active' : '')}
-                  style={{ animationDelay: (index + 1) * 0.03 + 's' }}
+                  className={'site-header__mobile-item' + (active ? ' site-header__mobile-item--active' : '')}
                 >
-                  <Icon className='fh__mobile-icon' />
+                  <Icon className='h-4 w-4' />
                   <span>{item.name}</span>
                 </a>
               );
@@ -184,25 +172,21 @@ const FuturisticHeader = memo(() => {
   );
 });
 
-// Demo-mode badge. Rendered OUTSIDE <header> on purpose: the header has a
-// transform (entrance animation), which makes it the containing block for
-// position:fixed descendants — a fixed badge inside it gets positioned
-// relative to the header and overlaps the nav links. From here it anchors to
-// the real viewport, bottom-center, where it collides with nothing.
+// Demo-mode badge. Rendered OUTSIDE <header> on purpose: fixed positioning
+// anchors to the real viewport, bottom-center, where it collides with nothing.
 const DemoModeBadge = () => {
   const { isAuthenticated, isDemoUser } = useAuth();
   if (!(isAuthenticated && isDemoUser)) return null;
   return (
     <div className="demo-mode-badge" role="status">
-      <span aria-hidden="true">🎯</span>
-      Demo Mode — Full Access
+      Demo Mode: Full Access
     </div>
   );
 };
 
 const HeaderWithDemoBadge = (props) => (
   <>
-    <FuturisticHeader {...props} />
+    <SiteHeader {...props} />
     <DemoModeBadge />
   </>
 );

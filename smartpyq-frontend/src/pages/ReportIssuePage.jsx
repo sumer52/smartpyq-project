@@ -83,10 +83,10 @@ const ReportIssuePage = () => {
     { value: 'other', label: 'Other', icon: ExclamationTriangleIcon, description: 'Anything else that needs our attention' }
   ];
   const priorities = [
-    { value: 'low', label: 'Low', color: 'text-green-400', description: 'Minor issue, no rush' },
-    { value: 'medium', label: 'Medium', color: 'text-yellow-400', description: 'Moderate impact' },
-    { value: 'high', label: 'High', color: 'text-orange-400', description: 'Significant impact' },
-    { value: 'critical', label: 'Critical', color: 'text-red-400', description: 'Blocking or severe issue' }
+    { value: 'low', label: 'Low', color: 'text-success', description: 'Minor issue, no rush' },
+    { value: 'medium', label: 'Medium', color: 'text-warning', description: 'Moderate impact' },
+    { value: 'high', label: 'High', color: 'text-warning', description: 'Significant impact' },
+    { value: 'critical', label: 'Critical', color: 'text-error', description: 'Blocking or severe issue' }
   ];
   // Auto-detect browser and device info
   React.useEffect(() => {
@@ -99,7 +99,7 @@ const ReportIssuePage = () => {
     }));
   }, []);
   return (
-    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-muted-50">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -109,13 +109,13 @@ const ReportIssuePage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ExclamationTriangleIcon className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ExclamationTriangleIcon className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Report an <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Issue</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
+              Report an <span className="text-accent">Issue</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+            <p className="text-xl text-secondary max-w-3xl mx-auto">
               Help us make SmartPYQ better by reporting bugs, suggesting improvements, or letting us know about issues you encounter.
             </p>
           </motion.div>
@@ -126,7 +126,7 @@ const ReportIssuePage = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="mb-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-6 text-center">What kind of problem are you reporting?</h2>
+            <h2 className="text-2xl font-bold text-primary mb-6 text-center">What kind of problem are you reporting?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {categories.map((category) => {
                 const IconComponent = category.icon;
@@ -150,14 +150,14 @@ const ReportIssuePage = () => {
                     <div className="flex items-start space-x-3">
                       <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
                         formData.category === category.value
-                          ? 'bg-linear-to-r from-brand-500 to-accent-500'
+                          ? 'bg-brand-500'
                           : 'bg-slate-700'
                       }`}>
-                        <IconComponent className="w-5 h-5 text-white" />
+                        <IconComponent className="w-5 h-5 text-primary" />
                       </div>
                       <div className="flex-1">
-                        <h3 className="font-semibold text-white mb-1">{category.label}</h3>
-                        <p className="text-sm text-gray-400">{category.description}</p>
+                        <h3 className="font-semibold text-primary mb-1">{category.label}</h3>
+                        <p className="text-sm text-muted">{category.description}</p>
                       </div>
                     </div>
                   </motion.label>
@@ -176,7 +176,7 @@ const ReportIssuePage = () => {
               {/* Title and Priority */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-2">
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="title" className="block text-sm font-medium text-secondary mb-2">
                     Issue Title *
                   </label>
                   <input
@@ -186,12 +186,12 @@ const ReportIssuePage = () => {
                     value={formData.title}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                     placeholder="Give your issue a short title"
                   />
                 </div>
                 <div>
-                  <label htmlFor="priority" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="priority" className="block text-sm font-medium text-secondary mb-2">
                     Priority *
                   </label>
                   <select
@@ -200,7 +200,7 @@ const ReportIssuePage = () => {
                     value={formData.priority}
                     onChange={handleInputChange}
                     required
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                   >
                     {priorities.map((priority) => (
                       <option key={priority.value} value={priority.value}>
@@ -212,7 +212,7 @@ const ReportIssuePage = () => {
               </div>
               {/* Description */}
               <div>
-                <label htmlFor="description" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="description" className="block text-sm font-medium text-secondary mb-2">
                   Detailed Description *
                 </label>
                 <textarea
@@ -222,14 +222,14 @@ const ReportIssuePage = () => {
                   onChange={handleInputChange}
                   required
                   rows={4}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                   placeholder="What happened? How did you encounter this issue? Include any relevant details..."
                 />
               </div>
               {/* Steps to Reproduce (for bugs) */}
               {formData.category === 'bug' && (
                 <div>
-                  <label htmlFor="stepsToReproduce" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="stepsToReproduce" className="block text-sm font-medium text-secondary mb-2">
                     Steps to Reproduce
                   </label>
                   <textarea
@@ -238,7 +238,7 @@ const ReportIssuePage = () => {
                     value={formData.stepsToReproduce}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                     placeholder="1. Go to...\n2. Click on...\n3. See error..."
                   />
                 </div>
@@ -247,7 +247,7 @@ const ReportIssuePage = () => {
               {formData.category === 'bug' && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="expectedBehavior" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="expectedBehavior" className="block text-sm font-medium text-secondary mb-2">
                       Expected Behavior
                     </label>
                     <textarea
@@ -256,12 +256,12 @@ const ReportIssuePage = () => {
                       value={formData.expectedBehavior}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                       placeholder="What did you expect the site to do?"
                     />
                   </div>
                   <div>
-                    <label htmlFor="actualBehavior" className="block text-sm font-medium text-gray-300 mb-2">
+                    <label htmlFor="actualBehavior" className="block text-sm font-medium text-secondary mb-2">
                       Actual Behavior
                     </label>
                     <textarea
@@ -270,7 +270,7 @@ const ReportIssuePage = () => {
                       value={formData.actualBehavior}
                       onChange={handleInputChange}
                       rows={3}
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                       placeholder="What did the site do instead?"
                     />
                   </div>
@@ -279,7 +279,7 @@ const ReportIssuePage = () => {
               {/* System Information */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <label htmlFor="browserInfo" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="browserInfo" className="block text-sm font-medium text-secondary mb-2">
                     Browser Information
                   </label>
                   <textarea
@@ -288,12 +288,12 @@ const ReportIssuePage = () => {
                     value={formData.browserInfo}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
                     placeholder="Browser and version info (auto-detected)"
                   />
                 </div>
                 <div>
-                  <label htmlFor="deviceInfo" className="block text-sm font-medium text-gray-300 mb-2">
+                  <label htmlFor="deviceInfo" className="block text-sm font-medium text-secondary mb-2">
                     Device Information
                   </label>
                   <textarea
@@ -302,14 +302,14 @@ const ReportIssuePage = () => {
                     value={formData.deviceInfo}
                     onChange={handleInputChange}
                     rows={2}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical text-xs"
                     placeholder="Device and screen info (auto-detected)"
                   />
                 </div>
               </div>
               {/* Contact Email */}
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
+                <label htmlFor="email" className="block text-sm font-medium text-secondary mb-2">
                   Contact Email (Optional)
                 </label>
                 <input
@@ -318,13 +318,13 @@ const ReportIssuePage = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                  className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                   placeholder="your@email.com (for follow-up only)"
                 />
               </div>
               {/* File Attachments */}
               <div>
-                <label className="block text-sm font-medium text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-secondary mb-2">
                   Attachments (Screenshots, logs, etc.)
                 </label>
                 <div className="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center hover:border-slate-500 transition-colors duration-200">
@@ -337,9 +337,9 @@ const ReportIssuePage = () => {
                     id="file-upload"
                   />
                   <label htmlFor="file-upload" className="cursor-pointer">
-                    <PaperClipIcon className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-                    <p className="text-gray-400">Click to upload or drag files here</p>
-                    <p className="text-xs text-gray-500 mt-1">PNG, JPG, PDF, TXT, LOG files up to 10MB each</p>
+                    <PaperClipIcon className="w-8 h-8 text-muted mx-auto mb-2" />
+                    <p className="text-muted">Click to upload or drag files here</p>
+                    <p className="text-xs text-muted mt-1">PNG, JPG, PDF, TXT, LOG files up to 10MB each</p>
                   </label>
                 </div>
                 {/* Attachment List */}
@@ -348,14 +348,14 @@ const ReportIssuePage = () => {
                     {formData.attachments.map((file, index) => (
                       <div key={index} className="flex items-center justify-between bg-slate-700/50 rounded-lg p-3">
                         <div className="flex items-center space-x-2">
-                          <DocumentTextIcon className="w-4 h-4 text-gray-400" />
-                          <span className="text-sm text-white">{file.name}</span>
-                          <span className="text-xs text-gray-400">({(file.size / 1024).toFixed(1)} KB)</span>
+                          <DocumentTextIcon className="w-4 h-4 text-muted" />
+                          <span className="text-sm text-primary">{file.name}</span>
+                          <span className="text-xs text-muted">({(file.size / 1024).toFixed(1)} KB)</span>
                         </div>
                         <button
                           type="button"
                           onClick={() => removeAttachment(index)}
-                          className="text-red-400 hover:text-red-300 text-sm"
+                          className="text-error hover:text-error text-sm"
                         >
                           Remove
                         </button>
@@ -371,13 +371,13 @@ const ReportIssuePage = () => {
                   animate={{ opacity: 1, y: 0 }}
                   className={`p-4 rounded-lg text-center ${
                     submitStatus === 'success'
-                      ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                      : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                      ? 'bg-green-500/20 border border-green-500/50 text-success'
+                      : 'bg-red-500/20 border border-red-500/50 text-error'
                   }`}
                 >
                   {submitStatus === 'success'
                     ? '✅ Issue report submitted successfully! We\'ll investigate and get back to you.'
-                    : '❌ Failed to submit report. Please try again or contact support directly.'}
+                    : 'Failed to submit the report. Please try again or contact support directly.'}
                 </motion.div>
               )}
               {/* Submit Button */}
@@ -388,7 +388,7 @@ const ReportIssuePage = () => {
               >
                 {isSubmitting ? (
                   <div className="flex items-center justify-center space-x-2">
-                    <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-5 h-5 border-2 border-muted-300 border-t-white rounded-full animate-spin" />
                     <span>Submitting...</span>
                   </div>
                 ) : (
@@ -404,7 +404,7 @@ const ReportIssuePage = () => {
             transition={{ duration: 0.6, delay: 0.6 }}
             className="mt-8 text-center"
           >
-            <p className="text-gray-400 text-sm">
+            <p className="text-muted text-sm">
               For urgent issues, please contact our support team directly at{' '}
               <a href="mailto:smartpyq@gmail.com" className="text-brand-400 hover:text-brand-300">
                 smartpyq@gmail.com

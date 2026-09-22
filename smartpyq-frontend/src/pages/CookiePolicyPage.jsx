@@ -80,7 +80,7 @@ const CookiePolicyPage = () => {
       icon: ShieldCheckIcon,
       content: [
         {
-          text: 'Our backend integrates with Google Gemini AI and OpenAI for the AI study assistant feature. These services do not set cookies on your browser — they are server-side API calls. No third-party JavaScript trackers are loaded on our pages.'
+          text: 'Our backend integrates with Google Gemini AI and OpenAI for the AI study assistant feature. These services do not set cookies on your browser; they are server-side API calls. No third-party JavaScript trackers are loaded on our pages.'
         },
       ],
     },
@@ -101,7 +101,7 @@ const CookiePolicyPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-muted-50">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -111,16 +111,16 @@ const CookiePolicyPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <CogIcon className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <CogIcon className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Cookie <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Policy</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
+              Cookie <span className="text-accent">Policy</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
+            <p className="text-xl text-secondary max-w-3xl mx-auto mb-4">
               This policy explains how SmartPYQ uses cookies and similar technologies when you visit our platform.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted">
               Last updated: January 15, 2024
             </p>
           </motion.div>
@@ -132,11 +132,11 @@ const CookiePolicyPage = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mb-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Our Cookie Commitment</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
-              SmartPYQ takes a privacy-first approach to cookies. We only use cookies and browser storage that are strictly necessary for the website to function. We do <strong className="text-white">not</strong> use analytics, advertising, or third-party tracking cookies.
+            <h2 className="text-2xl font-bold text-primary mb-4">Our Cookie Commitment</h2>
+            <p className="text-secondary leading-relaxed mb-4">
+              SmartPYQ takes a privacy-first approach to cookies. We only use cookies and browser storage that are strictly necessary for the website to function. We do <strong className="text-primary">not</strong> use analytics, advertising, or third-party tracking cookies.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               Because we only use essential cookies, we do not display a cookie consent banner. By using SmartPYQ, you consent to the use of essential cookies described in this policy.
             </p>
           </motion.div>
@@ -154,10 +154,10 @@ const CookiePolicyPage = () => {
                   className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8"
                 >
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center">
-                      <IconComponent className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-brand-500 rounded-lg flex items-center justify-center">
+                      <IconComponent className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">{section.title}</h2>
+                    <h2 className="text-2xl font-bold text-primary">{section.title}</h2>
                   </div>
                   <div className="space-y-6">
                     {section.content.map((item, itemIndex) => (
@@ -167,7 +167,7 @@ const CookiePolicyPage = () => {
                             {item.subtitle}
                           </h3>
                         )}
-                        <p className="text-gray-300 leading-relaxed">
+                        <p className="text-secondary leading-relaxed">
                           {item.text}
                         </p>
                       </div>
@@ -185,8 +185,8 @@ const CookiePolicyPage = () => {
             transition={{ duration: 0.6, delay: 1.0 }}
             className="bg-linear-to-r from-brand-500/10 to-accent-500/10 border border-brand-500/20 rounded-2xl p-8 mt-8 text-center"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Questions About Cookies?</h2>
-            <p className="text-gray-300 leading-relaxed mb-6">
+            <h2 className="text-2xl font-bold text-primary mb-4">Questions About Cookies?</h2>
+            <p className="text-secondary leading-relaxed mb-6">
               If you have any questions about our use of cookies, please contact us.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

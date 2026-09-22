@@ -9,14 +9,14 @@ const errorConfig = {
     title: 'Access Denied',
     message: "You don't have permission to access this page. If you believe this is a mistake, please contact support.",
     gradient: 'from-yellow-400/20 to-orange-500/20',
-    iconColor: 'text-yellow-400',
+    iconColor: 'text-warning',
   },
   500: {
     icon: ServerIcon,
     title: 'Server Error',
     message: 'Something went wrong on our end. Please try again later or contact support if the problem persists.',
     gradient: 'from-red-400/20 to-pink-500/20',
-    iconColor: 'text-red-400',
+    iconColor: 'text-error',
   },
   default: {
     icon: ExclamationTriangleIcon,
@@ -35,12 +35,7 @@ const ErrorPage = () => {
   const IconComponent = config.icon;
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute inset-0">
-        <div className={`absolute top-20 left-20 w-64 h-64 bg-linear-to-r ${config.gradient} rounded-full filter blur-xl animate-pulse`} />
-        <div className={`absolute bottom-20 right-20 w-48 h-48 bg-linear-to-r ${config.gradient} rounded-full filter blur-xl animate-pulse`} style={{ animationDelay: '1s' }} />
-      </div>
+    <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
 
       <motion.div
         className="relative z-10 max-w-lg w-full text-center"
@@ -56,7 +51,7 @@ const ErrorPage = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           {errorCode ? (
-            <h1 className="text-[10rem] font-bold leading-none bg-linear-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent select-none">
+            <h1 className="text-[10rem] font-bold leading-none text-accent select-none">
               {errorCode}
             </h1>
           ) : (
@@ -68,8 +63,8 @@ const ErrorPage = () => {
 
         {/* Message */}
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }}>
-          <h2 className="text-2xl font-bold text-white mb-3">{config.title}</h2>
-          <p className="text-gray-300 mb-8 leading-relaxed">{config.message}</p>
+          <h2 className="text-2xl font-bold text-primary mb-3">{config.title}</h2>
+          <p className="text-secondary mb-8 leading-relaxed">{config.message}</p>
         </motion.div>
 
         {/* Actions */}

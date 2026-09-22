@@ -59,22 +59,22 @@ const AdminLoginPage = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md"
       >
-        <div className="rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden">
+        <div className="rounded-2xl border border-line bg-muted-50/70 backdrop-blur-xl shadow-2xl overflow-hidden">
           {/* Accent bar */}
-          <div className="h-1.5 bg-linear-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+          <div className="h-1.5 bg-brand-500" />
 
           <div className="p-8">
             <div className="flex items-center gap-3 mb-2">
-              <div className="w-11 h-11 rounded-xl bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center">
-                <ShieldCheckIcon className="h-6 w-6 text-emerald-400" />
+              <div className="w-11 h-11 rounded-xl bg-brand-50 border border-brand-200 flex items-center justify-center">
+                <ShieldCheckIcon className="h-6 w-6 text-success" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-white leading-tight">Admin Access</h1>
-                <p className="text-sm text-gray-400">SmartPYQ content management</p>
+                <h1 className="text-2xl font-bold text-primary leading-tight">Admin Access</h1>
+                <p className="text-sm text-muted">SmartPYQ content management</p>
               </div>
             </div>
 
-            <p className="text-sm text-gray-400 mb-6">
+            <p className="text-sm text-muted mb-6">
               Restricted area. Only accounts with an administrator role can sign in here.
             </p>
 
@@ -82,7 +82,7 @@ const AdminLoginPage = () => {
               <motion.div
                 initial={{ opacity: 0, y: -6 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="mb-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
+                className="mb-4 flex items-start gap-2 rounded-lg border border-error-500/30 bg-red-500/10 px-4 py-3 text-sm text-error"
                 role="alert"
               >
                 <ExclamationCircleIcon className="h-5 w-5 shrink-0" />
@@ -92,7 +92,7 @@ const AdminLoginPage = () => {
 
             <form onSubmit={handleSubmit} className="space-y-4" noValidate>
               <div>
-                <label htmlFor="admin-email" className="block text-sm font-medium text-gray-300 mb-1.5">
+                <label htmlFor="admin-email" className="block text-sm font-medium text-secondary mb-1.5">
                   Admin email
                 </label>
                 <input
@@ -101,14 +101,14 @@ const AdminLoginPage = () => {
                   autoComplete="username"
                   value={formData.email}
                   onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
-                  className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-gray-500 outline-hidden focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+                  className="w-full rounded-lg border border-line bg-white px-4 py-2.5 text-primary placeholder:text-faint outline-hidden focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                   placeholder="admin@smartpyq.com"
                   required
                 />
               </div>
 
               <div>
-                <label htmlFor="admin-password" className="block text-sm font-medium text-gray-300 mb-1.5">
+                <label htmlFor="admin-password" className="block text-sm font-medium text-secondary mb-1.5">
                   Password
                 </label>
                 <div className="relative">
@@ -118,14 +118,14 @@ const AdminLoginPage = () => {
                     autoComplete="current-password"
                     value={formData.password}
                     onChange={(e) => setFormData((f) => ({ ...f, password: e.target.value }))}
-                    className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-11 text-white placeholder-gray-500 outline-hidden focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
+                    className="w-full rounded-lg border border-line bg-white px-4 py-2.5 pr-11 text-primary placeholder:text-faint outline-hidden focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20"
                     placeholder="••••••••"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-0 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-200 p-3"
+                    className="absolute right-0 top-1/2 -translate-y-1/2 text-muted hover:text-secondary p-3"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeSlashIcon className="h-5 w-5" /> : <EyeIcon className="h-5 w-5" />}
@@ -136,7 +136,7 @@ const AdminLoginPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-lg bg-linear-to-r from-emerald-500 to-teal-600 px-4 py-2.5 font-semibold text-white shadow-lg transition hover:from-emerald-400 hover:to-teal-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-lg bg-brand-500 px-4 py-2.5 font-semibold text-white transition hover:bg-brand-600 disabled:opacity-60 disabled:cursor-not-allowed disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Verifying…' : 'Sign in to Admin'}
               </button>
@@ -149,24 +149,24 @@ const AdminLoginPage = () => {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ delay: 0.2 }}
-                className="mt-6 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-3"
+                className="mt-6 rounded-lg border border-line bg-muted-50 px-4 py-3"
               >
-                <p className="text-xs font-semibold text-emerald-300 mb-1.5 tracking-wide">DEMO ADMIN LOGIN</p>
-                <div className="text-xs text-gray-300 space-y-0.5 font-mono">
-                  <p>Admin ID: <span className="text-emerald-300">{DEMO_ADMIN_ID}</span></p>
-                  <p>Password: <span className="text-emerald-300">{DEMO_ADMIN_PASSWORD}</span></p>
+                <p className="text-xs font-semibold text-success mb-1.5 tracking-wide">DEMO ADMIN LOGIN</p>
+                <div className="text-xs text-secondary space-y-0.5 font-mono">
+                  <p>Admin ID: <span className="text-success">{DEMO_ADMIN_ID}</span></p>
+                  <p>Password: <span className="text-success">{DEMO_ADMIN_PASSWORD}</span></p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setFormData({ email: DEMO_ADMIN_ID, password: DEMO_ADMIN_PASSWORD })}
-                  className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 underline"
+                  className="mt-2 text-xs text-success hover:text-success underline"
                 >
                   Fill demo credentials
                 </button>
               </motion.div>
 
             <div className="mt-6 text-center">
-              <Link to="/" className="text-sm text-gray-400 hover:text-gray-200">
+              <Link to="/" className="text-sm text-muted hover:text-secondary">
                 ← Back to SmartPYQ
               </Link>
             </div>

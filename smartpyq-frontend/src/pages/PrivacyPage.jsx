@@ -127,7 +127,7 @@ const PrivacyPage = () => {
   ];
   const lastUpdated = 'January 15, 2024';
   return (
-    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
+    <div className="min-h-screen bg-muted-50">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
@@ -137,16 +137,16 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center mx-auto mb-6">
-              <ShieldCheckIcon className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 bg-brand-500 rounded-full flex items-center justify-center mx-auto mb-6">
+              <ShieldCheckIcon className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Privacy <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Policy</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
+              Privacy <span className="text-accent">Policy</span>
             </h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
+            <p className="text-xl text-secondary max-w-3xl mx-auto mb-4">
               Your privacy is important to us. This policy explains how we collect, use, and protect your information when you use SmartPYQ.
             </p>
-            <p className="text-sm text-gray-400">
+            <p className="text-sm text-muted">
               Last updated: {lastUpdated}
             </p>
           </motion.div>
@@ -157,11 +157,11 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mb-12"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Introduction</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Introduction</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               SmartPYQ ("we," "our," or "us") is committed to protecting your privacy and ensuring the security of your personal information. This Privacy Policy describes how we collect, use, disclose, and safeguard your information when you use our platform.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               By using SmartPYQ, you agree to the collection and use of information in accordance with this policy. If you do not agree with our policies and practices, please do not use our service.
             </p>
           </motion.div>
@@ -178,10 +178,10 @@ const PrivacyPage = () => {
                   className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8"
                 >
                   <div className="flex items-center space-x-4 mb-6">
-                    <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center">
-                      <IconComponent className="w-6 h-6 text-white" />
+                    <div className="w-12 h-12 bg-brand-500 rounded-lg flex items-center justify-center">
+                      <IconComponent className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold text-white">{section.title}</h2>
+                    <h2 className="text-2xl font-bold text-primary">{section.title}</h2>
                   </div>
                   <div className="space-y-6">
                     {section.content.map((item, itemIndex) => (
@@ -189,7 +189,7 @@ const PrivacyPage = () => {
                         <h3 className="text-lg font-semibold text-brand-400 mb-2">
                           {item.subtitle}
                         </h3>
-                        <p className="text-gray-300 leading-relaxed">
+                        <p className="text-secondary leading-relaxed">
                           {item.text}
                         </p>
                       </div>
@@ -206,11 +206,11 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6, delay: 0.8 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Data Retention</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Data Retention</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               We retain your personal information only for as long as necessary to provide our services and fulfill the purposes outlined in this privacy policy. When you delete your account, we will delete or anonymize your personal information within 30 days, except where we are required to retain certain information for legal or regulatory purposes.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               Uploaded papers and associated metadata may be retained longer to maintain the integrity of our database and provide continued service to other users, but will be disassociated from your personal information.
             </p>
           </motion.div>
@@ -221,8 +221,8 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6, delay: 0.9 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">International Data Transfers</h2>
-            <p className="text-gray-300 leading-relaxed">
+            <h2 className="text-2xl font-bold text-primary mb-4">International Data Transfers</h2>
+            <p className="text-secondary leading-relaxed">
               Your information may be transferred to and processed in countries other than your own. We ensure that such transfers comply with applicable data protection laws and that appropriate safeguards are in place to protect your information.
             </p>
           </motion.div>
@@ -233,8 +233,8 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6, delay: 1.0 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Children's Privacy</h2>
-            <p className="text-gray-300 leading-relaxed">
+            <h2 className="text-2xl font-bold text-primary mb-4">Children's Privacy</h2>
+            <p className="text-secondary leading-relaxed">
               SmartPYQ is not intended for children under 13 years of age. We do not knowingly collect personal information from children under 13. If you are a parent or guardian and believe your child has provided us with personal information, please contact us so we can delete such information.
             </p>
           </motion.div>
@@ -245,11 +245,11 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6, delay: 1.1 }}
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Changes to This Privacy Policy</h2>
-            <p className="text-gray-300 leading-relaxed mb-4">
+            <h2 className="text-2xl font-bold text-primary mb-4">Changes to This Privacy Policy</h2>
+            <p className="text-secondary leading-relaxed mb-4">
               We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last updated" date.
             </p>
-            <p className="text-gray-300 leading-relaxed">
+            <p className="text-secondary leading-relaxed">
               We encourage you to review this Privacy Policy periodically to stay informed about how we are protecting your information.
             </p>
           </motion.div>
@@ -260,8 +260,8 @@ const PrivacyPage = () => {
             transition={{ duration: 0.6, delay: 1.2 }}
             className="bg-linear-to-r from-brand-500/10 to-accent-500/10 border border-brand-500/20 rounded-2xl p-8 mt-8 text-center"
           >
-            <h2 className="text-2xl font-bold text-white mb-4">Questions About This Policy?</h2>
-            <p className="text-gray-300 leading-relaxed mb-6">
+            <h2 className="text-2xl font-bold text-primary mb-4">Questions About This Policy?</h2>
+            <p className="text-secondary leading-relaxed mb-6">
               If you have any questions about this Privacy Policy or our data practices, please don't hesitate to contact us.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

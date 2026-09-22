@@ -5,8 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import { getStreams, getSpecializations, getSemesters, getSubjects, getPyqYears, getSemesterOptions } from '../data/pyqData';
 import { apiClient } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
-import SpotlightCard from './ui/SpotlightCard';
-import MagneticButton from './ui/MagneticButton';
 import { Skeleton, SkeletonCard } from './ui/Loaders';
 import { backdrop, modalPanel, sheetPanel } from '../lib/motion';
 import { BACKEND_URL } from '../lib/backendUrl';
@@ -173,18 +171,17 @@ const PYQNavigator = () => {
     const s = getStreams();
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" variants={container} initial="hidden" animate="visible" exit="exit">
       {Object.entries(s).map(([k, v]) => { const unlocked = isUnlocked(k); return (<motion.div key={k} variants={card} className={"card-nav p-8 cursor-pointer text-center " + (!unlocked ? "opacity-40" : "")} onClick={() => unlocked && handleStreamSelect(k, v)}>
-        <div className="text-5xl mb-4">{v.icon}</div>
-        <h3 className="text-2xl font-bold text-white mb-2">{v.displayName}</h3>
-        <p className="text-gray-400 text-sm">{Object.keys(v.specializations).length} specialization{Object.keys(v.specializations).length > 1 ? 's' : ''}</p></motion.div>);})}
+        <h3 className="text-2xl font-bold text-primary mb-2">{v.displayName}</h3>
+        <p className="text-muted text-sm">{Object.keys(v.specializations).length} specialization{Object.keys(v.specializations).length > 1 ? 's' : ''}</p></motion.div>);})}
     </motion.div>);
   };
   const renderSpecializations = () => {
     const specs = getSpecializations(selectedStream.key);
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" variants={container} initial="hidden" animate="visible" exit="exit">
       {Object.entries(specs).map(([k, v]) => (<motion.div key={k} variants={card} className="card-nav p-8 cursor-pointer text-center" onClick={() => handleSpecSelect(k, v)}>
-        <div className="w-16 h-16 bg-linear-to-r from-indigo-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><GraduationCap className="w-8 h-8 text-white" /></div>
-        <h3 className="text-xl font-bold text-white mb-2">{v.displayName}</h3>
-        <p className="text-gray-400 text-sm">{v.name}</p>
+        <div className="w-16 h-16 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4"><GraduationCap className="w-8 h-8 text-accent" /></div>
+        <h3 className="text-xl font-bold text-primary mb-2">{v.displayName}</h3>
+        <p className="text-muted text-sm">{v.name}</p>
       </motion.div>))}
     </motion.div>);
   };
@@ -194,9 +191,9 @@ const PYQNavigator = () => {
     return (<motion.div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" variants={container} initial="hidden" animate="visible" exit="exit">
       {opts.map((s) => { const has = sems[s.id] && sems[s.id].length > 0; return (
         <motion.div key={s.id} variants={card} className={`card-nav p-6 cursor-pointer text-center ${!has ? 'opacity-40' : ''}`} onClick={() => has && handleSemSelect(s)}>
-          <div className="w-14 h-14 bg-linear-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-3"><BookOpen className="w-7 h-7 text-white" /></div>
-          <h3 className="text-xl font-bold text-white mb-1">{s.displayName}</h3>
-          <p className="text-gray-400 text-xs">{has ? sems[s.id].length + ' subjects' : 'No subjects'}</p>
+          <div className="w-14 h-14 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-3"><BookOpen className="w-7 h-7 text-accent" /></div>
+          <h3 className="text-xl font-bold text-primary mb-1">{s.displayName}</h3>
+          <p className="text-muted text-xs">{has ? sems[s.id].length + ' subjects' : 'No subjects'}</p>
         </motion.div>); })}
     </motion.div>);
   };
@@ -205,10 +202,10 @@ const PYQNavigator = () => {
     const filtered = subs.filter(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={container} initial="hidden" animate="visible" exit="exit">
       {filtered.map((s) => (<motion.div key={s} variants={card} className="card-nav p-6 cursor-pointer flex items-center gap-4" onClick={() => handleSubjectSelect(s)}>
-        <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center shrink-0"><FileText className="w-6 h-6 text-white" /></div>
-        <div><h3 className="text-lg font-bold text-white">{s}</h3><p className="text-gray-400 text-sm">View PYQ papers</p></div>
+        <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center shrink-0"><FileText className="w-6 h-6 text-accent" /></div>
+        <div><h3 className="text-lg font-bold text-primary">{s}</h3><p className="text-muted text-sm">View PYQ papers</p></div>
       </motion.div>))}
-      {filtered.length === 0 && <p className="text-gray-400 text-center col-span-full py-8">No subjects match your search.</p>}
+      {filtered.length === 0 && <p className="text-muted text-center col-span-full py-8">No subjects match your search.</p>}
     </motion.div>);
   };
   const renderPyqYears = () => {
@@ -227,15 +224,15 @@ const PYQNavigator = () => {
               if (e.target.closest('[data-year-checkbox]')) return;
               handleYearSelect(y);
             }}>
-            <label data-year-checkbox className="absolute top-0 right-0 z-10 cursor-pointer rounded-bl-lg bg-black/40 p-2 hover:bg-black/60 transition-colors">
+            <label data-year-checkbox className="absolute top-0 right-0 z-10 cursor-pointer rounded-bl-lg bg-muted-100 p-2 hover:bg-muted-200 transition-colors">
               <input type="checkbox" className="sr-only" checked={isSelected} onChange={() => toggleYearSelect(y)} aria-label={`Select ${y} for analysis`} />
-              <span className={`inline-flex items-center justify-center w-7 h-7 rounded-md border-2 transition-colors ${isSelected ? 'bg-brand-500 border-brand-400 text-white' : 'border-white/40 bg-white/10 text-transparent hover:border-brand-300'}`}>
+              <span className={`inline-flex items-center justify-center w-7 h-7 rounded-md border-2 transition-colors ${isSelected ? 'bg-brand-500 border-brand-500 text-white' : 'border-muted-300 bg-white text-transparent hover:border-brand-300'}`}>
                 <CheckSquare className="w-5 h-5" strokeWidth={3} />
               </span>
             </label>
-            <div className="w-12 h-12 bg-linear-to-r from-orange-500 to-red-600 rounded-full flex items-center justify-center mx-auto mb-2"><Calendar className="w-6 h-6 text-white" /></div>
-            <h3 className="text-lg font-bold text-white">{y}</h3>
-            <p className="text-gray-400 text-xs mt-1">
+            <div className="w-12 h-12 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-2"><Calendar className="w-6 h-6 text-accent" /></div>
+            <h3 className="text-lg font-bold text-primary">{y}</h3>
+            <p className="text-muted text-xs mt-1">
               {count == null ? 'View papers' : count === 0 ? 'No papers' : `${count} paper${count > 1 ? 's' : ''}`}
             </p>
           </motion.div>);
@@ -243,20 +240,20 @@ const PYQNavigator = () => {
       </motion.div>
       {/* Selection + analyze bar (spec sections 2-3) */}
       <div className="mt-6 sticky bottom-4 z-20">
-        <div className="bg-gray-900/95 border border-white/15 rounded-2xl shadow-xl p-4 flex flex-col sm:flex-row items-center gap-3 backdrop-blur">
-          <div className="text-white font-semibold whitespace-nowrap">
+        <div className="bg-muted-50/95 border border-line rounded-2xl shadow-xl p-4 flex flex-col sm:flex-row items-center gap-3 backdrop-blur">
+          <div className="text-primary font-semibold whitespace-nowrap">
             {selectedYears.length > 0
               ? `${selectedYears.length} Paper${selectedYears.length > 1 ? 's' : ''} Selected`
               : 'Select years to analyze'}
           </div>
-          <div className="flex-1 text-xs text-gray-400 hidden sm:block">{selectedYears.length ? `Selected: ${selectedYears.join(', ')}` : 'Tick the checkbox on a year card, or tap a card to browse its papers.'}</div>
+          <div className="flex-1 text-xs text-muted hidden sm:block">{selectedYears.length ? `Selected: ${selectedYears.join(', ')}` : 'Tick the checkbox on a year card, or tap a card to browse its papers.'}</div>
           <button onClick={handleAnalyzeSelected} disabled={selectedYears.length === 0 || analyzeBusy}
             className="btn btn-primary flex items-center gap-2 whitespace-nowrap disabled:opacity-40">
             {analyzeBusy ? <Loader2 className="w-4 h-4 animate-spin" /> : <Flame className="w-4 h-4" />}
             {analyzeBusy ? 'Collecting papers...' : 'Analyze Selected Papers'}
           </button>
         </div>
-        {analyzeError && <div className="mt-2 bg-red-500/10 border border-red-400/30 text-red-300 rounded-xl p-3 text-sm">{analyzeError}</div>}
+        {analyzeError && <div className="mt-2 bg-error-50 border border-error-500/30 text-error rounded-xl p-3 text-sm">{analyzeError}</div>}
       </div>
     </>);
   };
@@ -265,28 +262,28 @@ const PYQNavigator = () => {
     if (isLoadingPapers) return (<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" aria-busy="true" aria-label="Loading papers">{[1,2,3,4,5,6].map((i) => <SkeletonCard key={i} lines={3} />)}</div>);
     return (
       <motion.div className="space-y-6" variants={container} initial="hidden" animate="visible" exit="exit">
-        <motion.div variants={card} className="bg-linear-to-r from-indigo-500 to-blue-600 rounded-2xl p-6 text-white">
+        <motion.div variants={card} className="bg-white border border-line rounded-2xl p-6 text-primary">
           <div className="flex items-center justify-between">
-            <div><h3 className="text-2xl font-bold">{selectedSubject}</h3><p className="text-indigo-100">{selectedStream?.displayName} / {selectedSpec?.displayName} / {selectedSem?.displayName} / {selectedPyqYear}</p></div>
-            <div className="text-right"><div className="text-2xl font-bold">{papers.length}</div><div className="text-indigo-100 text-sm">Papers</div></div>
+            <div><h3 className="text-2xl font-bold">{selectedSubject}</h3><p className="text-secondary">{selectedStream?.displayName} / {selectedSpec?.displayName} / {selectedSem?.displayName} / {selectedPyqYear}</p></div>
+            <div className="text-right"><div className="text-2xl font-bold">{papers.length}</div><div className="text-secondary text-sm">Papers</div></div>
           </div>
         </motion.div>
-        {paperError && <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4"><p className="text-yellow-400">{paperError}</p></div>}
+        {paperError && <div className="bg-yellow-500/10 border border-warning-500/30 rounded-xl p-4"><p className="text-warning">{paperError}</p></div>}
         {papers.length === 0 && !paperError ? (
-          <div className="text-center py-12 bg-white/5 rounded-xl"><FileText className="h-16 w-16 text-gray-500 mx-auto mb-4" /><h3 className="text-xl font-semibold text-white mb-2">No Papers Yet</h3><p className="text-gray-400">No question papers available for this selection. Be the first to upload!</p></div>
+          <div className="text-center py-12 bg-white rounded-xl"><FileText className="h-16 w-16 text-muted mx-auto mb-4" /><h3 className="text-xl font-semibold text-primary mb-2">No Papers Yet</h3><p className="text-muted">No question papers available for this selection. Be the first to upload!</p></div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {papers.map((p) => (
-              <SpotlightCard key={p.id} className="group bg-white/5 border border-white/10 rounded-xl p-4" spotlightColor="rgba(99,102,241,0.1)">
+              <div key={p.id} className="group bg-white border border-line rounded-xl p-4">
                 <motion.div variants={card}>
-                  <h4 className="font-semibold text-white mb-2 group-hover:text-indigo-300 transition-colors line-clamp-2">{p.title}</h4>
-                  <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
-                    <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{p.exam_type || 'Exam'}</span>
+                  <h4 className="font-semibold text-primary mb-2 group-hover:text-accent transition-colors line-clamp-2">{p.title}</h4>
+                  <div className="flex items-center gap-3 text-xs text-muted mb-3">
+                    <span className="bg-blue-500/20 text-accent px-2 py-1 rounded">{p.exam_type || 'Exam'}</span>
                     <span>{p.year}</span>
                     {p.file_size && <span>{formatFileSize(p.file_size)}</span>}
                   </div>
                   <div className="flex gap-2">
-                    <MagneticButton className="btn btn-sm btn-primary flex-1 justify-center" onClick={(e) => { e.stopPropagation(); handleDownload(p); }}><Download className="h-4 w-4" /> <span>Download</span></MagneticButton>
+                    <button className="btn btn-sm btn-primary flex-1 justify-center" onClick={(e) => { e.stopPropagation(); handleDownload(p); }}><Download className="h-4 w-4" /> <span>Download</span></button>
                     <button className="btn btn-sm btn-secondary flex-1 justify-center" onClick={(e) => {
                       e.stopPropagation();
                       navigate('/analyze?papers=' + p.id, { state: { context: { stream: selectedStream?.displayName, spec: selectedSpec?.displayName, semester: selectedSem?.displayName, subject: selectedSubject, years: [p.year] } } });
@@ -294,7 +291,7 @@ const PYQNavigator = () => {
                     <button className="btn btn-icon btn-sm btn-secondary" onClick={(e) => { e.stopPropagation(); setPreviewPaper(p); }}><Eye className="h-4 w-4" /></button>
                   </div>
                 </motion.div>
-              </SpotlightCard>
+              </div>
             ))}
           </div>
         )}
@@ -306,20 +303,20 @@ const PYQNavigator = () => {
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <motion.h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>PYQ Hub</motion.h1>
-          <motion.p className="text-xl text-gray-400 max-w-3xl mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>Browse Osmania University previous year question papers by stream, subject, and year</motion.p>
+          <motion.h1 className="text-4xl md:text-5xl font-semibold text-primary tracking-[-0.02em] mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>PYQ Hub</motion.h1>
+          <motion.p className="text-xl text-muted max-w-3xl mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>Browse Osmania University previous year question papers by stream, subject, and year</motion.p>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
           <div className="flex items-center gap-3">
             {currentLevel !== 'streams' && <button onClick={handleBack} className="btn btn-sm btn-secondary flex items-center gap-2"><ChevronLeft className="w-4 h-4" /> Back</button>}
-            <button onClick={handleReset} className="btn btn-sm btn-danger">Reset</button>
+            {currentLevel !== 'streams' && <button onClick={handleReset} className="btn btn-sm btn-ghost">Reset</button>}
           </div>
-          {currentLevel === 'subjects' && <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" /><input type="text" placeholder="Search subjects..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-white/15 rounded-lg bg-white/5 text-white placeholder-gray-500 focus:ring-2 focus:ring-brand-500" /></div>}
+          {currentLevel === 'subjects' && <div className="relative"><Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted w-4 h-4" /><input type="text" placeholder="Search subjects..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-line rounded-lg bg-white text-primary placeholder:text-faint focus:ring-2 focus:ring-brand-500" /></div>}
         </div>
-        <div className="flex items-center gap-2 mb-6 text-sm text-gray-400 flex-wrap">
-          {getBreadcrumb().map((item, i) => (<React.Fragment key={i}>{i > 0 && <ChevronRight className="w-3 h-3" />}<span className={i === getBreadcrumb().length - 1 ? 'font-medium text-white' : ''}>{item}</span></React.Fragment>))}
+        <div className="flex items-center gap-2 mb-6 text-sm text-muted flex-wrap">
+          {getBreadcrumb().map((item, i) => (<React.Fragment key={i}>{i > 0 && <ChevronRight className="w-3 h-3" />}<span className={i === getBreadcrumb().length - 1 ? 'font-medium text-primary' : ''}>{item}</span></React.Fragment>))}
         </div>
-        <motion.h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-8" key={currentLevel} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>{getTitle()}</motion.h2>
+        <motion.h2 className="text-2xl md:text-3xl font-bold text-primary text-center mb-8" key={currentLevel} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>{getTitle()}</motion.h2>
         <AnimatePresence mode="wait">
           {currentLevel === 'streams' && renderStreams()}
           {currentLevel === 'specializations' && renderSpecializations()}
@@ -337,11 +334,11 @@ const PYQNavigator = () => {
             {...backdrop}
           >
             <motion.div
-              className="relative bg-gray-900 rounded-t-2xl sm:rounded-2xl border border-white/20 shadow-2xl w-full max-w-4xl h-[85vh] mx-0 sm:mx-4 flex flex-col"
+              className="relative bg-muted-50 rounded-t-2xl sm:rounded-2xl border border-muted-300 shadow-2xl w-full max-w-4xl h-[85vh] mx-0 sm:mx-4 flex flex-col"
               onClick={(e) => e.stopPropagation()}
               {...(typeof window !== 'undefined' && window.innerWidth < 640 ? sheetPanel : modalPanel)}
             >
-              <div className="flex items-center justify-between px-6 py-4 border-b border-white/10"><h3 className="text-white font-semibold text-lg truncate">{previewPaper.title}</h3><button onClick={() => setPreviewPaper(null)} className="text-gray-400 hover:text-white text-2xl leading-none px-2" aria-label="Close preview">&times;</button></div>
+              <div className="flex items-center justify-between px-6 py-4 border-b border-line"><h3 className="text-primary font-semibold text-lg truncate">{previewPaper.title}</h3><button onClick={() => setPreviewPaper(null)} className="text-muted hover:text-primary text-2xl leading-none px-2" aria-label="Close preview">&times;</button></div>
               <div className="flex-1 overflow-hidden rounded-b-2xl">
                 {previewUrl ? <iframe src={previewUrl} className="w-full h-full border-0" title={previewPaper.title} /> : (
                   <div className="p-6 space-y-4" aria-busy="true">
