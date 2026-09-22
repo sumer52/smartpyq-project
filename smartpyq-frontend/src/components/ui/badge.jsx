@@ -21,13 +21,13 @@ const badgeVariants = cva(
         default:
           "border-brand-500/30 bg-brand-500/15 text-brand-200",
         success:
-          "border-success-500/30 bg-success-50 text-success",
+          "border-green-500/30 bg-green-500/15 text-green-300",
         warning:
-          "border-warning-500/30 bg-warning-50 text-warning",
+          "border-amber-500/30 bg-amber-500/15 text-amber-300",
         destructive:
-          "border-error-500/30 bg-error-50 text-error",
+          "border-red-500/30 bg-red-500/15 text-red-300",
         outline:
-          "border-line bg-white text-secondary",
+          "border-white/15 bg-white/5 text-gray-300",
       },
     },
     defaultVariants: {

@@ -8,6 +8,8 @@ const NotFoundPage = () => {
     <div className="min-h-screen flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 relative overflow-hidden">
       {/* Background decorations */}
       <div className="absolute inset-0">
+        <div className="absolute top-20 left-20 w-64 h-64 bg-linear-to-r from-brand-400/40 to-accent-500/40 rounded-full filter blur-xl animate-pulse" />
+        <div className="absolute bottom-20 right-20 w-48 h-48 bg-linear-to-r from-accent-400/40 to-brand-500/40 rounded-full filter blur-xl animate-pulse" style={{ animationDelay: '1s' }} />
       </div>
 
       <motion.div
@@ -23,7 +25,7 @@ const NotFoundPage = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h1 className="text-[10rem] font-bold leading-none text-accent select-none">
+          <h1 className="text-[10rem] font-bold leading-none bg-linear-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent select-none">
             404
           </h1>
         </motion.div>
@@ -34,8 +36,8 @@ const NotFoundPage = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
         >
-          <h2 className="text-2xl font-bold text-primary mb-3">Page Not Found</h2>
-          <p className="text-secondary mb-8 leading-relaxed">
+          <h2 className="text-2xl font-bold text-white mb-3">Page Not Found</h2>
+          <p className="text-gray-300 mb-8 leading-relaxed">
             The page you're looking for doesn't exist, has been moved, or is temporarily unavailable. 
             Let's get you back on track.
           </p>
@@ -67,12 +69,12 @@ const NotFoundPage = () => {
 
         {/* Helpful links */}
         <motion.div
-          className="mt-12 bg-white backdrop-blur-sm border border-line rounded-2xl p-6"
+          className="mt-12 bg-white/5 backdrop-blur-sm border border-white/10 rounded-2xl p-6"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.6 }}
         >
-          <h3 className="text-sm font-semibold text-muted uppercase tracking-wider mb-4">Quick Links</h3>
+          <h3 className="text-sm font-semibold text-gray-400 uppercase tracking-wider mb-4">Quick Links</h3>
           <div className="grid grid-cols-2 gap-3">
             {[
               { to: '/dashboard', label: 'Dashboard' },
@@ -85,7 +87,7 @@ const NotFoundPage = () => {
               <Link
                 key={link.to}
                 to={link.to}
-                className="text-sm text-muted hover:text-primary transition-colors py-2 px-3 rounded-lg hover:bg-white"
+                className="text-sm text-gray-400 hover:text-white transition-colors py-2 px-3 rounded-lg hover:bg-white/5"
               >
                 {link.label}
               </Link>

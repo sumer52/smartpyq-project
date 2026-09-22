@@ -181,7 +181,7 @@ const PracticePage = () => {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading questions">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
     </div>
   );
 
@@ -189,33 +189,33 @@ const PracticePage = () => {
     <div className="min-h-screen">
       <main className="max-w-4xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Exam Practice Mode</h1>
-          <p className="text-muted">Sharpen your preparation by practicing with real questions extracted from previous year examinations.</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Exam Practice Mode</h1>
+          <p className="text-gray-400">Sharpen your preparation by practicing with real questions extracted from previous year examinations.</p>
         </motion.div>
 
         {papersParam && (
           <div className="bg-brand-500/10 border border-brand-500/30 text-brand-200 rounded-xl p-4 text-sm mb-6">
-            Practicing questions from your {papersParam.split(',').length} analyzed paper{papersParam.split(',').length > 1 ? 's' : ''}, most repeated questions first.
+            Practicing questions from your {papersParam.split(',').length} analyzed paper{papersParam.split(',').length > 1 ? 's' : ''} — most repeated questions first.
           </div>
         )}
 
         {allQuestions.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-2xl border border-line">
-            <p className="text-muted text-lg">No questions available for practice yet</p>
-            <p className="text-muted text-sm mt-2">Run a paper analysis first to extract questions that you can practice with here.</p>
+          <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
+            <p className="text-gray-400 text-lg">No questions available for practice yet</p>
+            <p className="text-gray-500 text-sm mt-2">Run a paper analysis first to extract questions that you can practice with here.</p>
           </div>
         ) : (
           <>
             {/* Stats Bar */}
             <motion.div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4 mb-6" variants={stagger(0.06)} initial="hidden" animate="visible">
               {[ 
-                { val: stats.total, label: 'Total Questions', color: 'text-primary' },
-                { val: stats.reviewed, label: 'Reviewed', color: 'text-success' },
-                { val: stats.needsPractice, label: 'Needs Practice', color: 'text-warning' },
+                { val: stats.total, label: 'Total Questions', color: 'text-white' },
+                { val: stats.reviewed, label: 'Reviewed', color: 'text-green-400' },
+                { val: stats.needsPractice, label: 'Needs Practice', color: 'text-orange-400' },
               ].map((s, i) => (
-                <motion.div key={i} variants={cardUp} className="bg-white rounded-xl border border-line p-4 text-center">
-                  <p className={`text-2xl font-bold ${s.color}`}>{s.val}</p>
-                  <p className="text-xs text-muted mt-1">{s.label}</p>
+                <motion.div key={i} variants={cardUp} className="bg-white/5 rounded-xl border border-white/10 p-4 text-center">
+                  <p className={`text-2xl font-bold ${s.color}`}><Counter value={s.val} /></p>
+                  <p className="text-xs text-gray-400 mt-1">{s.label}</p>
                 </motion.div>
               ))}
             </motion.div>
@@ -223,14 +223,14 @@ const PracticePage = () => {
             {/* Subject Filter */}
             <div className="flex flex-wrap gap-2 mb-6">
               <button onClick={() => handleFilter('')}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!subjectFilter ? 'bg-brand-500 text-primary border-brand-500' : 'bg-white text-muted border-line hover:bg-muted-100'}`}>
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!subjectFilter ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                 All ({allQuestions.length})
               </button>
               {subjects.map(s => {
                 const count = allQuestions.filter(q => q.subject === s).length;
                 return (
                   <button key={s} onClick={() => handleFilter(s)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${subjectFilter === s ? 'bg-brand-500 text-primary border-brand-500' : 'bg-white text-muted border-line hover:bg-muted-100'}`}>
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${subjectFilter === s ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                     {s} ({count})
                   </button>
                 );
@@ -238,43 +238,43 @@ const PracticePage = () => {
             </div>
 
             {questions.length === 0 ? (
-              <div className="text-center py-12 bg-white rounded-2xl border border-line">
-                <p className="text-muted">No questions found for this subject.</p>
+              <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-gray-400">No questions found for this subject.</p>
               </div>
             ) : (
               <>
                 <div className="text-center mb-6">
-                  <span className="text-muted text-sm">Question {currentIdx + 1} of {questions.length}</span>
-                  <div className="w-full bg-muted-100 rounded-full h-2 mt-2">
-                    <div className="bg-brand-500 h-2 rounded-full transition-all" style={{width: ((currentIdx + 1) / questions.length * 100) + '%'}}></div>
+                  <span className="text-gray-400 text-sm">Question {currentIdx + 1} of {questions.length}</span>
+                  <div className="w-full bg-white/10 rounded-full h-2 mt-2">
+                    <div className="bg-indigo-500 h-2 rounded-full transition-all" style={{width: ((currentIdx + 1) / questions.length * 100) + '%'}}></div>
                   </div>
                 </div>
 
                 {current && (
                   <AnimatePresence mode="popLayout">
                   <motion.div key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25, ease: EASE }}
-                    className="bg-white backdrop-blur-xl rounded-2xl border border-line p-8 mb-6">
+                    className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 mb-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="bg-brand-500/20 text-accent text-xs px-2 py-1 rounded">Q{current.question_number || currentIdx + 1}</span>
-                      <span className="bg-muted-100 text-muted text-xs px-2 py-1 rounded">{current.subject}</span>
-                      {current.marks && <span className="bg-muted-100 text-muted text-xs px-2 py-1 rounded">{current.marks} marks</span>}
-                      {current.question_type && <span className="bg-muted-100 text-muted text-xs px-2 py-1 rounded">{current.question_type}</span>}
-                      {current.frequency > 1 && <span className="bg-orange-500/20 text-warning text-xs px-2 py-1 rounded">repeated {current.frequency}×</span>}
+                      <span className="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-1 rounded">Q{current.question_number || currentIdx + 1}</span>
+                      <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.subject}</span>
+                      {current.marks && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.marks} marks</span>}
+                      {current.question_type && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.question_type}</span>}
+                      {current.frequency > 1 && <span className="bg-orange-500/20 text-orange-300 text-xs px-2 py-1 rounded">repeated {current.frequency}×</span>}
                     </div>
-                    <p className="text-primary text-lg font-medium mb-6">{current.question_text}</p>
+                    <p className="text-white text-lg font-medium mb-6">{current.question_text}</p>
 
                     {showAnswer ? (
                       <div className="space-y-4">
                         {current.answer ? (
                           <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4">
-                            <p className="text-success text-xs font-semibold mb-2">ANSWER</p>
-                            <p className="text-primary text-sm leading-relaxed">{current.answer}</p>
+                            <p className="text-green-400 text-xs font-semibold mb-2">ANSWER</p>
+                            <p className="text-white text-sm leading-relaxed">{current.answer}</p>
                           </div>
                         ) : typeof current.id === 'number' ? (
                           answerLoading ? (
                             <div className="bg-green-500/10 border border-green-500/20 rounded-xl p-4 flex items-center gap-3">
                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-green-400"></div>
-                              <p className="text-success text-sm">Loading answer…</p>
+                              <p className="text-green-300 text-sm">Loading answer…</p>
                             </div>
                           ) : (
                             <AnswerView answer={answerDetail} answerUrl={api.answerFileUrl(current.id)} />
@@ -282,7 +282,7 @@ const PracticePage = () => {
                         ) : null}
                         <textarea value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Write your own answer here to test your understanding..."
-                          className="w-full h-32 bg-white border border-line rounded-xl p-4 text-primary placeholder:text-faint focus:outline-hidden focus:border-brand-500 resize-none" />
+                          className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-none" />
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button onClick={() => handlePractice('reviewed')} size="sm"
                             className="flex-1">I Knew This</Button>
@@ -312,15 +312,15 @@ const PracticePage = () => {
 
             {history.length > 0 && (
               <div className="mt-12">
-                <h2 className="text-xl font-bold text-primary mb-4">Your Practice History</h2>
+                <h2 className="text-xl font-bold text-white mb-4">Your Practice History</h2>
                 <div className="space-y-2">
                   {history.slice(-10).reverse().map((h, i) => (
-                    <div key={i} className="bg-white rounded-xl p-3 border border-line flex items-center gap-3">
-                      <span className={"text-xs px-2 py-1 rounded " + (h.status === 'reviewed' ? 'bg-green-500/20 text-success' : 'bg-orange-500/20 text-warning')}>
+                    <div key={i} className="bg-white/5 rounded-xl p-3 border border-white/5 flex items-center gap-3">
+                      <span className={"text-xs px-2 py-1 rounded " + (h.status === 'reviewed' ? 'bg-green-500/20 text-green-400' : 'bg-orange-500/20 text-orange-400')}>
                         {h.status}
                       </span>
-                      <p className="text-primary text-sm flex-1 min-w-0 truncate">{h.question_text}</p>
-                      <span className="text-muted text-xs">{h.subject}</span>
+                      <p className="text-white text-sm flex-1 min-w-0 truncate">{h.question_text}</p>
+                      <span className="text-gray-500 text-xs">{h.subject}</span>
                     </div>
                   ))}
                 </div>

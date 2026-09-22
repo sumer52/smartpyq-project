@@ -19,14 +19,14 @@ const buttonVariants = cva(
     variants: {
       variant: {
         default:
-          "bg-linear-to-b from-brand-500 to-brand-600 text-primary shadow-[0_6px_30px_rgba(108,78,246,0.25)] hover:from-brand-400 hover:to-brand-500",
+          "bg-linear-to-b from-brand-500 to-brand-600 text-white shadow-[0_6px_30px_rgba(108,78,246,0.25)] hover:from-brand-400 hover:to-brand-500",
         secondary:
-          "bg-white border border-line text-primary hover:bg-muted-100 hover:border-muted-300",
-        ghost: "text-secondary hover:bg-white hover:text-primary",
+          "bg-white/5 border border-white/10 text-white hover:bg-white/10 hover:border-white/20",
+        ghost: "text-gray-300 hover:bg-white/5 hover:text-white",
         outline:
           "border border-brand-500/40 text-brand-300 hover:bg-brand-500/10 hover:text-brand-200",
         destructive:
-          "bg-red-500/90 text-primary hover:bg-red-500",
+          "bg-red-500/90 text-white hover:bg-red-500",
         link: "text-brand-300 underline-offset-4 hover:underline",
       },
       size: {

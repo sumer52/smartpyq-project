@@ -6,7 +6,7 @@ export const pyqYears = [2019, 2020, 2021, 2022, 2023, 2024, 2025, 2026, 2027];
 export const pyqData = {
   streams: {
     bsc: {
-      id: 'bsc', name: 'B.Sc', displayName: 'B.Sc', icon: '',
+      id: 'bsc', name: 'B.Sc', displayName: 'B.Sc', icon: '🎓',
       specializations: {
         mscs: {
           id: 'mscs', name: 'Mathematics, Statistics & Computer Science', displayName: 'MSCS',
@@ -55,7 +55,7 @@ export const pyqData = {
       }
     },
     bcom: {
-      id: 'bcom', name: 'B.Com', displayName: 'B.Com', icon: '',
+      id: 'bcom', name: 'B.Com', displayName: 'B.Com', icon: '💼',
       specializations: {
         general: {
           id: 'general', name: 'General', displayName: 'General',
@@ -104,7 +104,7 @@ export const pyqData = {
       }
     },
     bca: {
-      id: 'bca', name: 'BCA', displayName: 'BCA', icon: '',
+      id: 'bca', name: 'BCA', displayName: 'BCA', icon: '💻',
       specializations: {
         general: {
           id: 'general', name: 'General', displayName: 'General',
@@ -153,7 +153,7 @@ export const pyqData = {
       }
     },
     bba: {
-      id: 'bba', name: 'BBA', displayName: 'BBA', icon: '',
+      id: 'bba', name: 'BBA', displayName: 'BBA', icon: '📊',
       specializations: {
         general: {
           id: 'general', name: 'General', displayName: 'General',

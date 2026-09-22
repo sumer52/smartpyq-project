@@ -25,14 +25,14 @@ const MaintenanceBanner = () => {
   return (
     <AnimatePresence>
       {visible && (
-        <motion.div className="bg-warning-50 border-b border-warning-500/30 px-4 py-3 relative z-50"
+        <motion.div className="bg-amber-500/10 border-b border-amber-500/20 px-4 py-3 relative z-50"
           initial={{ height: 0, opacity: 0 }} animate={{ height: "auto", opacity: 1 }} exit={{ height: 0, opacity: 0 }} transition={{ duration: 0.3 }}>
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <WrenchIcon className="h-5 w-5 text-warning shrink-0" />
-              <p className="text-sm text-warning">{message}</p>
+              <WrenchIcon className="h-5 w-5 text-amber-400 shrink-0" />
+              <p className="text-sm text-amber-200">{message}</p>
             </div>
-            <button onClick={dismiss} className="text-warning hover:text-warning-600 p-2 rounded-lg hover:bg-white transition-colors" aria-label="Dismiss maintenance notice">
+            <button onClick={dismiss} className="text-amber-400 hover:text-amber-300 p-2 rounded-lg hover:bg-white/5 transition-colors" aria-label="Dismiss maintenance notice">
               <XMarkIcon className="h-5 w-5" />
             </button>
           </div>

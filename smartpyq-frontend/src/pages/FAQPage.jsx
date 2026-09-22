@@ -118,7 +118,7 @@ const FAQPage = () => {
     return matchesCategory && matchesSearch;
   });
   return (
-    <div className="min-h-screen bg-muted-50">
+    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -128,22 +128,22 @@ const FAQPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
-              Frequently Asked <span className="text-accent">Questions</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+              Frequently Asked <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Questions</span>
             </h1>
-            <p className="text-xl text-secondary max-w-3xl mx-auto mb-8">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
               Find answers to common questions about SmartPYQ. Can't find what you're looking for? Contact our support team.
             </p>
             {/* Search Bar */}
             <div className="max-w-2xl mx-auto relative">
               <div className="relative">
-                <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-muted" />
+                <MagnifyingGlassIcon className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="Search questions..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                  className="w-full pl-12 pr-4 py-4 bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-xl text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
             </div>
@@ -182,9 +182,9 @@ const FAQPage = () => {
           >
             {filteredFAQs.length === 0 ? (
               <div className="text-center py-12">
-                <QuestionMarkCircleIcon className="w-16 h-16 text-muted mx-auto mb-4" />
-                <h3 className="text-xl font-semibold text-muted mb-2">No matching questions found</h3>
-                <p className="text-muted">Try adjusting your search terms or browse a different category.</p>
+                <QuestionMarkCircleIcon className="w-16 h-16 text-gray-500 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-400 mb-2">No matching questions found</h3>
+                <p className="text-gray-500">Try adjusting your search terms or browse a different category.</p>
               </div>
             ) : (
               <div className="space-y-4">
@@ -200,14 +200,14 @@ const FAQPage = () => {
                       onClick={() => toggleItem(faq.id)}
                       className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-slate-700/30 transition-colors duration-200"
                     >
-                      <h3 className="text-lg font-semibold text-primary pr-4">
+                      <h3 className="text-lg font-semibold text-white pr-4">
                         {faq.question}
                       </h3>
                       <motion.div
                         animate={{ rotate: openItems.has(faq.id) ? 180 : 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <ChevronDownIcon className="w-5 h-5 text-muted shrink-0" />
+                        <ChevronDownIcon className="w-5 h-5 text-gray-400 shrink-0" />
                       </motion.div>
                     </button>
                     <AnimatePresence>
@@ -220,7 +220,7 @@ const FAQPage = () => {
                           className="overflow-hidden"
                         >
                           <div className="px-6 pb-4 border-t border-slate-700">
-                            <p className="text-secondary leading-relaxed pt-4">
+                            <p className="text-gray-300 leading-relaxed pt-4">
                               {faq.answer}
                             </p>
                           </div>
@@ -240,10 +240,10 @@ const FAQPage = () => {
             className="text-center mt-16"
           >
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 max-w-2xl mx-auto">
-              <h3 className="text-2xl font-bold text-primary mb-4">
+              <h3 className="text-2xl font-bold text-white mb-4">
                 Have another question?
               </h3>
-              <p className="text-secondary mb-6">
+              <p className="text-gray-300 mb-6">
                 Can't find the answer you're looking for? Our support team is here to help.
               </p>
               <motion.button

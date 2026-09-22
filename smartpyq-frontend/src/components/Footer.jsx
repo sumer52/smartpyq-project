@@ -1,11 +1,14 @@
-import React from 'react';
+import React, { memo } from 'react';
+import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
   EnvelopeIcon,
-  MapPinIcon
+  MapPinIcon,
+  CheckCircleIcon,
+  ArrowTopRightOnSquareIcon,
+  ChatBubbleLeftRightIcon
 } from '@heroicons/react/24/outline';
-
-// Social media icons - simple inline SVG (Heroicons has no branded icons)
+// Social media icons - using simple SVG since Heroicons doesn't have branded icons
 const LinkedInIcon = () => (
   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
     <path fillRule="evenodd" d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" clipRule="evenodd" />
@@ -16,19 +19,20 @@ const GitHubIcon = () => (
     <path fillRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clipRule="evenodd" />
   </svg>
 );
-
 const Footer = ({ className = "" }) => {
   const currentYear = new Date().getFullYear();
   const socialLinks = [
     {
       name: 'LinkedIn',
       icon: LinkedInIcon,
-      url: 'https://www.linkedin.com/in/sumer2201'
+      url: 'https://www.linkedin.com/in/sumer2201',
+      color: 'hover:text-blue-300'
     },
     {
       name: 'GitHub',
       icon: GitHubIcon,
-      url: 'https://github.com/sumer52/smartpyq-project'
+      url: 'https://github.com/sumer52/smartpyq-project',
+      color: 'hover:text-white'
     }
   ];
   const quickLinks = [
@@ -48,125 +52,199 @@ const Footer = ({ className = "" }) => {
     { name: 'Terms of Service', to: '/terms' },
     { name: 'Cookie Policy', to: '/cookies' }
   ];
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
   return (
-    <footer className={`bg-muted-50 border-t border-line text-primary ${className}`}>
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+    <footer className={`bg-black/30 backdrop-blur-xl border-t border-white/10 text-white ${className}`}>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Main footer content */}
-        <div className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {/* Brand column */}
-          <div className="lg:col-span-1">
-            <Link to="/" viewTransition className="site-header__wordmark mb-5" aria-label="SmartPYQ Home">
-              <span className="site-header__mark" aria-hidden="true">S</span>
-              <span>SmartPYQ</span>
-            </Link>
-            <p className="text-secondary mb-5 leading-relaxed text-sm">
-              Previous year question papers for Osmania University, with analysis that
-              shows repeated questions, exam patterns, and what to study first.
+        <motion.div
+          className="py-12 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8"
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={{ once: true, margin: "-100px" }}
+        >
+          {/* PYQ Portal - Brand Column */}
+          <motion.div variants={itemVariants} className="lg:col-span-1">
+            <div className="mb-6">
+              <Link to="/" viewTransition className="flex items-center group">
+                <img src="/logo.png" alt="SmartPYQ" className="h-12 sm:h-14 md:h-16 w-auto object-contain group-hover:scale-105 transition-transform"  />
+              </Link>
+            </div>
+            <p className="text-gray-300 mb-6 leading-relaxed">
+              Your intelligent companion for accessing previous year question papers.
+              SmartPYQ identifies repeated questions, exam patterns, and important topics to help you prepare smarter.
             </p>
             {/* Social Links */}
-            <div className="flex space-x-2">
+            <div className="flex space-x-4">
               {socialLinks.map((social) => {
                 const IconComponent = social.icon;
                 return (
-                  <a
+                  <motion.a
                     key={social.name}
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-muted hover:text-primary transition-colors p-2.5 rounded-lg hover:bg-muted-100 focus:outline-hidden focus:ring-2 focus:ring-brand-500/30"
-                    aria-label={`SmartPYQ on ${social.name}`}
+                    className={`text-gray-500 ${social.color} transition-colors p-2 rounded-lg hover:bg-white/5 focus:outline-hidden focus:ring-2 focus:ring-brand-500/30`}
+                    aria-label={`Follow us on ${social.name}`}
                   >
                     <IconComponent className="h-5 w-5" />
-                  </a>
+                  </motion.a>
                 );
               })}
             </div>
             {/* Contact Info */}
-            <div className="mt-5 space-y-2 text-sm text-muted">
+            <div className="mt-6 space-y-2 text-sm text-gray-500">
               <div className="flex items-center">
                 <EnvelopeIcon className="h-4 w-4 mr-2" />
-                <a href="mailto:smartpyq@gmail.com" className="relative inline-block hover:text-primary transition-colors after:content-[''] after:absolute after:inset-x-0 after:-inset-y-3">
+                <a href="mailto:smartpyq@gmail.com" className="relative inline-block hover:text-white transition-colors after:content-[''] after:absolute after:inset-x-0 after:-inset-y-3">
                   smartpyq@gmail.com
                 </a>
               </div>
+
               <div className="flex items-start">
                 <MapPinIcon className="h-4 w-4 mr-2 mt-0.5 shrink-0" />
                 <span>Hyderabad, Telangana</span>
               </div>
             </div>
-          </div>
+          </motion.div>
           {/* Quick Links */}
-          <div>
-            <h3 className="text-sm font-semibold mb-5 text-primary uppercase tracking-wide">Explore</h3>
-            <ul className="space-y-1">
+          <motion.div variants={itemVariants}>
+            <h3 className="text-lg font-semibold mb-6 text-white/90">Quick Links</h3>
+            <ul className="space-y-3">
               {quickLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     viewTransition
                     to={link.to}
-                    className="text-muted hover:text-primary transition-colors relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5"
+                    className="text-gray-400 hover:text-white transition-colors flex items-center group relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5"
                   >
-                    {link.name}
+                    <span className="group-hover:translate-x-1 transition-transform">
+                      {link.name}
+                    </span>
+                    <ArrowTopRightOnSquareIcon className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
+          </motion.div>
           {/* Support */}
-          <div>
-            <h3 className="text-sm font-semibold mb-5 text-primary uppercase tracking-wide">Support</h3>
-            <ul className="space-y-1">
+          <motion.div variants={itemVariants}>
+            <h3 className="text-lg font-semibold mb-6 text-white/90">Support</h3>
+            <ul className="space-y-3">
               {supportLinks.map((link) => (
                 <li key={link.name}>
                   <Link
                     viewTransition
                     to={link.to}
-                    className="text-muted hover:text-primary transition-colors relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5"
+                    className="text-gray-300 hover:text-white transition-colors flex items-center group relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5"
                   >
-                    {link.name}
+                    <span className="group-hover:translate-x-1 transition-transform">
+                      {link.name}
+                    </span>
+                    <ArrowTopRightOnSquareIcon className="h-3 w-3 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
                   </Link>
                 </li>
               ))}
             </ul>
-          </div>
-          {/* Get in touch */}
-          <div>
-            <h3 className="text-sm font-semibold mb-5 text-primary uppercase tracking-wide">About</h3>
-            <p className="text-muted text-sm mb-4">
-              Free, community-maintained, and student-run. Papers are reviewed by an
-              admin before they appear in the hub.
+            {/* Additional Support Info */}
+            <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
+              <h4 className="font-medium text-white mb-2">Need Help?</h4>
+              <p className="text-sm text-gray-300 mb-3">
+                Our team is here to help with any questions about SmartPYQ.
+              </p>                <Link
+                  viewTransition
+                  to="/contact"
+                className="inline-flex items-center text-sm text-brand-400 hover:text-brand-300 transition-colors"
+              >
+                Contact Support
+                <ArrowTopRightOnSquareIcon className="h-3 w-3 ml-1" />
+              </Link>
+            </div>
+          </motion.div>
+          {/* Contact Info */}
+          <motion.div variants={itemVariants}>
+            <h3 className="text-lg font-semibold mb-6 text-white/90">Get in Touch</h3>
+            <p className="text-gray-400 mb-4">
+              Questions or feedback? We are here to support your exam preparation journey.
             </p>
-            <ul className="space-y-1.5 text-sm text-muted">
-              <li>Free access to all papers</li>
-              <li>AI analysis on uploaded papers</li>
-              <li>Community contributions welcome</li>
-            </ul>
-          </div>
-        </div>
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <ChatBubbleLeftRightIcon className="h-5 w-5 mr-3 text-brand-400" />
+                <span className="text-gray-400">AI Study Assistant available for instant help</span>
+              </div>
+            </div>
+            {/* Features */}
+            <div className="mt-6 space-y-2 text-sm text-gray-400">
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-4 w-4 mr-2 text-green-400" />
+                <span>Free access to previous year question papers</span>
+              </div>
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-4 w-4 mr-2 text-green-400" />
+                <span>AI-powered study guidance and concept explanations</span>
+              </div>
+              <div className="flex items-center">
+                <CheckCircleIcon className="h-4 w-4 mr-2 text-green-400" />
+                <span>Community-contributed question papers</span>
+              </div>
+            </div>
+          </motion.div>
+        </motion.div>
         {/* Bottom section */}
-        <div className="border-t border-line py-6">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-y-3">
-            <div className="flex flex-col md:flex-row items-center w-full md:w-auto space-y-2 md:space-y-0 md:space-x-6 text-sm text-faint">
+        <motion.div
+          className="border-t border-gray-800 py-8"
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ delay: 0.2 }}
+        >
+          <div className="flex flex-col md:flex-row justify-between items-center gap-y-4 md:gap-y-0">
+            <div className="flex flex-col md:flex-row items-center w-full md:w-auto space-y-2 md:space-y-0 md:space-x-6 text-sm text-gray-500">
               <p className="text-center md:text-left">
-                © {currentYear} SmartPYQ
+                © {currentYear} SmartPYQ. All rights reserved.
               </p>
               <div className="flex flex-wrap items-center justify-center md:justify-start gap-x-4 gap-y-1">
-                <Link to="/privacy" viewTransition className="hover:text-primary transition-colors relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2">
+                <Link to="/privacy" viewTransition className="hover:text-white transition-colors">
+                
                   Privacy
                 </Link>
-                <Link to="/terms" viewTransition className="hover:text-primary transition-colors relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2">
+                <span>•</span>
+                <Link to="/terms" viewTransition className="hover:text-white transition-colors">
                   Terms
                 </Link>
-                <Link to="/cookies" viewTransition className="hover:text-primary transition-colors relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2">
+                <span>•</span>
+                <Link to="/cookies" viewTransition className="hover:text-white transition-colors">
                   Cookies
                 </Link>
               </div>
             </div>
           </div>
-        </div>
+          <div className="mt-4 pt-4 border-t border-gray-800 text-center">
+            <p className="text-xs text-gray-400">
+              SmartPYQ {currentYear}
+            </p>
+          </div>
+        </motion.div>
+      </div>
+      {/* Background decoration */}
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-linear-to-br from-brand-500/5 to-accent-500/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-linear-to-tr from-accent-500/5 to-brand-500/5 rounded-full blur-3xl"></div>
       </div>
     </footer>
   );
 };
-
-export default React.memo(Footer);
+export default memo(Footer);

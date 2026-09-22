@@ -84,7 +84,7 @@ const ContactPage = () => {
     { value: 'bug', label: 'Bug Report' }
   ];
   return (
-    <div className="min-h-screen bg-muted-50">
+    <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
       <section className="relative py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
@@ -94,10 +94,10 @@ const ContactPage = () => {
             transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
-            <h1 className="text-4xl md:text-6xl font-bold text-primary mb-6">
-              Contact <span className="text-accent">Support</span>
+            <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
+              Contact <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Support</span>
             </h1>
-            <p className="text-xl text-secondary max-w-3xl mx-auto">
+            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Have a question, found a bug, or want to suggest a feature? We would love to hear from you and improve SmartPYQ.
             </p>
           </motion.div>
@@ -116,11 +116,11 @@ const ContactPage = () => {
                   href={method.action}
                   className="card-nav p-6"
                 >
-                  <div className="w-12 h-12 bg-brand-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
-                    <IconComponent className="w-6 h-6 text-primary" />
+                  <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
+                    <IconComponent className="w-6 h-6 text-white" />
                   </div>
-                  <h3 className="text-lg font-semibold text-primary mb-2">{method.title}</h3>
-                  <p className="text-muted text-sm mb-3">{method.description}</p>
+                  <h3 className="text-lg font-semibold text-white mb-2">{method.title}</h3>
+                  <p className="text-gray-400 text-sm mb-3">{method.description}</p>
                   <p className="text-brand-400 font-medium">{method.contact}</p>
                 </motion.a>
               );
@@ -134,13 +134,13 @@ const ContactPage = () => {
             className="max-w-4xl mx-auto"
           >
             <div className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8">
-              <h2 className="text-2xl font-bold text-primary mb-6 text-center">
+              <h2 className="text-2xl font-bold text-white mb-6 text-center">
                 Send us a Message
               </h2>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="name" className="block text-sm font-medium text-secondary mb-2">
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
                       Full Name *
                     </label>
                     <input
@@ -150,12 +150,12 @@ const ContactPage = () => {
                       value={formData.name}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                       placeholder="Your full name"
                     />
                   </div>
                   <div>
-                    <label htmlFor="email" className="block text-sm font-medium text-secondary mb-2">
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2">
                       Email Address *
                     </label>
                     <input
@@ -165,14 +165,14 @@ const ContactPage = () => {
                       value={formData.email}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                       placeholder="your@email.com"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-secondary mb-2">
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-300 mb-2">
                       Category *
                     </label>
                     <select
@@ -181,7 +181,7 @@ const ContactPage = () => {
                       value={formData.category}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                     >
                       {categories.map((category) => (
                         <option key={category.value} value={category.value}>
@@ -191,7 +191,7 @@ const ContactPage = () => {
                     </select>
                   </div>
                   <div>
-                    <label htmlFor="subject" className="block text-sm font-medium text-secondary mb-2">
+                    <label htmlFor="subject" className="block text-sm font-medium text-gray-300 mb-2">
                       Subject *
                     </label>
                     <input
@@ -201,13 +201,13 @@ const ContactPage = () => {
                       value={formData.subject}
                       onChange={handleInputChange}
                       required
-                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
+                      className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200"
                       placeholder="What is this about?"
                     />
                   </div>
                 </div>
                 <div>
-                  <label htmlFor="message" className="block text-sm font-medium text-secondary mb-2">
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-300 mb-2">
                     Message *
                   </label>
                   <textarea
@@ -217,7 +217,7 @@ const ContactPage = () => {
                     onChange={handleInputChange}
                     required
                     rows={6}
-                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-primary placeholder:text-faint focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
+                    className="w-full px-4 py-3 bg-slate-700/50 border border-slate-600 rounded-lg text-white placeholder-gray-400 focus:outline-hidden focus:ring-2 focus:ring-brand-500 focus:border-transparent transition-all duration-200 resize-vertical"
                     placeholder="Tell us what happened, what you expected, and any details that might help..."
                   />
                 </div>
@@ -228,13 +228,13 @@ const ContactPage = () => {
                     animate={{ opacity: 1, y: 0 }}
                     className={`p-4 rounded-lg text-center ${
                       submitStatus === 'success'
-                        ? 'bg-green-500/20 border border-green-500/50 text-success'
-                        : 'bg-red-500/20 border border-red-500/50 text-error'
+                        ? 'bg-green-500/20 border border-green-500/50 text-green-400'
+                        : 'bg-red-500/20 border border-red-500/50 text-red-400'
                     }`}
                   >
                     {submitStatus === 'success'
                       ? '✅ Message sent successfully! We\'ll get back to you soon.'
-                      : 'Failed to send the message. Please try again or contact us directly.'}
+                      : '❌ Failed to send message. Please try again or contact us directly.'}
                   </motion.div>
                 )}
                 <motion.button
@@ -244,7 +244,7 @@ const ContactPage = () => {
                 >
                   {isSubmitting ? (
                     <div className="flex items-center justify-center space-x-2">
-                      <div className="w-5 h-5 border-2 border-muted-300 border-t-white rounded-full animate-spin" />
+                      <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       <span>Sending...</span>
                     </div>
                   ) : (

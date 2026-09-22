@@ -281,7 +281,7 @@ export function applyCorrections(metadata, corrections) {
 
 // ─── Confidence Label ─────────────────────────────────────────────────────────
 export function getConfidenceLabel(confidence) {
-  if (confidence >= 0.9) return { label: 'High confidence', color: 'text-success', bg: 'bg-green-500/10 border-green-500/20' };
-  if (confidence >= 0.7) return { label: 'Likely correct', color: 'text-accent', bg: 'bg-blue-500/10 border-blue-500/20' };
-  return { label: 'Please verify', color: 'text-warning', bg: 'bg-yellow-500/10 border-yellow-500/20' };
+  if (confidence >= 0.9) return { label: 'High confidence', color: 'text-green-400', bg: 'bg-green-500/10 border-green-500/20' };
+  if (confidence >= 0.7) return { label: 'Likely correct', color: 'text-blue-400', bg: 'bg-blue-500/10 border-blue-500/20' };
+  return { label: 'Please verify', color: 'text-yellow-400', bg: 'bg-yellow-500/10 border-yellow-500/20' };
 }

@@ -415,9 +415,9 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
     if (!file) return null;
     const ext = (file.name || '').split('.').pop().toLowerCase();
     if (['jpg', 'jpeg', 'png', 'webp'].includes(ext)) {
-      return <PhotoIcon className="h-7 w-7 text-accent" />;
+      return <PhotoIcon className="h-7 w-7 text-blue-400" />;
     }
-    return <DocumentIcon className="h-7 w-7 text-error" />;
+    return <DocumentIcon className="h-7 w-7 text-red-400" />;
   };
 
   const getFileTypeLabel = (file) => {
@@ -431,24 +431,24 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
   };
 
   const getConfidenceColor = (conf) => {
-    if (conf >= 0.7) return 'text-success';
-    if (conf >= 0.4) return 'text-warning';
-    return 'text-warning';
+    if (conf >= 0.7) return 'text-green-400';
+    if (conf >= 0.4) return 'text-yellow-400';
+    return 'text-orange-400';
   };
 
   const stepAnim = { hidden: { opacity: 0, x: 40 }, visible: { opacity: 1, x: 0 }, exit: { opacity: 0, x: -40 } };
   const inputClass = (field) =>
-    'w-full px-4 py-3 bg-white border rounded-xl text-primary text-sm placeholder:text-faint focus:ring-2 focus:ring-brand-500/30 focus:border-brand-300 transition-all duration-200' +
-    (errors[field] ? ' border-red-500/50' : ' border-line hover:border-muted-300');
+    'w-full px-4 py-3 bg-white/5 border rounded-xl text-white text-sm placeholder-gray-500 focus:ring-2 focus:ring-purple-500/30 focus:border-purple-500/50 transition-all duration-200' +
+    (errors[field] ? ' border-red-500/50' : ' border-white/10 hover:border-white/20');
 
   return (
-    <div className="bg-white/[0.03] rounded-2xl border border-line overflow-hidden shadow-xl shadow-black/10">
+    <div className="bg-white/[0.03] rounded-2xl border border-white/10 overflow-hidden shadow-xl shadow-black/10">
       {/* Step Header */}
-      <div className="px-6 py-5 border-b border-line">
+      <div className="px-6 py-5 border-b border-white/5">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-primary">Upload Question Paper</h2>
+          <h2 className="text-lg font-semibold text-white">Upload Question Paper</h2>
           {onCancel && (
-            <button onClick={onCancel} className="text-muted hover:text-primary transition-colors p-1 rounded-lg hover:bg-white">
+            <button onClick={onCancel} className="text-gray-400 hover:text-white transition-colors p-1 rounded-lg hover:bg-white/5">
               <XMarkIcon className="h-5 w-5" />
             </button>
           )}
@@ -458,17 +458,17 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
             <React.Fragment key={step.id}>
               <div className="flex items-center gap-2">
                 <div className={'w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ' +
-                  (currentStep > step.id ? 'bg-green-500 text-primary' :
-                   currentStep === step.id ? 'bg-brand-50 border border-brand-200 text-accent' :
-                   'bg-white text-muted border border-line')}>
+                  (currentStep > step.id ? 'bg-green-500 text-white' :
+                   currentStep === step.id ? 'bg-purple-500/20 border border-purple-500/40 text-purple-300' :
+                   'bg-white/5 text-gray-500 border border-white/10')}>
                   {currentStep > step.id ? <CheckCircleIconSolid className="h-4 w-4" /> : step.id}
                 </div>
                 <div className="hidden md:block">
-                  <div className={'text-xs font-medium ' + (currentStep >= step.id ? 'text-primary' : 'text-muted')}>{step.title}</div>
+                  <div className={'text-xs font-medium ' + (currentStep >= step.id ? 'text-white' : 'text-gray-500')}>{step.title}</div>
                 </div>
               </div>
               {index < steps.length - 1 && (
-                <div className={'flex-1 h-px ' + (currentStep > step.id ? 'bg-green-500/40' : 'bg-muted-100')} />
+                <div className={'flex-1 h-px ' + (currentStep > step.id ? 'bg-green-500/40' : 'bg-white/10')} />
               )}
             </React.Fragment>
           ))}
@@ -484,17 +484,17 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
           {currentStep === 1 && (
             <motion.div key="step1" variants={stepAnim} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
               <div className="text-center mb-6">
-                <h3 className="text-base font-semibold text-primary mb-1">Select Your Question Paper</h3>
-                <p className="text-sm text-muted">Upload a PDF or image of the exam paper (up to 50MB)</p>
+                <h3 className="text-base font-semibold text-white mb-1">Select Your Question Paper</h3>
+                <p className="text-sm text-gray-400">Upload a PDF or image of the exam paper (up to 50MB)</p>
               </div>
 
               {/* Drop zone */}
               <div
                 className={'relative border-2 border-dashed rounded-2xl p-10 transition-all duration-200 cursor-pointer group ' +
-                  (dragActive ? 'border-brand-500 bg-brand-50' :
+                  (dragActive ? 'border-purple-500 bg-purple-500/5' :
                    uploadData.file ? 'border-green-500/40 bg-green-500/5' :
                    errors.file ? 'border-red-500/40 bg-red-500/5' :
-                   'border-line hover:border-muted-300 hover:bg-white/[0.02]')}
+                   'border-white/10 hover:border-white/20 hover:bg-white/[0.02]')}
                 onDragEnter={handleDrag} onDragLeave={handleDrag} onDragOver={handleDrag} onDrop={handleDrop}
                 onClick={() => !uploadData.file && fileInputRef.current?.click()}
               >
@@ -509,14 +509,14 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                 {/* Analyzing state */}
                 {isAnalyzing ? (
                   <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 rounded-2xl bg-brand-50 border border-line flex items-center justify-center mb-4">
-                      <ArrowPathIcon className="h-7 w-7 text-accent animate-spin" />
+                    <div className="w-14 h-14 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mb-4">
+                      <ArrowPathIcon className="h-7 w-7 text-purple-400 animate-spin" />
                     </div>
-                    <p className="text-primary font-medium text-sm">Analyzing document...</p>
-                    <p className="text-muted text-xs mt-1">Extracting text and detecting metadata</p>
-                    <div className="mt-4 w-48 bg-white rounded-full h-1.5 overflow-hidden">
+                    <p className="text-white font-medium text-sm">Analyzing document...</p>
+                    <p className="text-gray-400 text-xs mt-1">Extracting text and detecting metadata</p>
+                    <div className="mt-4 w-48 bg-white/5 rounded-full h-1.5 overflow-hidden">
                       <motion.div
-                        className="bg-brand-500 h-1.5 rounded-full"
+                        className="bg-purple-500 h-1.5 rounded-full"
                         initial={{ width: '0%' }}
                         animate={{ width: '80%' }}
                         transition={{ duration: 8, ease: 'linear' }}
@@ -526,10 +526,10 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                 ) : uploadData.file ? (
                   <div className="flex flex-col items-center">
                     <div className="w-14 h-14 rounded-2xl bg-green-500/10 border border-green-500/20 flex items-center justify-center mb-4">
-                      <CheckCircleIcon className="h-7 w-7 text-success" />
+                      <CheckCircleIcon className="h-7 w-7 text-green-400" />
                     </div>
-                    <p className="text-primary font-medium text-sm">{uploadData.file.name}</p>
-                    <p className="text-muted text-xs mt-1">
+                    <p className="text-white font-medium text-sm">{uploadData.file.name}</p>
+                    <p className="text-gray-400 text-xs mt-1">
                       {formatFileSize(uploadData.file.size)} &bull; {getFileTypeLabel(uploadData.file)}
                     </p>
                     <button onClick={(e) => {
@@ -538,43 +538,43 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                       setAnalysisResult(null);
                       setDetectedQuestions([]);
                     }}
-                      className="mt-3 text-xs text-muted hover:text-primary transition-colors">
+                      className="mt-3 text-xs text-gray-400 hover:text-white transition-colors">
                       Remove file
                     </button>
                   </div>
                 ) : (
                   <div className="flex flex-col items-center">
-                    <div className="w-14 h-14 rounded-2xl bg-white border border-line flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200">
-                      <CloudArrowUpIcon className="h-7 w-7 text-muted group-hover:text-accent transition-colors" />
+                    <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mb-4 group-hover:scale-105 transition-transform duration-200">
+                      <CloudArrowUpIcon className="h-7 w-7 text-gray-400 group-hover:text-purple-400 transition-colors" />
                     </div>
-                    <p className="text-primary font-medium text-sm">Drop your file here or click to browse</p>
-                    <p className="text-muted text-xs mt-1">PDF, JPG, JPEG, PNG, or WEBP &bull; Up to 50MB</p>
-                    <p className="text-faint text-xs mt-0.5">Files must contain readable text; photos of signatures or blank pages are rejected.</p>
+                    <p className="text-white font-medium text-sm">Drop your file here or click to browse</p>
+                    <p className="text-gray-500 text-xs mt-1">PDF, JPG, JPEG, PNG, or WEBP &bull; Up to 50MB</p>
+                    <p className="text-gray-600 text-xs mt-0.5">Files must contain readable text — photos of signatures or blank pages are rejected.</p>
                   </div>
                 )}
               </div>
 
               {/* Error */}
               {errors.file && (
-                <motion.div className="mt-3 flex items-center gap-2 text-error text-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div className="mt-3 flex items-center gap-2 text-red-400 text-sm" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <ExclamationTriangleIcon className="h-4 w-4" /> {errors.file}
                 </motion.div>
               )}
 
               {/* Analysis error (non-blocking) */}
               {analysisError && (
-                <motion.div className="mt-3 flex items-start gap-2 text-warning text-sm p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div className="mt-3 flex items-start gap-2 text-yellow-400 text-sm p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-medium">Could not auto-detect details</p>
-                    <p className="text-warning/70 text-xs mt-0.5">{analysisError}</p>
+                    <p className="text-yellow-400/70 text-xs mt-0.5">{analysisError}</p>
                   </div>
                 </motion.div>
               )}
 
               {/* File format hint */}
               {!uploadData.file && !isAnalyzing && (
-                <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted">
+                <div className="mt-4 flex items-center justify-center gap-4 text-xs text-gray-500">
                   <div className="flex items-center gap-1.5">
                     <DocumentIcon className="h-4 w-4" />
                     <span>PDF</span>
@@ -594,15 +594,15 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
           {currentStep === 2 && (
             <motion.div key="step2" variants={stepAnim} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
               {/* File info bar */}
-              <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-xl border border-line mb-5">
+              <div className="flex items-center gap-3 p-3 bg-white/[0.03] rounded-xl border border-white/5 mb-5">
                 {getFileIcon(uploadData.file)}
                 <div className="flex-1 min-w-0">
-                  <p className="text-primary text-sm font-medium truncate">{uploadData.file?.name}</p>
-                  <p className="text-muted text-xs">{formatFileSize(uploadData.file?.size)} &bull; {getFileTypeLabel(uploadData.file)}</p>
+                  <p className="text-white text-sm font-medium truncate">{uploadData.file?.name}</p>
+                  <p className="text-gray-500 text-xs">{formatFileSize(uploadData.file?.size)} &bull; {getFileTypeLabel(uploadData.file)}</p>
                 </div>
                 {analysisResult?.success && (
                   <div className="flex items-center gap-1 text-xs">
-                    <SparklesIcon className="h-3.5 w-3.5 text-accent" />
+                    <SparklesIcon className="h-3.5 w-3.5 text-purple-400" />
                     <span className={getConfidenceColor(analysisConfidence)}>
                       {Math.round(analysisConfidence * 100)}% detected
                     </span>
@@ -612,66 +612,66 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
 
               {/* Analysis error banner */}
               {analysisError && (
-                <div className="mb-5 flex items-start gap-2 text-warning text-sm p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl">
+                <div className="mb-5 flex items-start gap-2 text-yellow-400 text-sm p-3 bg-yellow-500/5 border border-yellow-500/15 rounded-xl">
                   <ExclamationTriangleIcon className="h-4 w-4 mt-0.5 shrink-0" />
                   <div>
                     <p className="font-medium">Auto-detection partially failed</p>
-                    <p className="text-warning/70 text-xs mt-0.5">Please review and correct the details below before uploading.</p>
+                    <p className="text-yellow-400/70 text-xs mt-0.5">Please review and correct the details below before uploading.</p>
                   </div>
                 </div>
               )}
 
               <div className="text-center mb-5">
-                <h3 className="text-base font-semibold text-primary mb-1">Review Detected Information</h3>
-                <p className="text-sm text-muted">Verify and correct any auto-detected details before uploading</p>
+                <h3 className="text-base font-semibold text-white mb-1">Review Detected Information</h3>
+                <p className="text-sm text-gray-400">Verify and correct any auto-detected details before uploading</p>
               </div>
 
               <div className="space-y-5">
 
                 {/* ─── Paper Details Section ─── */}
-                <div className="p-4 bg-white/[0.02] rounded-xl border border-line">
-                  <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3 flex items-center gap-1.5">
                     <PencilSquareIcon className="h-3.5 w-3.5" />
                     Paper Details
                   </h4>
                   <div className="space-y-4">
                     {/* Title */}
                     <div className="relative">
-                      <label className="block text-xs font-medium text-secondary mb-1.5">Paper Title *</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">Paper Title *</label>
                       <div className="relative">
                         <input ref={titleInputRef} type="text" value={uploadData.title}
                           onChange={(e) => handleInputChange('title', e.target.value)}
                           onFocus={() => titleSuggestions.length > 0 && setShowTitleSuggestions(true)}
                           onBlur={() => setTimeout(() => setShowTitleSuggestions(false), 200)}
                           className={inputClass('title')} placeholder="e.g., Data Structures - Final Exam 2024" />
-                        {uploadData.title && <MagnifyingGlassIcon className="h-4 w-4 text-muted absolute right-3 top-1/2 -translate-y-1/2" />}
+                        {uploadData.title && <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 absolute right-3 top-1/2 -translate-y-1/2" />}
                       </div>
                       {showTitleSuggestions && titleSuggestions.length > 0 && (
-                        <div className="absolute z-20 w-full mt-1 bg-[#1a1a2e] border border-line rounded-xl shadow-xl max-h-48 overflow-y-auto">
+                        <div className="absolute z-20 w-full mt-1 bg-[#1a1a2e] border border-white/10 rounded-xl shadow-xl max-h-48 overflow-y-auto">
                           {titleSuggestions.map((title, i) => (
-                            <button key={i} className="w-full text-left px-4 py-2.5 text-sm text-secondary hover:bg-white hover:text-primary transition-colors first:rounded-t-xl last:rounded-b-xl"
+                            <button key={i} className="w-full text-left px-4 py-2.5 text-sm text-gray-300 hover:bg-white/5 hover:text-white transition-colors first:rounded-t-xl last:rounded-b-xl"
                               onMouseDown={(e) => { e.preventDefault(); handleInputChange('title', title); setShowTitleSuggestions(false); }}>
                               {title}
                             </button>
                           ))}
                         </div>
                       )}
-                      {errors.title && <p className="mt-1 text-xs text-error">{errors.title}</p>}
+                      {errors.title && <p className="mt-1 text-xs text-red-400">{errors.title}</p>}
                     </div>
 
                     {/* Stream */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5"><AcademicCapIcon className="h-3.5 w-3.5 inline mr-1" />Stream *</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5"><AcademicCapIcon className="h-3.5 w-3.5 inline mr-1" />Stream *</label>
                       <select value={uploadData.stream} onChange={(e) => handleStreamChange(e.target.value)} className={inputClass('stream')}>
                         <option value="">Select Stream</option>
                         {streams.map(s => <option key={s.key} value={s.key}>{s.displayName}</option>)}
                       </select>
-                      {errors.stream && <p className="mt-1 text-xs text-error">{errors.stream}</p>}
+                      {errors.stream && <p className="mt-1 text-xs text-red-400">{errors.stream}</p>}
                     </div>
 
                     {/* Semester */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5">Semester *</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">Semester *</label>
                       <select value={uploadData.semester} onChange={(e) => handleSemesterChange(e.target.value)}
                         className={inputClass('semester')} disabled={!uploadData.stream}>
                         <option value="">{uploadData.stream ? 'Select Semester' : 'Select stream first'}</option>
@@ -679,23 +679,23 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                           <option key={s} value={s}>Semester {s.replace('sem', '')}</option>
                         ))}
                       </select>
-                      {errors.semester && <p className="mt-1 text-xs text-error">{errors.semester}</p>}
+                      {errors.semester && <p className="mt-1 text-xs text-red-400">{errors.semester}</p>}
                     </div>
 
                     {/* Subject */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5">Subject *</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">Subject *</label>
                       <select value={uploadData.subject} onChange={(e) => handleSubjectChange(e.target.value)}
                         className={inputClass('subject')} disabled={!uploadData.semester}>
                         <option value="">{uploadData.semester ? 'Select Subject' : 'Select semester first'}</option>
                         {availableSubjects.map(s => <option key={s} value={s}>{s}</option>)}
                       </select>
-                      {errors.subject && <p className="mt-1 text-xs text-error">{errors.subject}</p>}
+                      {errors.subject && <p className="mt-1 text-xs text-red-400">{errors.subject}</p>}
                     </div>
 
                     {/* Year */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5"><CalendarIcon className="h-3.5 w-3.5 inline mr-1" />PYQ Year *</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5"><CalendarIcon className="h-3.5 w-3.5 inline mr-1" />PYQ Year *</label>
                       <select value={uploadData.year} onChange={(e) => handleYearChange(e.target.value)}
                         className={inputClass('year')} disabled={!uploadData.subject}>
                         <option value="">{uploadData.subject ? 'Select Year' : 'Select subject first'}</option>
@@ -710,36 +710,36 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                           ))}
                         </optgroup>
                       </select>
-                      {errors.year && <p className="mt-1 text-xs text-error">{errors.year}</p>}
+                      {errors.year && <p className="mt-1 text-xs text-red-400">{errors.year}</p>}
                     </div>
 
                     {/* University */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5"><BuildingLibraryIcon className="h-3.5 w-3.5 inline mr-1" />University *</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5"><BuildingLibraryIcon className="h-3.5 w-3.5 inline mr-1" />University *</label>
                       <select value={uploadData.university} onChange={(e) => handleInputChange('university', e.target.value)}
                         className={inputClass('university')}>
                         {universities.map(u => <option key={u} value={u}>{u}</option>)}
                       </select>
-                      {errors.university && <p className="mt-1 text-xs text-error">{errors.university}</p>}
+                      {errors.university && <p className="mt-1 text-xs text-red-400">{errors.university}</p>}
                     </div>
                   </div>
                 </div>
 
                 {/* ─── Tags & Description ─── */}
-                <div className="p-4 bg-white/[0.02] rounded-xl border border-line">
-                  <h4 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">Additional Info</h4>
+                <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5">
+                  <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Additional Info</h4>
                   <div className="space-y-4">
                     {/* Tags */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5"><TagIcon className="h-3.5 w-3.5 inline mr-1" />Tags (optional)</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5"><TagIcon className="h-3.5 w-3.5 inline mr-1" />Tags (optional)</label>
                       <input type="text" onKeyPress={handleTagKeyPress} className={inputClass('tags')}
                         placeholder="Press Enter to add tags (e.g., algorithms, mid-term)" />
                       {uploadData.tags.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 mt-2">
                           {uploadData.tags.map((tag, i) => (
-                            <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-brand-50 border border-line text-accent rounded-lg text-xs">
+                            <span key={i} className="inline-flex items-center gap-1 px-2.5 py-1 bg-purple-500/10 border border-purple-500/20 text-purple-300 rounded-lg text-xs">
                               {tag}
-                              <button onClick={() => removeTag(tag)} className="hover:text-primary transition-colors"><XMarkIcon className="h-3 w-3" /></button>
+                              <button onClick={() => removeTag(tag)} className="hover:text-white transition-colors"><XMarkIcon className="h-3 w-3" /></button>
                             </span>
                           ))}
                         </div>
@@ -748,7 +748,7 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
 
                     {/* Description */}
                     <div>
-                      <label className="block text-xs font-medium text-secondary mb-1.5">Description (optional)</label>
+                      <label className="block text-xs font-medium text-gray-300 mb-1.5">Description (optional)</label>
                       <textarea value={uploadData.description} onChange={(e) => handleInputChange('description', e.target.value)}
                         rows={2} className={inputClass('description') + ' resize-none'}
                         placeholder="Any additional notes about this paper..." />
@@ -758,29 +758,29 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
 
                 {/* ─── Detected Questions Section ─── */}
                 {detectedQuestions.length > 0 && (
-                  <div className="p-4 bg-white/[0.02] rounded-xl border border-line">
+                  <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-xs font-semibold text-muted uppercase tracking-wider flex items-center gap-1.5">
-                        <SparklesIcon className="h-3.5 w-3.5 text-accent" />
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <SparklesIcon className="h-3.5 w-3.5 text-purple-400" />
                         Detected Questions ({detectedQuestions.length})
                       </h4>
                       <div className="flex items-center gap-3">
                         <button
                           type="button"
                           onClick={applyStandardPattern}
-                          className="text-xs text-accent hover:text-primary px-2.5 py-1 rounded-lg border border-line hover:border-brand-400/50 transition-colors"
-                          title="Part A: questions 1-8 default to 4 marks, Part B: questions 9-14 default to 8 marks. Only 4- and 8-mark questions exist. Set any exception manually; defaults only fill blanks."
+                          className="text-xs text-purple-300 hover:text-white px-2.5 py-1 rounded-lg border border-purple-500/30 hover:border-purple-400/50 transition-colors"
+                          title="Part A: questions 1-8 default to 4 marks, Part B: questions 9-14 default to 8 marks. Only 4- and 8-mark questions exist — set any exception manually; defaults only fill blanks."
                         >
                           Apply standard pattern (8×4 + 6×8)
                         </button>
-                        <span className="text-xs text-muted">Edit below or remove incorrect entries · total must equal 80</span>
+                        <span className="text-xs text-gray-500">Edit below or remove incorrect entries · total must equal 80</span>
                       </div>
                     </div>
                     <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
                       {detectedQuestions.map((q, i) => (
-                        <div key={i} className="p-3 bg-white/[0.03] rounded-lg border border-line group">
+                        <div key={i} className="p-3 bg-white/[0.03] rounded-lg border border-white/5 group">
                           <div className="flex items-start gap-3">
-                            <span className="shrink-0 w-7 h-7 rounded-lg bg-brand-50 border border-line flex items-center justify-center text-accent text-xs font-bold mt-0.5">
+                            <span className="shrink-0 w-7 h-7 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-300 text-xs font-bold mt-0.5">
                               {q.question_number || i + 1}
                             </span>
                             <div className="flex-1 min-w-0 space-y-2">
@@ -788,7 +788,7 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                                 value={q.question_text}
                                 onChange={(e) => updateQuestionText(i, e.target.value)}
                                 rows={2}
-                                className="w-full px-3 py-2 bg-white border border-line rounded-lg text-primary text-xs placeholder:text-faint focus:ring-1 focus:ring-brand-500/30 focus:border-brand-300 resize-none"
+                                className="w-full px-3 py-2 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-gray-500 focus:ring-1 focus:ring-purple-500/30 focus:border-purple-500/50 resize-none"
                                 placeholder="Question text..."
                               />
                               <div className="flex items-center gap-2">
@@ -796,19 +796,19 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                                   type="text"
                                   value={q.marks || ''}
                                   onChange={(e) => updateQuestionMarks(i, e.target.value)}
-                                  className="w-16 px-2 py-1 bg-white border border-line rounded-lg text-primary text-xs placeholder:text-faint focus:ring-1 focus:ring-brand-500/30"
+                                  className="w-16 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-gray-500 focus:ring-1 focus:ring-purple-500/30"
                                   placeholder="Marks"
                                 />
                                 <input
                                   type="text"
                                   value={q.section || ''}
                                   onChange={(e) => updateQuestionSection(i, e.target.value)}
-                                  className="flex-1 px-2 py-1 bg-white border border-line rounded-lg text-primary text-xs placeholder:text-faint focus:ring-1 focus:ring-brand-500/30"
+                                  className="flex-1 px-2 py-1 bg-white/5 border border-white/10 rounded-lg text-white text-xs placeholder-gray-500 focus:ring-1 focus:ring-purple-500/30"
                                   placeholder="Section (e.g., Section A)"
                                 />
                                 <button
                                   onClick={() => removeQuestion(i)}
-                                  className="text-muted hover:text-error transition-colors p-1 rounded"
+                                  className="text-gray-500 hover:text-red-400 transition-colors p-1 rounded"
                                   title="Remove question"
                                 >
                                   <XMarkIcon className="h-4 w-4" />
@@ -821,7 +821,7 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                     </div>
                     <button
                       onClick={addQuestion}
-                      className="mt-3 w-full py-2 border border-dashed border-line rounded-xl text-muted text-xs hover:border-line hover:text-accent transition-colors"
+                      className="mt-3 w-full py-2 border border-dashed border-white/10 rounded-xl text-gray-400 text-xs hover:border-purple-500/30 hover:text-purple-300 transition-colors"
                     >
                       + Add Question
                     </button>
@@ -830,14 +830,14 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
 
                 {/* Show add questions button even if none detected */}
                 {detectedQuestions.length === 0 && (
-                  <div className="p-4 bg-white/[0.02] rounded-xl border border-line">
+                  <div className="p-4 bg-white/[0.02] rounded-xl border border-white/5">
                     <div className="flex items-center justify-between mb-3">
-                      <h4 className="text-xs font-semibold text-muted uppercase tracking-wider">Questions</h4>
+                      <h4 className="text-xs font-semibold text-gray-400 uppercase tracking-wider">Questions</h4>
                     </div>
-                    <p className="text-muted text-xs mb-3">No questions were auto-detected. You can add them manually below.</p>
+                    <p className="text-gray-500 text-xs mb-3">No questions were auto-detected. You can add them manually below.</p>
                     <button
                       onClick={addQuestion}
-                      className="w-full py-2 border border-dashed border-line rounded-xl text-muted text-xs hover:border-line hover:text-accent transition-colors"
+                      className="w-full py-2 border border-dashed border-white/10 rounded-xl text-gray-400 text-xs hover:border-purple-500/30 hover:text-purple-300 transition-colors"
                     >
                       + Add Question
                     </button>
@@ -860,10 +860,10 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
             <motion.div key="corrections" variants={stepAnim} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
               <div className="text-center mb-6">
                 <div className="w-12 h-12 rounded-2xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center mx-auto mb-3">
-                  <SparklesIcon className="h-6 w-6 text-accent" />
+                  <SparklesIcon className="h-6 w-6 text-blue-400" />
                 </div>
-                <h3 className="text-base font-semibold text-primary mb-1">Spelling Corrections Detected</h3>
-                <p className="text-sm text-muted">We found {corrections.length} potential {corrections.length === 1 ? 'correction' : 'corrections'} in your metadata. Review and accept or reject each.</p>
+                <h3 className="text-base font-semibold text-white mb-1">Spelling Corrections Detected</h3>
+                <p className="text-sm text-gray-400">We found {corrections.length} potential {corrections.length === 1 ? 'correction' : 'corrections'} in your metadata. Review and accept or reject each.</p>
               </div>
 
               <div className="space-y-3">
@@ -871,25 +871,25 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                   const conf = getConfidenceLabel(c.confidence);
                   return (
                     <motion.div key={c.field} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-                      className="p-4 bg-white/[0.03] rounded-xl border border-line">
+                      className="p-4 bg-white/[0.03] rounded-xl border border-white/5">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-2">
-                            <span className="text-xs font-medium text-muted">{c.label}</span>
+                            <span className="text-xs font-medium text-gray-400">{c.label}</span>
                             <span className={`text-xs px-1.5 py-0.5 rounded ${conf.bg} ${conf.color}`}>{conf.label}</span>
                           </div>
                           <div className="flex items-center gap-2 text-sm">
-                            <span className="text-error line-through">{c.original}</span>
-                            <span className="text-muted">→</span>
-                            <span className="text-success font-medium">{c.correctedDisplay || c.corrected}</span>
+                            <span className="text-red-400 line-through">{c.original}</span>
+                            <span className="text-gray-500">→</span>
+                            <span className="text-green-400 font-medium">{c.correctedDisplay || c.corrected}</span>
                           </div>
                         </div>
                         <div className="flex items-center gap-2">
                           <button onClick={() => setAcceptedCorrections(prev => ({ ...prev, [c.field]: !prev[c.field] }))}
                             className={`text-xs px-3 py-1.5 rounded-lg border transition-all ${
                               acceptedCorrections[c.field]
-                                ? 'bg-green-500/20 border-success-500/30 text-success'
-                                : 'bg-white border-line text-muted hover:bg-muted-100'
+                                ? 'bg-green-500/20 border-green-500/30 text-green-400'
+                                : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                             }`}>
                             {acceptedCorrections[c.field] ? '✓ Accepted' : 'Accept'}
                           </button>
@@ -903,7 +903,7 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
               <div className="mt-6 flex justify-between">
                 <button onClick={() => { setShowCorrections(false); setCorrections([]); }} className="btn btn-ghost">Back to Edit</button>
                 <div className="flex gap-3">
-                  <button onClick={skipCorrections} className="btn btn-ghost text-muted">Skip All</button>
+                  <button onClick={skipCorrections} className="btn btn-ghost text-gray-400">Skip All</button>
                   <button onClick={applyAndContinue} className="btn btn-primary">
                     Apply {Object.values(acceptedCorrections).filter(Boolean).length} & Continue
                   </button>
@@ -918,57 +918,57 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
           {currentStep === 3 && !showCorrections && (
             <motion.div key="step3" variants={stepAnim} initial="hidden" animate="visible" exit="exit" transition={{ duration: 0.3 }}>
               <div className="text-center mb-6">
-                <h3 className="text-base font-semibold text-primary mb-1">Confirm Your Upload</h3>
-                <p className="text-sm text-muted">
+                <h3 className="text-base font-semibold text-white mb-1">Confirm Your Upload</h3>
+                <p className="text-sm text-gray-400">
                   {isStudent
-                    ? 'Double-check the details. An admin will verify this paper before it goes public'
+                    ? 'Double-check the details — an admin will verify this paper before it goes public'
                     : 'Double-check the details before uploading to the PYQ Hub'}
                 </p>
               </div>
 
-              <div className="bg-white/[0.03] rounded-xl border border-line p-5 mb-6">
+              <div className="bg-white/[0.03] rounded-xl border border-white/5 p-5 mb-6">
                 <div className="space-y-3">
                   {/* File info */}
-                  <div className="flex items-start gap-3 pb-3 border-b border-line">
+                  <div className="flex items-start gap-3 pb-3 border-b border-white/5">
                     {getFileIcon(uploadData.file)}
                     <div>
-                      <p className="text-primary text-sm font-medium">{uploadData.file?.name}</p>
-                      <p className="text-muted text-xs">{formatFileSize(uploadData.file?.size)} &bull; {getFileTypeLabel(uploadData.file)}</p>
+                      <p className="text-white text-sm font-medium">{uploadData.file?.name}</p>
+                      <p className="text-gray-500 text-xs">{formatFileSize(uploadData.file?.size)} &bull; {getFileTypeLabel(uploadData.file)}</p>
                     </div>
                   </div>
 
                   {/* Metadata grid */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-                    <div><span className="text-muted text-xs block">Title</span><span className="text-primary">{uploadData.title}</span></div>
-                    <div><span className="text-muted text-xs block">Stream</span><span className="text-primary">{streams.find(s => s.key === uploadData.stream)?.displayName || uploadData.stream}</span></div>
-                    <div><span className="text-muted text-xs block">Semester</span><span className="text-primary">{uploadData.semester ? 'Semester ' + uploadData.semester.replace('sem', '') : '-'}</span></div>
-                    <div><span className="text-muted text-xs block">Subject</span><span className="text-primary">{uploadData.subject}</span></div>
-                    <div><span className="text-muted text-xs block">PYQ Year</span><span className="text-primary">{uploadData.year}</span></div>
-                    <div><span className="text-muted text-xs block">University</span><span className="text-primary">{uploadData.university}</span></div>
+                    <div><span className="text-gray-500 text-xs block">Title</span><span className="text-white">{uploadData.title}</span></div>
+                    <div><span className="text-gray-500 text-xs block">Stream</span><span className="text-white">{streams.find(s => s.key === uploadData.stream)?.displayName || uploadData.stream}</span></div>
+                    <div><span className="text-gray-500 text-xs block">Semester</span><span className="text-white">{uploadData.semester ? 'Semester ' + uploadData.semester.replace('sem', '') : '-'}</span></div>
+                    <div><span className="text-gray-500 text-xs block">Subject</span><span className="text-white">{uploadData.subject}</span></div>
+                    <div><span className="text-gray-500 text-xs block">PYQ Year</span><span className="text-white">{uploadData.year}</span></div>
+                    <div><span className="text-gray-500 text-xs block">University</span><span className="text-white">{uploadData.university}</span></div>
                     {uploadData.tags.length > 0 && (
-                      <div className="col-span-2"><span className="text-muted text-xs block">Tags</span>
+                      <div className="col-span-2"><span className="text-gray-500 text-xs block">Tags</span>
                         <div className="flex flex-wrap gap-1 mt-1">{uploadData.tags.map((tag, i) => (
-                          <span key={i} className="px-2 py-0.5 bg-brand-50 text-accent rounded text-xs">{tag}</span>
+                          <span key={i} className="px-2 py-0.5 bg-purple-500/10 text-purple-300 rounded text-xs">{tag}</span>
                         ))}</div>
                       </div>
                     )}
                     {uploadData.description && (
-                      <div className="col-span-2"><span className="text-muted text-xs block">Description</span>
-                        <span className="text-primary text-sm">{uploadData.description}</span>
+                      <div className="col-span-2"><span className="text-gray-500 text-xs block">Description</span>
+                        <span className="text-white text-sm">{uploadData.description}</span>
                       </div>
                     )}
                   </div>
 
                   {/* Questions summary */}
                   {detectedQuestions.length > 0 && (
-                    <div className="pt-3 border-t border-line">
-                      <span className="text-muted text-xs block mb-2">Questions ({detectedQuestions.length})</span>
+                    <div className="pt-3 border-t border-white/5">
+                      <span className="text-gray-500 text-xs block mb-2">Questions ({detectedQuestions.length})</span>
                       <div className="space-y-1.5 max-h-40 overflow-y-auto">
                         {detectedQuestions.map((q, i) => (
                           <div key={i} className="flex items-start gap-2 text-xs">
-                            <span className="text-accent font-medium shrink-0">{q.question_number || i + 1}.</span>
-                            <span className="text-secondary line-clamp-2">{q.question_text}</span>
-                            {q.marks && <span className="text-muted shrink-0">({q.marks}m)</span>}
+                            <span className="text-purple-400 font-medium shrink-0">{q.question_number || i + 1}.</span>
+                            <span className="text-gray-300 line-clamp-2">{q.question_text}</span>
+                            {q.marks && <span className="text-gray-500 shrink-0">({q.marks}m)</span>}
                           </div>
                         ))}
                       </div>
@@ -979,21 +979,21 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
 
               {/* Upload progress */}
               {isUploading && (
-                <motion.div className="mb-5 p-4 bg-brand-50 border border-line rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div className="mb-5 p-4 bg-purple-500/5 border border-purple-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <div className="flex items-center gap-2 mb-2">
-                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-brand-400 border-t-transparent"></div>
-                    <span className="text-accent text-sm font-medium">{uploadProgress < 100 ? 'Uploading…' : 'Upload complete!'}</span>
+                    <div className="animate-spin rounded-full h-4 w-4 border-2 border-purple-400 border-t-transparent"></div>
+                    <span className="text-purple-300 text-sm font-medium">{uploadProgress < 100 ? 'Uploading…' : 'Upload complete!'}</span>
                   </div>
-                  <div className="w-full bg-white rounded-full h-1.5">
-                    <motion.div className="bg-brand-500 h-1.5 rounded-full" animate={{ width: uploadProgress + '%' }} transition={{ duration: 0.3 }} />
+                  <div className="w-full bg-white/5 rounded-full h-1.5">
+                    <motion.div className="bg-purple-500 h-1.5 rounded-full" animate={{ width: uploadProgress + '%' }} transition={{ duration: 0.3 }} />
                   </div>
-                  <p className="text-xs text-muted mt-1.5">{Math.round(uploadProgress)}% complete</p>
+                  <p className="text-xs text-gray-500 mt-1.5">{Math.round(uploadProgress)}% complete</p>
                 </motion.div>
               )}
 
               {/* Error */}
               {errors.submit && (
-                <motion.div className="mb-5 flex items-center gap-2 text-error text-sm p-3 bg-red-500/5 border border-red-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+                <motion.div className="mb-5 flex items-center gap-2 text-red-400 text-sm p-3 bg-red-500/5 border border-red-500/15 rounded-xl" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
                   <ExclamationTriangleIcon className="h-4 w-4" /> {errors.submit}
                 </motion.div>
               )}
@@ -1004,7 +1004,7 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                 <div className="flex gap-3">
                   <button onClick={() => { setIsUploading(false); setCurrentStep(1); setUploadData(prev => ({ ...prev, file: null })); setAnalysisResult(null); setDetectedQuestions([]); }}
                     disabled={isUploading}
-                    className="btn btn-ghost disabled:opacity-50 text-muted">
+                    className="btn btn-ghost disabled:opacity-50 text-gray-400">
                     Cancel
                   </button>
                   <button onClick={handleSubmit} disabled={isUploading}
