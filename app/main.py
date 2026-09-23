@@ -173,8 +173,10 @@ if settings.ALLOWED_HOSTS:
         ("*" + host) if host.startswith(".") else host
         for host in settings.ALLOWED_HOSTS
     ]
-    # In development, allow all hosts to avoid blocking frontend requests
-    trusted_hosts = ["*"] if settings.ENV == "development" else normalized_hosts
+    # In development and test environments, allow all hosts — the test
+    # client (httpx ASGITransport / TestClient) sends no production Host,
+    # and the allowlist would 400 every request, as CI's ENV=test run hit.
+    trusted_hosts = ["*"] if settings.ENV in ("development", "test") else normalized_hosts
 
     class _HealthBypassTrustedHost(TrustedHostMiddleware):
         """Skip the host allowlist for health endpoints.

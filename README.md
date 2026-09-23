@@ -142,7 +142,7 @@ cd smartpyq-frontend && npm run build
 
 Verified main flows (live UI): PYQ Hub drill-down to papers, multi-year paper analysis (priority tiers, repeated questions, question explorer), exam practice with text/image/PDF answers, student upload → admin verification, search, and AI chat.
 
-**Current result:** `384 passed, 4 skipped` (backend), frontend `npm run build` succeeds.
+**Current result:** `393 passed, 4 skipped` (backend, including under CI's `ENV=test`), frontend `npm run build` succeeds.
 
 ## Production Build
 
@@ -164,6 +164,17 @@ npm run preview      # optionally serve the build locally to verify
 
 > Frontend code is public after deployment by nature — keep secrets on the backend only.
 
+### Current production deployment
+
+The live stack deploys automatically from `main`:
+
+- **Frontend** — Vercel (root directory `smartpyq-frontend`, SPA rewrite from `vercel.json`). Deploys on every push to `main`.
+- **Backend** — Render free tier (`render.yaml`): build `pip install -r requirements.txt`, start `alembic upgrade head && seed scripts && uvicorn ...`, health check `/health`. Auto-deploy on push to `main`.
+- **Database** — Supabase Postgres (production `DATABASE_URL`), migrations via Alembic on every backend deploy.
+- **Storage** — Supabase Storage bucket `question-papers` (`STORAGE_BACKEND=supabase`).
+
+Operational notes: the free Render instance has 512 MB RAM — keep `ENABLE_OCR=false` there (see Environment Variables). Health endpoints `/health` and `/ready` bypass the host allowlist so platform probes never see 400s.
+
 ### Backend (hosting the FastAPI API)
 
 The FastAPI backend is **not** part of the Vercel static deployment. Host it on a service that runs Python natively (e.g. Render's Python runtime via the included `render.yaml`, Railway, or a VPS). It needs the environment variables below plus migrations applied.
@@ -182,7 +193,8 @@ Names only — set real values in your host's environment, never in the repo.
 - AI: `GEMINI_API_KEY` **or** `OPENAI_API_KEY` + `OPENAI_BASE_URL` + `OPENAI_MODEL`; `AI_DEFAULT_MODEL`, `AI_MAX_TOKENS`, `AI_TEMPERATURE`, `AI_TIMEOUT_SECONDS`
 - Storage: `STORAGE_BACKEND`, `SUPABASE_URL`, `SUPABASE_ANON_KEY`, `SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_SECRET_KEY`, `SUPABASE_SERVICE_ROLE_KEY`, `SUPABASE_JWKS_URL`, `SUPABASE_STORAGE_BUCKET` (or Firebase/AWS equivalents)
 - Admin account: `ADMIN_EMAIL`, `ADMIN_PASSWORD` (used by the seed script only — the admin password is never stored in the repo)
-- Uploads: `UPLOAD_TEXT_CHECK` (default `true` — rejects files with no readable text, e.g. signature photos; OCR runs locally via RapidOCR, no external service)
+- Uploads: `UPLOAD_TEXT_CHECK` (default `true` — rejects files with no readable text, e.g. signature photos), `ENABLE_OCR` (default `false` — see below)
+- OCR: `ENABLE_OCR` (default `false`). RapidOCR loads ONNX models into RAM; alongside the app baseline this exceeds a 512 MB container (Render free tier) and OOM-kills the process mid-request. Leave it off on small hosts — text PDFs still extract normally, scanned PDFs upload cleanly with a "no readable text" result. Set `true` only on hosts with ≥1 GB free RAM.
 - Demo data: `ENABLE_DEMO_ACCOUNT` (auto-on in development, off in production; enable explicitly in production with `true`)
 - Email: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `SMTP_FROM`
 
