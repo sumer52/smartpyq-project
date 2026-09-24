@@ -1,0 +1,34 @@
+# Keep-alive pinger for the Render free-tier backend (prevents spin-down cold starts).
+# Render spins the free instance down after ~15 min idle; the next request then pays
+# the full process boot. A 5-min ping keeps it warm inside that window.
+# Safe to disable once the backend runs on a paid plan (no spin-down).
+# Note: GitHub auto-disables scheduled workflows after 60 days of repo inactivity.
+name: Keep Backend Warm
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: keep-warm
+  cancel-in-progress: false
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping backend health endpoint
+        run: |
+          for i in 1 2 3; do
+            code=$(curl -s -o /dev/null -m 60 -w "%{http_code}" "${BACKEND_URL}/health" || true)
+            echo "attempt $i -> HTTP $code"
+            [ "$code" = "200" ] && exit 0
+            sleep 15
+          done
+          echo "::warning::backend /health did not return 200 after 3 attempts (code=$code)"
+        env:
+          BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://smartpyq-backend.onrender.com' }}

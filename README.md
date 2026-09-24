@@ -173,7 +173,7 @@ The live stack deploys automatically from `main`:
 - **Database** — Supabase Postgres (production `DATABASE_URL`), migrations via Alembic on every backend deploy.
 - **Storage** — Supabase Storage bucket `question-papers` (`STORAGE_BACKEND=supabase`).
 
-Operational notes: the free Render instance has 512 MB RAM — keep `ENABLE_OCR=false` there (see Environment Variables). Health endpoints `/health` and `/ready` bypass the host allowlist so platform probes never see 400s.
+Operational notes: the free Render instance has 512 MB RAM — keep `ENABLE_OCR=false` there (see Environment Variables). Health endpoints `/health` and `/ready` bypass the host allowlist so platform probes never see 400s. The free tier also spins the instance down after ~15 min idle; a scheduled GitHub Actions workflow (`.github/workflows/keep-warm.yml`) pings `/health` every 5 minutes to prevent cold-start delays — remove it once the backend is on a paid plan.
 
 ### Backend (hosting the FastAPI API)
 
