@@ -181,9 +181,17 @@ async def run():
 
             pump_task.cancel()
             print(json.dumps({"summary": f"{sum(1 for r in results if r['ok'])}/{len(results)} passed"}))
+            json.dump(results, open(os.path.join("tmp", "intro_results.json"), "w"), indent=1)
     finally:
         proc.kill()
         shutil.rmtree(PROFILE_DIR, ignore_errors=True) if False else None
+
+# Surface each failing check as a GitHub annotation (visible on the commit and
+# via the API without log access).
+for _r in results:
+    if not _r["ok"]:
+        detail = (": " + _r["detail"]) if _r.get("detail") else ""
+        print(f"::error title=Intro check failed::{_r['check']}{detail}", flush=True)
 
 PROFILE_DIR = os.path.join(os.getcwd(), "tmp", f"intro-{os.getpid()}")
 asyncio.run(run())
