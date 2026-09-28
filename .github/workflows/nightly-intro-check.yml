@@ -1,0 +1,64 @@
+name: Nightly intro check (production)
+
+# Runs the 29-check intro harness against the LIVE Vercel deployment so
+# regressions that only exist in the deployed build (bad chunks, CDN
+# caching, env drift) surface within a day instead of silently shipping.
+# Scheduled runs notify the workflow author on failure; it can also be
+# triggered manually from the Actions tab.
+
+on:
+  schedule:
+    - cron: "30 2 * * *" # 02:30 UTC = 08:00 IST, before the day starts
+  workflow_dispatch:
+
+jobs:
+  prod-intro-e2e:
+    name: Intro E2E (live production)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install harness dependency
+        run: pip install websockets
+
+      - name: Ensure Chrome is installed
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Export Chrome path
+        run: echo "CHROME_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
+
+      - name: Preflight diagnostics
+        run: |
+          if [ -x "$CHROME_PATH" ]; then
+            echo "::notice title=Preflight::chrome ok: $CHROME_PATH"
+          else
+            echo "::error title=Chrome not available::CHROME_PATH=$CHROME_PATH"
+            exit 1
+          fi
+
+      - name: Run intro validation against production (29 checks)
+        run: |
+          mkdir -p tmp
+          python intro_check.py https://smartpyq-project.vercel.app
+
+      - name: Job summary
+        if: always()
+        run: cat tmp/intro_summary.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+
+      - name: Upload intro screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intro-prod-screenshots-${{ github.run_id }}
+          path: |
+            tmp/*.png
+            tmp/intro_results.json
+          if-no-files-found: ignore
+          retention-days: 7
