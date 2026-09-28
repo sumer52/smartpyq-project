@@ -73,6 +73,10 @@ jobs:
 
       - name: Production build
         working-directory: smartpyq-frontend
+        env:
+          # A production bundle throws at runtime without this (backendUrl.js
+          # assertBackendConfigured). CI has no .env, so mirror production.
+          VITE_BACKEND_URL: https://smartpyq-backend.onrender.com
         run: npm run build
 
       - name: Set up Python
