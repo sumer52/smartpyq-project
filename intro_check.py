@@ -84,22 +84,24 @@ window.addEventListener('unhandledrejection', e => window.__errlog.push('REJ ' +
 
             # ---------- Phase A: first visit ----------
             await goto("/", settle=6.0)
-            check("A1 intro shows on first visit", await wait_intro(True, 12))
-            if not await ev("!!document.getElementById('root')?.firstChild"):
-                # React never mounted: dump deep page state as an annotation so CI
+            a1_ok = await wait_intro(True, 12)
+            check("A1 intro shows on first visit", a1_ok)
+            if not a1_ok:
+                # First visit failed: dump deep page state as an annotation so CI
                 # failures are diagnosable without log access, then abort early.
                 diag = await ev("""(() => JSON.stringify({
                   url: location.href,
                   title: document.title.slice(0, 60),
                   rootChildTags: [...(document.getElementById('root')||{children:[]}).children].map(c => c.tagName + '.' + String(c.className).slice(0, 25)),
                   rootText: (document.getElementById('root')||{textContent:''}).textContent.slice(0, 200),
+                  buttons: document.querySelectorAll('button').length,
                   errors: (window.__errlog || []).slice(0, 8),
                   failedResources: performance.getEntriesByType('resource')
                     .filter(e => e.responseStatus && e.responseStatus >= 400)
                     .map(e => e.name.split('/').pop() + '=' + e.responseStatus).slice(0, 10),
                 }))()""")
-                print("::error title=React app did not mount::" + str(diag), flush=True)
-                print("::error title=Raw console (unfiltered)::" + " | ".join(console_errors[-6:]) or "(none)", flush=True)
+                print("::error title=First-visit intro absent::" + str(diag), flush=True)
+                print("::error title=Raw console (unfiltered)::" + (" | ".join(console_errors[-6:]) or "(none)"), flush=True)
                 sys.exit(1)
             check("A2 flag not set initially", (await ev("localStorage.getItem('smartpyq_intro_seen')")) != "true")
             check("A3 body scroll locked", (await ev("document.body.style.overflow")) == "hidden")
