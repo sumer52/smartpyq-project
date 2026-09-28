@@ -205,7 +205,8 @@ except SystemExit:
 except BaseException:
     import traceback
     # Hard crashes must surface as annotations too (check results never populate).
-    print("::error title=Intro harness crashed::" + traceback.format_exc()[-600:], flush=True)
+    # Newlines are replaced: raw newlines break GitHub's workflow-command parser.
+    print("::error title=Intro harness crashed::" + traceback.format_exc()[-600:].replace("\n", " | "), flush=True)
     sys.exit(1)
 
 # Surface each failing check as a GitHub annotation (visible on the commit and
@@ -213,6 +214,6 @@ except BaseException:
 for _r in results:
     if not _r["ok"]:
         detail = (": " + _r["detail"]) if _r.get("detail") else ""
-        print(f"::error title=Intro check failed::{_r['check']}{detail}", flush=True)
+        print(f"::error title=Intro check failed::{_r['check']}{detail}".replace("\n", " | "), flush=True)
 
 sys.exit(0 if all(r["ok"] for r in results) else 1)  # fail the CI job on any check failure

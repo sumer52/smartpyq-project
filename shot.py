@@ -39,8 +39,8 @@ def free_port():
 def start_chrome(w, h):
     chrome = next((c for c in CHROME_CANDIDATES if c and os.path.exists(c)), None)
     if not chrome:
-        found = [c for c in CHROME_CANDIDATES if c and os.path.exists(c)]
-        print(json.dumps({"error": "chrome not found"})); sys.exit(1)
+        print("::error title=Chrome not found::checked " + " | ".join(str(c) for c in CHROME_CANDIDATES if c), flush=True)
+        sys.exit(1)
         return
     port = free_port()
     shutil.rmtree(PROFILE, ignore_errors=True)

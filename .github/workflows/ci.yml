@@ -84,9 +84,13 @@ jobs:
         run: pip install websockets
 
       - name: Ensure Chrome is installed
+        id: chrome
         uses: browser-actions/setup-chrome@v1
-        with:
-          id: chrome
+
+      - name: Preflight diagnostics
+        run: |
+          echo "::notice title=CI preflight::chrome=$([ -n "$CHROME_PATH" ] && echo set || echo unset) exists=$([ -n "$CHROME_PATH" ] && [ -x "$CHROME_PATH" ] && echo yes || echo no)"
+          [ -n "$CHROME_PATH" ] && [ -x "$CHROME_PATH" ] || { echo "::error title=Chrome not available::CHROME_PATH=$CHROME_PATH"; exit 1; }
 
       - name: Export Chrome path
         run: echo "CHROME_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
