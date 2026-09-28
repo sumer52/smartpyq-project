@@ -1,6 +1,7 @@
 import React, { Suspense, lazy } from 'react';
 import { Outlet, RouterProvider, Navigate, useLocation, createBrowserRouter } from 'react-router-dom';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
+import { IntroExperienceProvider } from './components/intro/IntroExperienceContext';
 
 import FuturisticHeader from './components/FuturisticHeader';
 import Footer from './components/Footer';
@@ -122,6 +123,7 @@ const router = createBrowserRouter([
 function AppLayout() {
   return (
     <AuthProvider>
+      <IntroExperienceProvider>
       <div className="App min-h-screen" style={{position:"relative",zIndex:10}}>
         <SkipLink />
         <ScrollProgress />
@@ -156,6 +158,7 @@ function AppLayout() {
           className="sr-only"
         ></div>
       </div>
+      </IntroExperienceProvider>
     </AuthProvider>
   );
 }

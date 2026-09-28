@@ -1,0 +1,103 @@
+.thumbnail-carousel {
+  width: min(590px, 100%);
+  min-width: 0;
+}
+.thumbnail-carousel__track {
+  display: flex;
+  align-items: stretch;
+  gap: 8px;
+  padding: 5px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+  scroll-snap-type: x proximity;
+  mask-image: linear-gradient(90deg, transparent, #000 3%, #000 97%, transparent);
+}
+.thumbnail-carousel__track::-webkit-scrollbar { display: none; }
+.thumbnail-carousel__item {
+  position: relative;
+  flex: 0 0 110px;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 20px 1fr;
+  grid-template-rows: 1fr auto;
+  gap: 4px 7px;
+  padding: 8px 9px;
+  overflow: hidden;
+  scroll-snap-align: center;
+  border: 1px solid rgba(255,255,255,.08);
+  border-radius: 10px;
+  color: rgba(235,226,255,.6);
+  background: linear-gradient(145deg, rgba(255,255,255,.035), rgba(65,32,119,.055));
+  backdrop-filter: blur(14px);
+  text-align: left;
+  transition: color .24s ease, border-color .24s ease, background .24s ease, opacity .24s ease;
+  cursor: pointer;
+}
+.thumbnail-carousel__item:hover { color: rgba(255,255,255,.82); border-color: rgba(185,146,255,.24); background: rgba(89,46,157,.1); }
+.thumbnail-carousel__item.is-active { color: #f8f4ff; border-color: transparent; background: rgba(93,46,173,.15); }
+.thumbnail-carousel__active-frame {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(198,166,255,.5);
+  border-radius: inherit;
+  box-shadow: inset 0 1px rgba(255,255,255,.08), 0 0 22px rgba(119,65,221,.14);
+  pointer-events: none;
+}
+.thumbnail-carousel__number {
+  position: relative;
+  z-index: 1;
+  grid-row: 1 / 3;
+  align-self: center;
+  color: rgba(195,164,255,.58);
+  font-size: .6rem;
+  font-weight: 700;
+  letter-spacing: .08em;
+}
+.thumbnail-carousel__visual {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 16px;
+}
+.thumbnail-carousel__visual i { display: block; width: 3px; border-radius: 3px 3px 1px 1px; background: linear-gradient(180deg, #c4b5fd, #7c3aed); opacity: .42; }
+.thumbnail-carousel__visual i:nth-child(1) { height: 7px; }
+.thumbnail-carousel__visual i:nth-child(2) { height: 13px; }
+.thumbnail-carousel__visual i:nth-child(3) { height: 10px; }
+.thumbnail-carousel__visual--blue i { background: linear-gradient(180deg,#bae6fd,#6366f1); }
+.thumbnail-carousel__visual--cyan i { background: linear-gradient(180deg,#a5f3fc,#8b5cf6); }
+.thumbnail-carousel__visual--pink i { background: linear-gradient(180deg,#f5d0fe,#9333ea); }
+.thumbnail-carousel__visual--brand i { background: linear-gradient(180deg,#fff,#8b5cf6); }
+.thumbnail-carousel__item.is-active .thumbnail-carousel__visual i { opacity: .95; animation: thumbnailBars 1.8s ease-in-out infinite alternate; }
+.thumbnail-carousel__item.is-active .thumbnail-carousel__visual i:nth-child(2) { animation-delay: -.45s; }
+.thumbnail-carousel__item.is-active .thumbnail-carousel__visual i:nth-child(3) { animation-delay: -.9s; }
+.thumbnail-carousel__label {
+  position: relative;
+  z-index: 1;
+  overflow: hidden;
+  color: inherit;
+  font-size: .66rem;
+  font-weight: 650;
+  letter-spacing: .08em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.thumbnail-carousel__item:focus-visible { outline: 2px solid #c7a8ff; outline-offset: 3px; }
+@keyframes thumbnailBars { to { transform: scaleY(.7); opacity: .55; } }
+
+@media (max-width: 700px) {
+  .thumbnail-carousel { width: 100%; }
+  .thumbnail-carousel__track { gap: 6px; padding-inline: 18px; margin-inline: -16px; mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent); }
+  .thumbnail-carousel__item { flex-basis: 102px; min-height: 56px; padding: 8px; grid-template-columns: 18px 1fr; gap: 3px 6px; }
+  .thumbnail-carousel__label { font-size: .62rem; letter-spacing: .05em; }
+  .thumbnail-carousel__number { font-size: .56rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .thumbnail-carousel__track { scroll-behavior: auto; }
+  .thumbnail-carousel__item,
+  .thumbnail-carousel__visual i { transition: none; animation: none !important; }
+}

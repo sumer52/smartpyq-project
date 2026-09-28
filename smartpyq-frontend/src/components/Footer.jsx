@@ -1,6 +1,7 @@
 import React, { memo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { useSmartPYQIntroSafe } from './intro/IntroExperienceContext';
 import {
   EnvelopeIcon,
   MapPinIcon,
@@ -21,6 +22,7 @@ const GitHubIcon = () => (
 );
 const Footer = ({ className = "" }) => {
   const currentYear = new Date().getFullYear();
+  const replayIntro = useSmartPYQIntroSafe()?.replayIntro ?? null;
   const socialLinks = [
     {
       name: 'LinkedIn',
@@ -44,6 +46,8 @@ const Footer = ({ className = "" }) => {
     { name: 'Practice', to: '/practice' },
     { name: 'Admin Login', to: '/admin/login' }
   ];
+  const replayAction = replayIntro ? { name: 'Replay Intro', action: replayIntro } : null;
+  const footerQuickLinks = replayAction ? [...quickLinks, replayAction] : quickLinks;
   const supportLinks = [
     { name: 'Contact Us', to: '/contact' },
     { name: 'FAQ', to: '/faq' },
@@ -124,7 +128,19 @@ const Footer = ({ className = "" }) => {
           <motion.div variants={itemVariants}>
             <h3 className="text-lg font-semibold mb-6 text-white/90">Quick Links</h3>
             <ul className="space-y-3">
-              {quickLinks.map((link) => (
+              {footerQuickLinks.map((link) => link.action ? (
+                <li key={link.name}>
+                  <button
+                    type="button"
+                    onClick={link.action}
+                    className="text-gray-400 hover:text-white transition-colors flex items-center group relative after:content-[''] after:absolute after:inset-x-0 after:-inset-y-2.5 text-left"
+                  >
+                    <span className="group-hover:translate-x-1 transition-transform">
+                      {link.name}
+                    </span>
+                  </button>
+                </li>
+              ) : (
                 <li key={link.name}>
                   <Link
                     viewTransition
