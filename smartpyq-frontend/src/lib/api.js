@@ -1,11 +1,20 @@
 // API Configuration and Utilities
 // Backend origin comes from the single config module (backendUrl.js).
-import { BACKEND_URL, assertBackendConfigured } from './backendUrl';
+import { BACKEND_URL, isBackendConfigured, MISSING_BACKEND_URL_MESSAGE } from './backendUrl';
 
 import { isDemoSessionActive, attachDemoBackendSession } from './demoSession';
 
-// Surface a missing production configuration on the first API call.
-assertBackendConfigured();
+// Typed failure for API calls in a misconfigured production build: callers
+// already handle thrown ApiErrors, so data pages render their error states
+// instead of the whole app dying at import time. Thrown lazily (not as a
+// top-level class extending ApiError, which would crash on import order).
+const ensureBackendConfigured = () => {
+  if (!isBackendConfigured) {
+    const error = new ApiError(MISSING_BACKEND_URL_MESSAGE, 0, null);
+    error.name = 'BackendConfigurationError';
+    throw error;
+  }
+};
 
 // Custom error classes for better error handling
 class ApiError extends Error {
@@ -105,6 +114,7 @@ class ApiClient {
   }
 
   async request(endpoint, options = {}) {
+    ensureBackendConfigured();
     const url = `${this.baseURL}${endpoint}`;
     const config = {
       headers: this.getAuthHeaders(),
@@ -237,6 +247,7 @@ class ApiClient {
   }
 
   async authorizePaperDownload(id) {
+    ensureBackendConfigured();
     const url = `${this.baseURL}/api/v1/papers/${id}/download`;
     const headers = {};
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
@@ -412,6 +423,7 @@ class ApiClient {
   // ------------------------------------------------------------------
 
   async uploadStudentPaper(formData, onProgress) {
+    ensureBackendConfigured();
     // XHR (not fetch) so the caller can show real upload progress.
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
     return new Promise((resolve, reject) => {
@@ -444,6 +456,7 @@ class ApiClient {
   // Authenticated binary fetch (used by the admin review preview — pending
   // papers need the Authorization header, which a plain iframe can't send).
   async getFileBlob(endpoint) {
+    ensureBackendConfigured();
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
     const res = await fetch(`${this.baseURL}${endpoint}`, { headers });

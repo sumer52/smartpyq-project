@@ -8,6 +8,7 @@ import Footer from './components/Footer';
 import ChatWidget from './components/ChatWidget';
 import ScrollToTop from './components/ScrollToTop';
 import SessionExpiredBanner from './components/SessionExpiredBanner';
+import BackendConfigBanner from './components/BackendConfigBanner';
 import OfflineBanner from './components/OfflineBanner';
 import MaintenanceBanner from './components/MaintenanceBanner';
 import ScrollProgress from './components/ui/ScrollProgress';
@@ -138,6 +139,7 @@ function AppLayout() {
         <ScrollToTop />
         <SessionExpiredBanner />
         <OfflineBanner />
+        <BackendConfigBanner />
         <MaintenanceBanner />
 
         <main id="main-content" className="flex-1 relative" style={{zIndex:10, paddingTop: "70px"}}>
