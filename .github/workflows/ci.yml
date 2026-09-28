@@ -96,6 +96,7 @@ jobs:
           [ -n "$CHROME_PATH" ] && [ -x "$CHROME_PATH" ] || { echo "::error title=Chrome not available::CHROME_PATH=$CHROME_PATH"; exit 1; }
 
       - name: Serve dist and run intro validation (29 checks)
+        id: intro
         run: |
           mkdir -p tmp
           python serve_dist.py 5175 > tmp/serve_dist.log 2>&1 &
@@ -106,7 +107,13 @@ jobs:
           done
           curl -sf http://127.0.0.1:5175/ > /dev/null || { echo "server did not start"; cat tmp/serve_dist.log; exit 1; }
           python intro_check.py http://127.0.0.1:5175
+          HARNESS_EXIT=$?
           kill $SERVER_PID || true
+          [ $HARNESS_EXIT -eq 0 ] || exit $HARNESS_EXIT
+
+      - name: Job summary
+        if: always() && steps.intro.outcome == 'failure'
+        run: cat tmp/intro_summary.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
 
       - name: Upload intro screenshots
         if: always()

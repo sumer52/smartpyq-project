@@ -42,6 +42,12 @@ async def run():
                         console_errors.append(msg["params"]["entry"]["text"][:200])
             pump_task = asyncio.create_task(pump())
             await rpc("Runtime.enable"); await rpc("Log.enable"); await rpc("Page.enable")
+            # Capture page-side errors that CDP console events can miss.
+            await rpc("Page.addScriptToEvaluateOnNewDocument", {"source": """
+window.__errlog = [];
+window.addEventListener('error', e => window.__errlog.push('ERR ' + e.message + ' @' + (e.filename||'').split('/').pop() + ':' + e.lineno));
+window.addEventListener('unhandledrejection', e => window.__errlog.push('REJ ' + (e.reason && e.reason.message || e.reason)));
+"""})
 
             async def ev(expr):
                 r = await rpc("Runtime.evaluate", {"expression": expr, "returnByValue": True, "awaitPromise": True})
@@ -80,16 +86,21 @@ async def run():
             await goto("/", settle=6.0)
             check("A1 intro shows on first visit", await wait_intro(True, 12))
             if not await ev("!!document.getElementById('root')?.firstChild"):
-                # React never mounted: dump page state as an annotation so CI
-                # failures are diagnosable without log access.
+                # React never mounted: dump deep page state as an annotation so CI
+                # failures are diagnosable without log access, then abort early.
                 diag = await ev("""(() => JSON.stringify({
                   url: location.href,
                   title: document.title.slice(0, 60),
+                  rootChildTags: [...(document.getElementById('root')||{children:[]}).children].map(c => c.tagName + '.' + String(c.className).slice(0, 25)),
+                  rootText: (document.getElementById('root')||{textContent:''}).textContent.slice(0, 200),
+                  errors: (window.__errlog || []).slice(0, 8),
                   failedResources: performance.getEntriesByType('resource')
                     .filter(e => e.responseStatus && e.responseStatus >= 400)
                     .map(e => e.name.split('/').pop() + '=' + e.responseStatus).slice(0, 10),
                 }))()""")
                 print("::error title=React app did not mount::" + str(diag), flush=True)
+                print("::error title=Raw console (unfiltered)::" + " | ".join(console_errors[-6:]) or "(none)", flush=True)
+                sys.exit(1)
             check("A2 flag not set initially", (await ev("localStorage.getItem('smartpyq_intro_seen')")) != "true")
             check("A3 body scroll locked", (await ev("document.body.style.overflow")) == "hidden")
 
@@ -193,6 +204,10 @@ async def run():
             pump_task.cancel()
             print(json.dumps({"summary": f"{sum(1 for r in results if r['ok'])}/{len(results)} passed"}))
             json.dump(results, open(os.path.join("tmp", "intro_results.json"), "w"), indent=1)
+            with open(os.path.join("tmp", "intro_summary.md"), "w", encoding="utf-8") as f:
+                f.write("## Intro E2E results\n\n| # | Check | Result |\n|---|-------|--------|\n")
+                for i, r in enumerate(results, 1):
+                    f.write(f"| {i} | {r['check']} | {'pass' if r['ok'] else '**FAIL**'} |\n")
     finally:
         proc.kill()
         shutil.rmtree(PROFILE_DIR, ignore_errors=True) if False else None
