@@ -3,8 +3,8 @@ import { motion } from 'framer-motion';
 
 const ease = [0.22, 1, 0.36, 1];
 const card = {
-  hidden: { opacity: 0, y: 18, scale: 0.96, filter: 'blur(9px)' },
-  show: (delay) => ({ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)', transition: { duration: 0.48, delay, ease } }),
+  hidden: { opacity: 0, y: 18, scale: 0.96 },
+  show: (delay) => ({ opacity: 1, y: 0, scale: 1, transition: { duration: 0.48, delay, ease } }),
 };
 
 export default function IntroAnalysisVisual({ reducedMotion = false }) {
@@ -15,7 +15,7 @@ export default function IntroAnalysisVisual({ reducedMotion = false }) {
       aria-label="SmartPYQ identifies repeated questions, topic frequency, and exam priorities."
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      exit={{ opacity: 0, scale: 1.02, filter: 'blur(8px)' }}
+      exit={{ opacity: 0, scale: 1.02 }}
       transition={{ duration: reducedMotion ? 0.2 : 0.34 }}
     >
       <div className="sp-intro__scan" aria-hidden="true" />

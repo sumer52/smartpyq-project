@@ -91,7 +91,7 @@ export default function SmartPYQIntro({ onComplete }) {
       aria-modal="true"
       aria-label="SmartPYQ introduction"
       initial={{ opacity: 0 }}
-      animate={{ opacity: exiting ? 0 : 1, filter: exiting && !reducedMotion ? 'blur(9px)' : 'blur(0px)' }}
+      animate={{ opacity: exiting ? 0 : 1 }}
       transition={{ duration: reducedMotion ? 0.2 : 0.52, ease: [0.22, 1, 0.36, 1] }}
       onClick={(event) => {
         if (event.target.closest('button')) return;

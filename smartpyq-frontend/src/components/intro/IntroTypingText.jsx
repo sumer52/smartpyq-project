@@ -77,17 +77,17 @@ export default function IntroTypingText({ step = 0, reducedMotion = false }) {
     <motion.section
       className={`sp-intro__typing-scene sp-intro__typing-scene--${step}`}
       aria-label={line.label}
-      initial={{ opacity: 0, y: 12, filter: 'blur(8px)' }}
-      animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
-      exit={{ opacity: 0, y: -12, filter: 'blur(8px)' }}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -12 }}
       transition={{ duration: reducedMotion ? 0.18 : 0.38, ease: [0.22, 1, 0.36, 1] }}
     >
       <p className="sp-intro__system-label">SMARTPYQ ANALYSIS ENGINE</p>
       {step === 0 && (
         <motion.div
           className="sp-intro__hub-path"
-          initial={{ opacity: 0, y: 8, filter: 'blur(6px)' }}
-          animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: reducedMotion ? 0.2 : 0.55, ease: [0.22, 1, 0.36, 1] }}
           aria-label="PYQ Hub: Year, Stream, Subject, PYQ"
         >
