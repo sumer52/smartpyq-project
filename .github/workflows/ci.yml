@@ -83,6 +83,14 @@ jobs:
       - name: Install harness dependency
         run: pip install websockets
 
+      - name: Ensure Chrome is installed
+        uses: browser-actions/setup-chrome@v1
+        with:
+          id: chrome
+
+      - name: Export Chrome path
+        run: echo "CHROME_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
+
       - name: Serve dist on :5175
         run: |
           python serve_dist.py 5175 &

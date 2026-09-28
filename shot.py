@@ -15,7 +15,9 @@ for _v in ("HTTP_PROXY", "HTTPS_PROXY", "http_proxy", "https_proxy"):
 _opener = urllib.request.build_opener(urllib.request.ProxyHandler({}))
 urllib.request.install_opener(_opener)
 
-CHROME_CANDIDATES = [
+CHROME_CANDIDATES = ([
+    os.environ.get("CHROME_PATH"),  # explicit override (e.g. browser-actions/setup-chrome)
+] if os.environ.get("CHROME_PATH") else []) + [
     r"C:\Program Files\Google\Chrome\Application\chrome.exe",
     r"C:\Program Files (x86)\Google\Chrome\Application\chrome.exe",
     os.path.expandvars(r"%LOCALAPPDATA%\Google\Chrome\Application\chrome.exe"),
@@ -35,9 +37,11 @@ def free_port():
 
 
 def start_chrome(w, h):
-    chrome = next((c for c in CHROME_CANDIDATES if os.path.exists(c)), None)
+    chrome = next((c for c in CHROME_CANDIDATES if c and os.path.exists(c)), None)
     if not chrome:
+        found = [c for c in CHROME_CANDIDATES if c and os.path.exists(c)]
         print(json.dumps({"error": "chrome not found"})); sys.exit(1)
+        return
     port = free_port()
     shutil.rmtree(PROFILE, ignore_errors=True)
     os.makedirs(PROFILE, exist_ok=True)

@@ -186,6 +186,17 @@ async def run():
         proc.kill()
         shutil.rmtree(PROFILE_DIR, ignore_errors=True) if False else None
 
+PROFILE_DIR = os.path.join(os.getcwd(), "tmp", f"intro-{os.getpid()}")
+try:
+    asyncio.run(run())
+except SystemExit:
+    raise
+except BaseException:
+    import traceback
+    # Hard crashes must surface as annotations too (check results never populate).
+    print("::error title=Intro harness crashed::" + traceback.format_exc()[-600:], flush=True)
+    sys.exit(1)
+
 # Surface each failing check as a GitHub annotation (visible on the commit and
 # via the API without log access).
 for _r in results:
@@ -193,6 +204,4 @@ for _r in results:
         detail = (": " + _r["detail"]) if _r.get("detail") else ""
         print(f"::error title=Intro check failed::{_r['check']}{detail}", flush=True)
 
-PROFILE_DIR = os.path.join(os.getcwd(), "tmp", f"intro-{os.getpid()}")
-asyncio.run(run())
 sys.exit(0 if all(r["ok"] for r in results) else 1)  # fail the CI job on any check failure
