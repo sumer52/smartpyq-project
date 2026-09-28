@@ -52,3 +52,54 @@ jobs:
 
       - name: Production build
         run: npm run build
+
+  intro-e2e:
+    name: Intro E2E (CDP harness)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: smartpyq-frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: smartpyq-frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: smartpyq-frontend
+        run: npm run build
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install harness dependency
+        run: pip install websockets
+
+      - name: Serve dist on :5175
+        run: |
+          python serve_dist.py 5175 &
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:5175/ > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:5175/ > /dev/null || { echo "server did not start"; exit 1; }
+
+      - name: Run intro validation (29 checks)
+        run: python intro_check.py http://127.0.0.1:5175
+
+      - name: Upload intro screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: intro-screenshots
+          path: tmp/*.png
+          if-no-files-found: ignore
+          retention-days: 7
