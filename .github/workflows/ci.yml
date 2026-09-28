@@ -97,6 +97,7 @@ jobs:
 
       - name: Serve dist and run intro validation (29 checks)
         run: |
+          mkdir -p tmp
           python serve_dist.py 5175 > tmp/serve_dist.log 2>&1 &
           SERVER_PID=$!
           for i in $(seq 1 30); do
