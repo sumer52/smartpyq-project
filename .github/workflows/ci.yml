@@ -91,17 +91,17 @@ jobs:
       - name: Export Chrome path
         run: echo "CHROME_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
 
-      - name: Serve dist on :5175
+      - name: Serve dist and run intro validation (29 checks)
         run: |
-          python serve_dist.py 5175 &
+          python serve_dist.py 5175 > tmp/serve_dist.log 2>&1 &
+          SERVER_PID=$!
           for i in $(seq 1 30); do
             curl -sf http://127.0.0.1:5175/ > /dev/null && break
             sleep 1
           done
-          curl -sf http://127.0.0.1:5175/ > /dev/null || { echo "server did not start"; exit 1; }
-
-      - name: Run intro validation (29 checks)
-        run: python intro_check.py http://127.0.0.1:5175
+          curl -sf http://127.0.0.1:5175/ > /dev/null || { echo "server did not start"; cat tmp/serve_dist.log; exit 1; }
+          python intro_check.py http://127.0.0.1:5175
+          kill $SERVER_PID || true
 
       - name: Upload intro screenshots
         if: always()
@@ -111,5 +111,6 @@ jobs:
           path: |
             tmp/*.png
             tmp/intro_results.json
+            tmp/serve_dist.log
           if-no-files-found: ignore
           retention-days: 7

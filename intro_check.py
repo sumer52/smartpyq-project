@@ -79,6 +79,17 @@ async def run():
             # ---------- Phase A: first visit ----------
             await goto("/", settle=6.0)
             check("A1 intro shows on first visit", await wait_intro(True, 12))
+            if not await ev("!!document.getElementById('root')?.firstChild"):
+                # React never mounted: dump page state as an annotation so CI
+                # failures are diagnosable without log access.
+                diag = await ev("""(() => JSON.stringify({
+                  url: location.href,
+                  title: document.title.slice(0, 60),
+                  failedResources: performance.getEntriesByType('resource')
+                    .filter(e => e.responseStatus && e.responseStatus >= 400)
+                    .map(e => e.name.split('/').pop() + '=' + e.responseStatus).slice(0, 10),
+                }))()""")
+                print("::error title=React app did not mount::" + str(diag), flush=True)
             check("A2 flag not set initially", (await ev("localStorage.getItem('smartpyq_intro_seen')")) != "true")
             check("A3 body scroll locked", (await ev("document.body.style.overflow")) == "hidden")
 
