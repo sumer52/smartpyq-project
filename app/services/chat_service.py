@@ -400,7 +400,7 @@ class ChatService:
                 tokens_used=total_tokens,
                 metadata={
                     'streamed': True,
-                    'model': 'gemini-pro',  # Default model
+                    'model': getattr(self.ai_service, 'gemini_model', None) or 'gemini',
                     'provider': 'gemini'
                 }
             )

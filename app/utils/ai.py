@@ -57,8 +57,22 @@ class AIService:
         if settings.GEMINI_API_KEY:
             try:
                 genai.configure(api_key=settings.GEMINI_API_KEY)
-                self.gemini_client = genai.GenerativeModel('gemini-pro')
-                logger.info("Gemini AI client initialized")
+                # 'gemini-pro' was retired from the Gemini API; pick the first
+                # available modern model at runtime (config override > 2.0-flash >
+                # 2.5-flash > 1.5-flash) so a renamed/deprecated model never breaks chat.
+                self.gemini_model = getattr(settings, "GEMINI_MODEL", None) or None
+                if not self.gemini_model:
+                    try:
+                        available = [m.name.split("models/")[-1] for m in genai.list_models()]
+                        for candidate in ("gemini-2.0-flash", "gemini-2.5-flash", "gemini-1.5-flash"):
+                            if candidate in available:
+                                self.gemini_model = candidate
+                                break
+                    except Exception as list_err:
+                        logger.warning(f"Could not list Gemini models, using default: {list_err}")
+                self.gemini_model = self.gemini_model or "gemini-2.0-flash"
+                self.gemini_client = genai.GenerativeModel(self.gemini_model)
+                logger.info(f"Gemini AI client initialized (model: {self.gemini_model})")
             except Exception as e:
                 logger.error(f"Failed to initialize Gemini client: {e}")
         
@@ -218,7 +232,7 @@ class AIService:
             return AIResponse(
                 content=response.text,
                 provider=AIProvider.GEMINI,
-                model="gemini-pro",
+                model=self.gemini_model,
                 tokens_used=response.usage_metadata.total_token_count if hasattr(response, 'usage_metadata') else 0,
                 finish_reason=response.candidates[0].finish_reason.name if response.candidates else "unknown",
                 metadata={
@@ -539,8 +553,8 @@ async def stream_ai_response(
     async for chunk in stream:
         yield AIResponse(
             content=chunk,
-            provider=AIProvider.GEMINI,
-            model="gemini-pro",
+            provider=ai_service.gemini_client is not None and AIProvider.GEMINI or AIProvider.OPENAI,
+            model=getattr(ai_service, 'gemini_model', None) or 'gemini-2.0-flash',
             tokens_used=0,
             finish_reason="streaming"
         )
