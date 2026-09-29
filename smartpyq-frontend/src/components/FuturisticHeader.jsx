@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, memo } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon, DocumentArrowUpIcon } from '@heroicons/react/24/outline';
+import { HomeIcon, BookOpenIcon, CloudArrowUpIcon, ChatBubbleLeftRightIcon, UserIcon, ArrowRightOnRectangleIcon, Cog6ToothIcon, FireIcon, MagnifyingGlassIcon, AcademicCapIcon, ShieldCheckIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../contexts/AuthContext';
 const FuturisticHeader = memo(() => {
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -63,7 +63,6 @@ const FuturisticHeader = memo(() => {
         { name: 'Practice', href: '/practice', icon: AcademicCapIcon },
         { name: 'Search', href: '/search', icon: MagnifyingGlassIcon },
         { name: 'AI', href: '/ai', icon: ChatBubbleLeftRightIcon },
-        { name: 'My Papers', href: '/my-papers', icon: DocumentArrowUpIcon },
         // Everyone can upload: visitors hit the public upload page; admins
         // get the full upload wizard (their papers publish without review).
         { name: 'Upload', href: isAdmin ? '/upload' : '/my-papers', icon: CloudArrowUpIcon },
