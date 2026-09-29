@@ -7,7 +7,8 @@ import {
   ArrowPathIcon,
   MinusIcon,
   StopIcon,
-  ClipboardDocumentIcon
+  ClipboardDocumentIcon,
+  DocumentTextIcon
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
 import { BACKEND_URL } from '../lib/backendUrl';
@@ -33,6 +34,10 @@ const ChatWidget = ({ className = "" }) => {
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  // PYQ mode: paste an exam question, get a structured step-by-step
+  // explanation. Uses the SAME stateless /chat/ask endpoint — it only
+  // scaffolds the pasted text into a clear request before sending.
+  const [pyqMode, setPyqMode] = useState(false);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatAbortRef = useRef(null);
@@ -156,9 +161,19 @@ const ChatWidget = ({ className = "" }) => {
   };
 
   const handleSendMessage = () => {
-    const message = inputValue.trim();
-    if (!message || isLoading) return;
+    const raw = inputValue.trim();
+    if (!raw || isLoading) return;
+    // PYQ mode wraps the pasted question in an explanation scaffold (the
+    // backend stays stateless and topic-agnostic; this is purely a
+    // client-side prompt template). 4000-char backend cap: trim the paste
+    // so message + scaffold always fit.
+    const message = pyqMode
+      ? `This is a previous-year exam question. Explain it step by step: restate what is being asked, identify the topic and the concept tested, show the full solution or answer with reasoning, and add one exam tip or common mistake to avoid. Keep it at a college-exam level.
+
+Question: ${raw.slice(0, 3400)}`
+      : raw;
     setInputValue('');
+    setPyqMode(false);
     setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: message, timestamp: new Date() }]);
     streamAnswer(message);
   };
@@ -382,10 +397,12 @@ const ChatWidget = ({ className = "" }) => {
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
                           onKeyDown={handleKeyDown}
-                          placeholder="Ask anything — e.g. explain recursion, solve 2x+5=15…"
+                          placeholder={pyqMode
+                            ? 'Paste a PYQ / exam question here…'
+                            : 'Ask anything — e.g. explain recursion, solve 2x+5=15…'}
                           className="w-full px-3 py-2 border border-white/15 rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 resize-none transition-colors"
-                          rows={1}
-                          style={{ minHeight: '40px', maxHeight: '120px' }}
+                          rows={pyqMode ? 3 : 1}
+                          style={{ minHeight: pyqMode ? '72px' : '40px', maxHeight: '160px' }}
                           disabled={isLoading}
                         />
                       </div>
@@ -409,25 +426,44 @@ const ChatWidget = ({ className = "" }) => {
                         </motion.button>
                       )}
                     </div>
-                    {/* Starter prompts (fresh chat only) */}
-                    {messages.length <= 1 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {[
-                          'What is artificial intelligence?',
-                          'Solve 2x + 5 = 15',
-                          'Write a Python binary search program',
-                          'Explain gravity in simple words'
-                        ].map((suggestion) => (
-                          <button
-                            key={suggestion}
-                            className="btn btn-sm btn-ghost btn-pill"
-                            onClick={() => setInputValue(suggestion)}
-                          >
-                            {suggestion}
-                          </button>
-                        ))}
-                      </div>
-                    )}
+                    {/* Composer actions */}
+                    <div className="mt-2 flex flex-wrap gap-2 items-center">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setPyqMode(v => !v);
+                          inputRef.current?.focus();
+                        }}
+                        aria-pressed={pyqMode}
+                        className={`btn btn-sm btn-pill inline-flex items-center gap-1.5 ${pyqMode ? 'btn-primary' : 'btn-ghost'}`}
+                        title="Paste an exam question and get a step-by-step explanation"
+                      >
+                        <DocumentTextIcon className="h-3.5 w-3.5" /> PYQ mode {pyqMode ? 'ON' : ''}
+                      </button>
+                      {pyqMode && (
+                        <span className="text-[10px] text-gray-400">
+                          Paste a question — you'll get topic, concept, full solution & exam tips
+                        </span>
+                      )}
+                      {messages.length <= 1 && !pyqMode && (
+                        <>
+                          {[
+                            'What is artificial intelligence?',
+                            'Solve 2x + 5 = 15',
+                            'Write a Python binary search program',
+                            'Explain gravity in simple words'
+                          ].map((suggestion) => (
+                            <button
+                              key={suggestion}
+                              className="btn btn-sm btn-ghost btn-pill"
+                              onClick={() => setInputValue(suggestion)}
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </>
+                      )}
+                    </div>
                     <p className="mt-2 text-[10px] text-gray-500 text-center">
                       Answers are AI-generated — verify important information. Enter to send, Shift+Enter for a new line.
                     </p>
