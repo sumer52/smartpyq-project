@@ -4,10 +4,11 @@ import { useNavigate } from 'react-router-dom';
 import {
   FileText, Bot, Search, BookOpen, Upload, TrendingUp,
   ArrowRight, Repeat, Brain, Sparkles, ChevronRight,
-  BarChart3, Zap, CheckCircle, Target, Flame, Lightbulb, GraduationCap
+  BarChart3, Zap, CheckCircle, Target, Flame, Lightbulb, GraduationCap, Play
 } from 'lucide-react';
 import { apiClient } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
+import { useSmartPYQIntroSafe } from '../components/intro/IntroExperienceContext';
 import { getStreams, getAllSubjectsForStreamSemester, getAvailableSemesters, getPyqYears } from '../data/pyqData';
 import MagneticButton from '../components/ui/MagneticButton';
 import ThumbnailCarousel from '../components/ui/ThumbnailCarousel';
@@ -281,6 +282,9 @@ const TestimonialCard = ({ t }) => (
 
 const HomePage = () => {
   const navigate = useNavigate();
+  // Replay the cinematic intro on demand (same handler as the footer link;
+  // replays never count toward intro analytics).
+  const replayIntro = useSmartPYQIntroSafe()?.replayIntro ?? null;
   const { isAuthenticated } = useAuth();
   const [papers, setPapers] = useState([]);
   const [stats, setStats] = useState({ total: 0, subjects: new Set(), streams: new Set() });
@@ -444,6 +448,11 @@ const HomePage = () => {
                 <button onClick={() => navigate('/practice')} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
                   <Target className="h-3.5 w-3.5" /> Practice questions
                 </button>
+                {replayIntro && (
+                  <button onClick={replayIntro} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                    <Play className="h-3.5 w-3.5" /> Replay intro
+                  </button>
+                )}
               </motion.div>
 
               {/* Live library pulse — real numbers from the database */}
