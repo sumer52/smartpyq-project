@@ -22,6 +22,11 @@ export default function IntroParticles({ exiting = false, converging = false, re
     let height = window.innerHeight;
     let scale = Math.min(window.devicePixelRatio || 1, 1.25);
     let particles = [];
+    // Slow phones get a 30fps ceiling — the drift reads identically but
+    // halves the canvas work on exactly the devices that need the help.
+    // (render() runs inside rAF; we simply skip alternate frames.)
+    const FRAME_MIN_MS = width < 700 ? 1000 / 30 : 0;
+    let lastFrameTime = 0;
     // Preallocated segment buckets: [x1, y1, x2, y2, ...] per alpha level.
     const buckets = [[], [], [], []];
 
@@ -52,6 +57,11 @@ export default function IntroParticles({ exiting = false, converging = false, re
 
     const render = (time) => {
       if (!active) return;
+      if (FRAME_MIN_MS && time - lastFrameTime < FRAME_MIN_MS) {
+        frameId = window.requestAnimationFrame(render);
+        return;
+      }
+      lastFrameTime = time;
       context.clearRect(0, 0, width, height);
       const speed = exiting ? 3.2 : 1;
       const connectionDistance = width < 700 ? 76 : 100;

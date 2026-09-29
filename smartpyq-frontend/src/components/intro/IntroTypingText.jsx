@@ -57,14 +57,35 @@ export default function IntroTypingText({ step = 0, reducedMotion = false }) {
     setIsTyping(!reducedMotion);
     if (reducedMotion) return undefined;
 
+    // rAF fires at 60-120Hz, but a typing effect reads perfectly at ~24fps
+    // (film standard). Re-rendering React at full rAF rate — with glowing
+    // text-shadow repaints — janks low-end phones; this time-gate renders
+    // the exact same visual timeline at a quarter of the React work.
+    const FRAME_MS = 1000 / 24;
     const startedAt = performance.now();
+    const total = line.duration;
     let alive = true;
+    let lastPushed = -1;
+    let lastPushTime = 0;
+    const push = (progress, now) => {
+      const nextCount = Math.floor(progress * fullText.length);
+      if (nextCount === lastPushed) return;
+      lastPushed = nextCount;
+      lastPushTime = now;
+      setTypedCount(nextCount);
+      setIsTyping(progress < 1);
+    };
     const tick = (now) => {
       if (!alive) return;
-      const progress = Math.min(1, (now - startedAt) / line.duration);
-      setTypedCount(Math.floor(progress * fullText.length));
-      setIsTyping(progress < 1);
-      if (progress < 1) frameRef.current = requestAnimationFrame(tick);
+      const progress = Math.min(1, (now - startedAt) / total);
+      if (progress >= 1) {
+        push(1, now);
+        return; // timeline complete — stop the loop entirely
+      }
+      if (lastPushed < 0 || now - lastPushTime >= FRAME_MS) {
+        push(progress, now);
+      }
+      frameRef.current = requestAnimationFrame(tick);
     };
     frameRef.current = requestAnimationFrame(tick);
     return () => {

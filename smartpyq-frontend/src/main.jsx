@@ -28,4 +28,12 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <App />
   </React.StrictMode>,
-)
+);
+
+// app:ready handshake — reveal the app over the static splash.
+// Two rAFs: guarantee the first commit has painted before we flip
+// [data-app-ready], so the splash never flickers away before content exists.
+requestAnimationFrame(() => requestAnimationFrame(() => {
+  document.documentElement.setAttribute('data-app-ready', '');
+  document.getElementById('splash')?.remove();
+}));
