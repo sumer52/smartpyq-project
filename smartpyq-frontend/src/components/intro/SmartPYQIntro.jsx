@@ -16,7 +16,7 @@ const INTRO_SCENES = [
 ];
 const TOTAL_STEPS = INTRO_SCENES.length;
 
-export default function SmartPYQIntro({ onComplete }) {
+export default function SmartPYQIntro({ onFinish }) {
   const reducedMotion = useReducedMotion();
   const [step, setStep] = useState(0);
   const [exiting, setExiting] = useState(false);
@@ -25,17 +25,23 @@ export default function SmartPYQIntro({ onComplete }) {
   const previousFocusRef = useRef(null);
   const skipRef = useRef(null);
 
-  const finish = useCallback(() => {
+  // finish(reason, scene): 'completed' when the visitor reaches the end
+  // (Enter SmartPYQ or clicking through the last scene), 'skipped' when
+  // they leave early (Escape, Skip button). The reason flows to analytics.
+  const finish = useCallback((reason = 'completed', scene = 0) => {
     if (completedRef.current) return;
     completedRef.current = true;
     window.clearTimeout(exitTimerRef.current);
     setExiting(true);
-    exitTimerRef.current = window.setTimeout(() => onComplete?.(), reducedMotion ? 240 : 540);
-  }, [onComplete, reducedMotion]);
+    exitTimerRef.current = window.setTimeout(
+      () => onFinish?.(reason, scene),
+      reducedMotion ? 240 : 540
+    );
+  }, [onFinish, reducedMotion]);
 
   const goNext = useCallback(() => {
     if (step >= TOTAL_STEPS - 1) {
-      finish();
+      finish('completed', step);
       return;
     }
     setStep((current) => Math.min(TOTAL_STEPS - 1, current + 1));
@@ -64,7 +70,7 @@ export default function SmartPYQIntro({ onComplete }) {
 
   useEffect(() => {
     const handleKeyDown = (event) => {
-      if (event.key === 'Escape') finish();
+      if (event.key === 'Escape') finish('skipped', step);
       if (event.key === 'ArrowRight') goNext();
       if (event.key === 'ArrowLeft') goBack();
       if (event.key === 'Tab') {
@@ -79,7 +85,7 @@ export default function SmartPYQIntro({ onComplete }) {
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [finish, goBack, goNext]);
+  }, [finish, goBack, goNext, step]);
 
   const showDocument = step === 1;
   const showNetwork = step === 2;
@@ -147,7 +153,7 @@ export default function SmartPYQIntro({ onComplete }) {
       <AnimatePresence mode="wait">
         {step <= 2 && <IntroTypingText key={`typing-${step}`} step={step} reducedMotion={reducedMotion} />}
         {step === 3 && <IntroAnalysisVisual key="analysis" reducedMotion={reducedMotion} />}
-        {step === 4 && <IntroLogo key="logo" reducedMotion={reducedMotion} onEnter={finish} />}
+        {step === 4 && <IntroLogo key="logo" reducedMotion={reducedMotion} onEnter={() => finish('completed', step)} />}
       </AnimatePresence>
 
       {step < 4 && (
@@ -165,7 +171,7 @@ export default function SmartPYQIntro({ onComplete }) {
         </nav>
       )}
 
-      <button ref={skipRef} className="sp-intro__skip" type="button" onClick={finish}>
+      <button ref={skipRef} className="sp-intro__skip" type="button" onClick={() => finish('skipped', step)}>
         Skip Intro <span aria-hidden="true">→</span>
       </button>
     </motion.section>

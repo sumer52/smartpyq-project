@@ -16,6 +16,7 @@ from app.models.question import (
     AnalysisResult, AnalysisStatus, SimilarityMethod, PracticeAttempt,
 )
 from app.models.bookmark import Bookmark
+from app.models.intro_analytics import IntroEventAggregate, INTRO_EVENT_TYPES
 
 # Export all models for easy importing
 __all__ = [
@@ -56,4 +57,8 @@ __all__ = [
     "SimilarityMethod",
     "PracticeAttempt",
     "Bookmark",
+
+    # Intro analytics
+    "IntroEventAggregate",
+    "INTRO_EVENT_TYPES",
 ]
