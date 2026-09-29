@@ -50,6 +50,16 @@ PATTERNS = [
 
 files_scanned = 0
 violations = []
+
+# Sanctioned policy: main.jsx disables the right-click context menu with
+# exactly ONE listener (product decision). Strip that exact form — source
+# and minified variants — before scanning, so S2 catches any OTHER
+# contextmenu blocking but not the sanctioned one.
+SANCTIONED_CONTEXTMENU = [
+    re.compile(r"document\.addEventListener\(\s*['\"]contextmenu['\"],\s*\(\w+\)\s*=>\s*\w+\.preventDefault\(\)\s*\)"),
+    re.compile(r"document\.addEventListener\(\s*[\"']contextmenu[\"'],\s*\w+\s*=>\s*\w+\.preventDefault\(\)\s*\)"),
+]
+
 for d in SCAN_DIRS:
     if not os.path.isdir(d):
         continue
@@ -67,6 +77,8 @@ for d in SCAN_DIRS:
                 text = open(p, encoding="utf-8", errors="ignore").read()
             except OSError:
                 continue
+            for _sanctioned in SANCTIONED_CONTEXTMENU:
+                text = _sanctioned.sub("", text)
             files_scanned += 1
             for pat, label in PATTERNS:
                 for m in re.finditer(pat, text):
@@ -156,7 +168,10 @@ async def run():
             })()"""
             r = json.loads(await ev(probe) or "{}")
 
-            check("R4 right-click (contextmenu) not blocked", r.get("contextmenu") is False, f"defaultPrevented={r.get('contextmenu')}")
+            # POLICY: right-click context menu is disabled site-wide
+            # (main.jsx), so contextmenu MUST be prevented. Keyboard
+            # DevTools shortcuts MUST stay free (R5-R8).
+            check("R4 right-click (contextmenu) blocked by policy", r.get("contextmenu") is True, f"defaultPrevented={r.get('contextmenu')}")
             check("R5 F12 not blocked", r.get("F12") is False, f"defaultPrevented={r.get('F12')}")
             check("R6 Ctrl+Shift+I not blocked", r.get("Ctrl+Shift+I") is False, f"defaultPrevented={r.get('Ctrl+Shift+I')}")
             check("R7 Ctrl+Shift+J not blocked", r.get("Ctrl+Shift+J") is False, f"defaultPrevented={r.get('Ctrl+Shift+J')}")

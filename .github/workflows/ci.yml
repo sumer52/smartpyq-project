@@ -132,7 +132,7 @@ jobs:
           retention-days: 7
 
   devtools-check:
-    name: DevTools freedom guard
+    name: DevTools policy guard
     runs-on: ubuntu-latest
     timeout-minutes: 12
     steps:
@@ -170,7 +170,7 @@ jobs:
       - name: Export Chrome path
         run: echo "CHROME_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
 
-      - name: Serve dist and run DevTools guard (source + runtime)
+      - name: Serve dist and run DevTools policy guard (source + runtime)
         id: devtools
         run: |
           mkdir -p tmp
