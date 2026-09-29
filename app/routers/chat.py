@@ -4,6 +4,7 @@ Handles AI chatbot interactions, streaming responses, and session management.
 """
 
 import json
+import logging
 from datetime import datetime
 from typing import List, Optional, AsyncGenerator
 
@@ -34,6 +35,8 @@ from ..core.exceptions import (
 )
 from ..models.user import User
 from ..models.tenant import Tenant
+
+logger = logging.getLogger(__name__)
 from ..schemas.chat import ChatRequest as ChatRequestSchema
 from ..services.chat_service import ChatService
 
@@ -105,6 +108,77 @@ class SimpleChatResponse(BaseModel):
     """Simple chat response"""
     response: str
     session_id: Optional[str] = None
+
+# ---------------- General-purpose doubt-solving chat (stateless) ----------------
+
+class AskRequest(BaseModel):
+    """One independent question. No conversation id, no stored history."""
+    message: str = Field(..., min_length=1, max_length=4000, description="The user's question")
+
+
+@router.post("/ask", responses=RATE_LIMITED)
+@limiter.limit("10/minute;120/hour")
+async def ask_once(payload: AskRequest, request: Request):
+    """Answer one question with a streaming (SSE) AI response.
+
+    Stateless by design: nothing about this exchange is written to the
+    database — no sessions, no message rows, no conversation memory. Each
+    request is independent. The system prompt is the general-purpose
+    doubt-solver from app.utils.ai; API keys stay server-side.
+    """
+    from app.utils.ai import ai_service, SMARTPYQ_SYSTEM_PROMPT, AIMessage, AIProvider
+
+    async def generate() -> AsyncGenerator[str, None]:
+        # NOTE: EventSourceResponse adds the "data: " prefix and CRLF framing
+        # itself — yield ONLY the JSON payload here.
+        # Greet bare greetings without burning an AI call.
+        if len(payload.message) <= 60 and not any(c.isdigit() for c in payload.message):
+            lowered = payload.message.lower().strip().rstrip("!?. ")
+            if lowered in {"hi", "hello", "hey", "hii", "helo", "good morning", "good evening", "good afternoon"}:
+                yield json.dumps({
+                    "type": "content",
+                    "content": "Hi! Ask me anything — math, code, science, concepts, or anything else you're curious about.",
+                })
+                yield json.dumps({"type": "done", "content": ""})
+                return
+
+        if ai_service.gemini_client is None and ai_service.openai_client is None:
+            yield json.dumps({
+                "type": "error",
+                "message": "The AI service is not configured right now. Please try again later.",
+            })
+            return
+
+        messages = [
+            AIMessage(role="system", content=SMARTPYQ_SYSTEM_PROMPT),
+            AIMessage(role="user", content=payload.message),
+        ]
+        produced = False
+        try:
+            stream = await ai_service.chat_completion(messages, stream=True)
+            async for chunk in stream:
+                if chunk:
+                    produced = True
+                    yield json.dumps({"type": "content", "content": chunk})
+            if not produced:
+                yield json.dumps({
+                    "type": "error",
+                    "message": "The AI returned an empty response. Please try again.",
+                })
+            else:
+                yield json.dumps({"type": "done", "content": ""})
+        except Exception:
+            # Never leak provider errors, quota details, or stack traces.
+            logger.warning("AI generation failed for an /chat/ask request", exc_info=True)
+            yield json.dumps({
+                "type": "error",
+                "message": "Something went wrong while generating the answer. Please try again.",
+            })
+
+    return EventSourceResponse(generate(), media_type="text/plain", headers={
+        "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
+    })
 
 @router.post("/simple", response_model=SimpleChatResponse, responses=RATE_LIMITED)
 @limiter.limit("20/hour")

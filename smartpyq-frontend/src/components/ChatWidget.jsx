@@ -1,301 +1,220 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, Suspense, lazy } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  ChatBubbleLeftRightIcon,
   XMarkIcon,
   PaperAirplaneIcon,
   SparklesIcon,
-  ExclamationTriangleIcon,
   ArrowPathIcon,
-  MinusIcon
+  MinusIcon,
+  StopIcon,
+  ClipboardDocumentIcon
 } from '@heroicons/react/24/outline';
 import { ChatBubbleLeftRightIcon as ChatBubbleLeftRightIconSolid } from '@heroicons/react/24/solid';
 import { BACKEND_URL } from '../lib/backendUrl';
+
+// Markdown rendering (headings, lists, tables, code blocks with copy) is
+// lazy-loaded: it is only needed once an answer exists, never on page load.
+const ChatMarkdown = lazy(() => import('./chat/ChatMarkdown'));
+
+const WELCOME = {
+  id: 1,
+  type: 'bot',
+  content: "Hi! I'm your AI assistant. Ask me **anything** — math, physics, code, concepts, career doubts, or anything else you're curious about.",
+  timestamp: new Date()
+};
+
+const GENERIC_ERROR = 'Something went wrong while generating the answer. Please try again.';
+
 const ChatWidget = ({ className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      type: 'bot',
-      content: 'Hi! I\'m your AI study assistant. I can help you with questions about previous year papers, study tips, and academic guidance. How can I help you today?',
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState([WELCOME]);
   const [inputValue, setInputValue] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const chatAbortRef = useRef(null);
-  const chatContainerRef = useRef(null);
-  // Auto-scroll to bottom when new messages arrive
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
-  // Focus input when chat opens
+
   useEffect(() => {
     if (isOpen && !isMinimized && inputRef.current) {
       inputRef.current.focus();
     }
+    if (isOpen) setUnreadCount(0);
   }, [isOpen, isMinimized]);
-  // Handle unread count
-  useEffect(() => {
-    if (isOpen) {
-      setUnreadCount(0);
-    }
-  }, [isOpen]);
-  // Cleanup SSE connection on unmount
-  useEffect(() => {
-    return () => {
-      if (chatAbortRef.current) {
-        chatAbortRef.current.abort();
-      }
-    };
-  }, []);
-  // Load chat history from localStorage
-  useEffect(() => {
-    const savedMessages = localStorage.getItem(`chat_${sessionId}`);
-    if (savedMessages) {
-      try {
-        const parsed = JSON.parse(savedMessages);
-        setMessages(parsed);
-      } catch (error) {
-        console.error('Failed to load chat history:', error);
-      }
-    }
-  }, [sessionId]);
-  // Save messages to localStorage
-  useEffect(() => {
-    if (messages.length > 1) { // Don't save just the welcome message
-      localStorage.setItem(`chat_${sessionId}`, JSON.stringify(messages));
-    }
-  }, [messages, sessionId]);
-  // Mock typing animation
-  const showTypingAnimation = () => {
-    setIsTyping(true);
-    // Simulate variable typing delay
-    const typingDelay = Math.random() * 2000 + 1000; // 1-3 seconds
-    setTimeout(() => {
-      setIsTyping(false);
-    }, typingDelay);
-  };
 
-  // Handle SSE connection for streaming responses
-  const handleSSEResponse = (userMessage) => {
-    // The backend stream endpoint is POST /api/v1/chat/stream with a JSON body
-    // and Bearer auth — EventSource cannot send either, so we read the SSE
-    // response body with fetch + ReadableStream instead.
+  // Abort any in-flight stream when the widget unmounts.
+  useEffect(() => () => chatAbortRef.current?.abort(), []);
+
+  // ---------------- Streaming (stateless) ----------------
+  // Each question is independent: POST /api/v1/chat/ask returns an SSE
+  // stream. Nothing is persisted server-side and nothing is saved here.
+  const streamAnswer = (question) => {
     const controller = new AbortController();
     chatAbortRef.current = controller;
-    let botMessageId = Date.now();
-    let accumulatedContent = '';
+    const botMessageId = Date.now() + Math.floor(Math.random() * 1000);
+    let accumulated = '';
+    setIsTyping(true);
+    setIsLoading(true);
 
-    const appendContent = (content) => {
-      accumulatedContent += content;
+    const upsertBotMessage = (content, streaming) => {
       setMessages(prev => {
-        const existing = prev.find(msg => msg.id === botMessageId);
+        const existing = prev.find(m => m.id === botMessageId);
         if (existing) {
-          return prev.map(msg =>
-            msg.id === botMessageId
-              ? { ...msg, content: accumulatedContent }
-              : msg
-          );
+          return prev.map(m => (m.id === botMessageId ? { ...m, content, streaming } : m));
         }
-        return [...prev, {
-          id: botMessageId,
-          type: 'bot',
-          content: accumulatedContent,
-          timestamp: new Date(),
-          streaming: true
-        }];
+        return [...prev, { id: botMessageId, type: 'bot', content, timestamp: new Date(), streaming }];
       });
+    };
+
+    const finish = () => {
+      setIsTyping(false);
+      setIsLoading(false);
+      if (!isOpen) setUnreadCount(prev => prev + 1);
     };
 
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
     const headers = { 'Content-Type': 'application/json' };
     if (token) headers.Authorization = `Bearer ${token}`;
 
-    fetch(`${BACKEND_URL}/api/v1/chat/stream`, {
+    fetch(`${BACKEND_URL}/api/v1/chat/ask`, {
       method: 'POST',
       headers,
-      body: JSON.stringify({ message: userMessage, prompt: userMessage, session_id: sessionId, stream: true }),
+      body: JSON.stringify({ message: question }),
       signal: controller.signal,
     })
       .then(async (response) => {
         if (!response.ok || !response.body) {
-          throw new Error(`Stream unavailable (HTTP ${response.status})`);
+          throw new Error(`chat unavailable (HTTP ${response.status})`);
         }
         const reader = response.body.getReader();
         const decoder = new TextDecoder();
         let buffer = '';
+        let sawDone = false;
         for (;;) {
           const { done, value } = await reader.read();
           if (done) break;
           buffer += decoder.decode(value, { stream: true });
-          // SSE frames are separated by blank lines; each line is "data: {...}"
-          const frames = buffer.split('\n\n');
+          // SSE frames are CRLF-separated (sse-starlette); normalize first.
+          const frames = buffer.replace(/\r\n/g, '\n').split('\n\n');
           buffer = frames.pop() || '';
           for (const frame of frames) {
             for (const line of frame.split('\n')) {
               if (!line.startsWith('data:')) continue;
               try {
                 const data = JSON.parse(line.slice(5).trim());
-                if (data.type === 'content' || data.type === 'chunk') {
-                  appendContent(data.content || data.text || '');
-                } else if (data.type === 'done' || data.type === 'end') {
-                  setMessages(prev => prev.map(msg =>
-                    msg.id === botMessageId ? { ...msg, streaming: false } : msg
-                  ));
-                  setIsLoading(false);
+                if (data.type === 'content' && data.content) {
+                  accumulated += data.content;
+                  setIsTyping(false);
+                  upsertBotMessage(accumulated, true);
+                } else if (data.type === 'error') {
+                  accumulated = accumulated || `⚠️ ${data.message || GENERIC_ERROR}`;
+                  upsertBotMessage(accumulated, false);
+                  sawDone = true;
+                  finish();
                   reader.cancel().catch(() => {});
                   return;
-                } else if (data.type === 'error') {
-                  throw new Error(data.message || 'Stream error');
+                } else if (data.type === 'done') {
+                  sawDone = true;
+                  upsertBotMessage(accumulated || '…', false);
+                  finish();
+                  reader.cancel().catch(() => {});
+                  return;
                 }
-              } catch (parseErr) {
-                // Ignore malformed frames; never kill the stream for one bad line
+              } catch {
+                // Ignore malformed frames; never kill the stream for one bad line.
               }
             }
           }
         }
-        // Stream ended without an explicit done frame
-        setMessages(prev => prev.map(msg =>
-          msg.id === botMessageId ? { ...msg, streaming: false } : msg
-        ));
-        setIsLoading(false);
+        if (!sawDone) {
+          upsertBotMessage(accumulated || `⚠️ ${GENERIC_ERROR}`, false);
+          finish();
+        }
       })
       .catch((err) => {
-        if (err.name === 'AbortError') return;
-        console.warn('Streaming chat unavailable, falling back:', err.message);
-        handleFallbackResponse(userMessage);
+        if (err.name === 'AbortError') {
+          // User pressed Stop — keep whatever streamed in.
+          upsertBotMessage(accumulated || '_Stopped._', false);
+          setIsTyping(false);
+          setIsLoading(false);
+          return;
+        }
+        upsertBotMessage(`⚠️ ${GENERIC_ERROR}`, false);
+        setIsTyping(false);
+        setIsLoading(false);
+        if (!isOpen) setUnreadCount(prev => prev + 1);
       });
   };
-  // Smart local response generator
-  const getLocalResponse = (msg) => {
-    const lower = msg.toLowerCase();
-    if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey'))
-      return 'Hello! Welcome to SmartPYQ. I can help you with previous year papers, exam preparation tips, and study guidance. What would you like to know?';
-    if (lower.includes('pyq') || lower.includes('previous year') || lower.includes('question paper'))
-      return 'SmartPYQ has previous year question papers for Osmania University across B.Sc, B.Com, BCA, and BBA courses. Go to the PYQ Hub to browse papers by stream, semester, and subject!';
-    if (lower.includes('repeated') || lower.includes('important'))
-      return 'One of SmartPYQ best features is detecting repeated questions across multiple exam years. Go to the Analysis section to upload a paper and discover which topics appear most frequently.';
-    if (lower.includes('upload'))
-      return 'You can upload question papers to SmartPYQ! Go to the Upload page and select your PDF or image file. Our AI will automatically extract questions and categorize them by topic.';
-    if (lower.includes('practice'))
-      return 'The Practice mode lets you test yourself on questions extracted from previous year papers. Go to the Practice section to start a practice session organized by subject and difficulty.';
-    if (lower.includes('analyze') || lower.includes('analysis'))
-      return 'SmartPYQ AI Analysis processes question papers to identify patterns: repeated questions, topic frequency, important areas, and exam trends. Upload a paper in the Analyze section!';
-    if (lower.includes('search'))
-      return 'Use the Smart Search feature to find papers instantly! You can search by subject name, course, year, or keywords.';
-    if (lower.includes('course') || lower.includes('stream') || lower.includes('b.sc') || lower.includes('b.com') || lower.includes('bca') || lower.includes('bba'))
-      return 'SmartPYQ covers 4 courses: B.Sc, B.Com, BCA, and BBA at Osmania University. Each has multiple specializations and semesters. Go to PYQ Hub to explore!';
-    if (lower.includes('study tip') || lower.includes('exam') || lower.includes('preparation'))
-      return 'Smart study tips: 1) Focus on repeated questions first. 2) Understand exam patterns. 3) Practice with past papers under timed conditions. 4) Use SmartPYQ analysis to identify weak areas. 5) Revise regularly!';
-    if (lower.includes('thank'))
-      return 'You are welcome! If you have any more questions about SmartPYQ or exam preparation, feel free to ask. Good luck with your studies!';
-    if (lower.includes('help'))
-      return 'I can help you with: Finding previous year papers, Analyzing exam patterns, Discovering repeated questions, Practice preparation tips, Uploading papers, and Course/subject information. Just ask me anything!';
-    return 'Thanks for your question! I am SmartPYQ AI assistant. I can help you with previous year papers, exam patterns, repeated questions, study tips, and more. Try asking me about PYQ papers, analysis, practice, or study strategies!';
-  };
 
-  // Send message to chat API
-  const handleFallbackResponse = async (userMessage) => {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 15000);
-    try {
-      showTypingAnimation();
-      const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
-      let response;
-      if (token) {
-        try {
-          response = await fetch(`${BACKEND_URL}/api/v1/chat/`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-            body: JSON.stringify({ prompt: userMessage, session_id: sessionId, stream: false }),
-            signal: controller.signal
-          });
-        } catch(e) {}
-      }
-      if (!token || !response || !response.ok) {
-        try {
-          response = await fetch(`${BACKEND_URL}/api/v1/chat/simple`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt: userMessage, session_id: sessionId }),
-            signal: controller.signal
-          });
-        } catch(e) {}
-      }
-      if (response && response.ok) {
-        const data = await response.json();
-        setTimeout(() => {
-          setMessages(prev => [...prev, { id: Date.now(), type: 'bot', content: data.response || 'I had trouble processing that. Please try again.', timestamp: new Date() }]);
-          setIsLoading(false);
-          if (!isOpen) setUnreadCount(prev => prev + 1);
-        }, Math.max(0, 800 - (Date.now() % 800)));
-      } else { throw new Error('Backend unavailable'); }
-    } catch (error) {
-      const localReply = getLocalResponse(userMessage);
-      const delay = Math.min(600 + localReply.length * 5, 1500);
-      setTimeout(() => {
-        setMessages(prev => [...prev, { id: Date.now(), type: 'bot', content: localReply, timestamp: new Date() }]);
-        setIsLoading(false);
-        setIsTyping(false);
-        if (!isOpen) setUnreadCount(prev => prev + 1);
-      }, delay);
-    } finally { clearTimeout(timeoutId); }
-  };
-  // Send the user's message: append it, then try SSE streaming, falling back to the
-  // regular chat API and finally to the local response generator.
   const handleSendMessage = () => {
     const message = inputValue.trim();
     if (!message || isLoading) return;
     setInputValue('');
     setMessages(prev => [...prev, { id: Date.now(), type: 'user', content: message, timestamp: new Date() }]);
-    setIsLoading(true);
-    setError(null);
-    handleSSEResponse(message);
+    streamAnswer(message);
   };
-  const handleKeyPress = (e) => {
+
+  const handleRegenerate = () => {
+    if (isLoading) return;
+    const lastUser = [...messages].reverse().find(m => m.type === 'user');
+    if (!lastUser) return;
+    // Drop the trailing bot answer(s) and re-ask the same question.
+    setMessages(prev => {
+      const copy = [...prev];
+      while (copy.length && copy[copy.length - 1].type === 'bot') copy.pop();
+      return copy;
+    });
+    streamAnswer(lastUser.content);
+  };
+
+  const handleStop = () => {
+    chatAbortRef.current?.abort();
+  };
+
+  // Enter sends; Shift+Enter inserts a newline (textarea default).
+  const handleKeyDown = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
     }
   };
+
   const toggleChat = () => {
     setIsOpen(!isOpen);
-    if (!isOpen) {
-      setIsMinimized(false);
-    }
+    if (!isOpen) setIsMinimized(false);
   };
-  const toggleMinimize = () => {
-    setIsMinimized(!isMinimized);
-  };
+  const toggleMinimize = () => setIsMinimized(!isMinimized);
+
   const clearChat = () => {
-    setMessages([
-      {
-        id: 1,
-        type: 'bot',
-        content: "Chat cleared! Ask me anything — I'm here to help.",
-        timestamp: new Date()
-      }
-    ]);
-    localStorage.removeItem(`chat_${sessionId}`);
+    chatAbortRef.current?.abort();
+    setMessages([{ ...WELCOME, id: Date.now(), content: "Chat cleared. Ask me anything!", timestamp: new Date() }]);
   };
-  const formatTime = (date) => {
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: true
-    }).format(date);
+
+  const copyAnswer = async (content) => {
+    try { await navigator.clipboard.writeText(content); } catch { /* clipboard unavailable */ }
   };
+
+  const formatTime = (date) => new Intl.DateTimeFormat('en-US', {
+    hour: '2-digit', minute: '2-digit', hour12: true
+  }).format(date);
+
+  // Index of the last completed bot answer — that one gets the Regenerate action.
+  const lastBotIndex = (() => {
+    for (let i = messages.length - 1; i >= 0; i -= 1) {
+      if (messages[i].type === 'bot' && !messages[i].streaming && i !== 0) return i;
+    }
+    return -1;
+  })();
+
   const TypingIndicator = () => (
     <motion.div
       className="flex items-center space-x-1 px-4 py-2"
@@ -308,23 +227,15 @@ const ChatWidget = ({ className = "" }) => {
           <motion.div
             key={i}
             className="w-2 h-2 bg-white/30 rounded-full"
-            animate={{
-              scale: [1, 1.2, 1],
-              opacity: [0.5, 1, 0.5]
-            }}
-            transition={
-              {
-                duration: 1.2,
-                repeat: Infinity,
-                delay: i * 0.2
-              }
-            }
+            animate={{ scale: [1, 1.2, 1], opacity: [0.5, 1, 0.5] }}
+            transition={{ duration: 1.2, repeat: Infinity, delay: i * 0.2 }}
           />
         ))}
       </div>
-      <span className="text-sm text-gray-500 ml-2">AI is typing...</span>
+      <span className="text-sm text-gray-500 ml-2">Thinking…</span>
     </motion.div>
   );
+
   return (
     <div className={`fixed bottom-4 right-4 sm:bottom-6 sm:right-6 z-50 ${className}`} style={{ maxWidth: 'calc(100vw - 32px)' }}>
       <AnimatePresence>
@@ -344,11 +255,19 @@ const ChatWidget = ({ className = "" }) => {
                   <SparklesIcon className="h-5 w-5 text-white" />
                 </div>
                 <div>
-                  <h3 className="font-semibold text-white">AI Study Assistant</h3>
-                  <p className="text-xs text-white/80">Always here to help</p>
+                  <h3 className="font-semibold text-white">AI Assistant</h3>
+                  <p className="text-xs text-white/80">Ask anything — doubts, code, concepts</p>
                 </div>
               </div>
               <div className="flex items-center space-x-2">
+                <motion.button
+                  className="btn btn-icon btn-sm btn-ghost"
+                  onClick={clearChat}
+                  aria-label="Clear chat"
+                  title="Clear chat"
+                >
+                  <ArrowPathIcon className="h-4 w-4" />
+                </motion.button>
                 <motion.button
                   className="btn btn-icon btn-sm btn-ghost"
                   onClick={toggleMinimize}
@@ -374,12 +293,8 @@ const ChatWidget = ({ className = "" }) => {
                   transition={{ duration: 0.2 }}
                 >
                   {/* Messages */}
-                  <div 
-                    ref={chatContainerRef}
-                    className="h-96 overflow-y-auto p-4 space-y-4 bg-white/5"
-                    style={{ scrollbarWidth: 'thin' }}
-                  >
-                    {messages.map((message) => (
+                  <div className="h-96 overflow-y-auto p-4 space-y-4 bg-white/5" style={{ scrollbarWidth: 'thin' }}>
+                    {messages.map((message, index) => (
                       <motion.div
                         key={message.id}
                         className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
@@ -387,25 +302,54 @@ const ChatWidget = ({ className = "" }) => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <div className={`max-w-[80%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
+                        <div className={`max-w-[85%] ${message.type === 'user' ? 'order-2' : 'order-1'}`}>
                           <div
-                            className={`px-4 py-2 rounded-2xl ${message.type === 'user'
+                            className={`px-4 py-2.5 rounded-2xl ${message.type === 'user'
                               ? 'bg-brand-600 text-white rounded-br-md'
                               : 'bg-white/5 text-white rounded-bl-md shadow-xs border border-white/10'
                             }`}
                           >
-                            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            {message.type === 'user' ? (
+                              <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                            ) : (
+                              <Suspense fallback={<p className="text-sm whitespace-pre-wrap">{message.content}</p>}>
+                                <ChatMarkdown content={message.content} />
+                              </Suspense>
+                            )}
                             {message.streaming && (
                               <motion.div
-                                className="inline-block w-2 h-4 bg-current ml-1"
+                                className="inline-block w-2 h-4 bg-current ml-1 align-middle"
                                 animate={{ opacity: [1, 0] }}
                                 transition={{ duration: 0.8, repeat: Infinity }}
                               />
                             )}
                           </div>
-                          <p className={`text-xs text-gray-500 mt-1 ${message.type === 'user' ? 'text-right' : 'text-left'}`}>
-                            {formatTime(new Date(message.timestamp))}
-                          </p>
+                          {/* Answer actions */}
+                          {message.type === 'bot' && !message.streaming && message.content && (
+                            <div className={`flex items-center gap-3 mt-1 text-[11px] text-gray-500 ${index === lastBotIndex ? '' : 'opacity-70'}`}>
+                              <button
+                                onClick={() => copyAnswer(message.content)}
+                                className="inline-flex items-center gap-1 hover:text-white transition-colors focus:outline-hidden"
+                                aria-label="Copy answer"
+                              >
+                                <ClipboardDocumentIcon className="h-3 w-3" /> Copy
+                              </button>
+                              {index === lastBotIndex && (
+                                <button
+                                  onClick={handleRegenerate}
+                                  disabled={isLoading}
+                                  className="inline-flex items-center gap-1 hover:text-white transition-colors disabled:opacity-40 focus:outline-hidden"
+                                  aria-label="Regenerate response"
+                                >
+                                  <ArrowPathIcon className="h-3 w-3" /> Regenerate
+                                </button>
+                              )}
+                              <span className="ml-auto">{formatTime(new Date(message.timestamp))}</span>
+                            </div>
+                          )}
+                          {message.type === 'user' && (
+                            <p className="text-xs text-gray-500 mt-1 text-right">{formatTime(new Date(message.timestamp))}</p>
+                          )}
                         </div>
                         {message.type === 'bot' && (
                           <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center mr-2 mt-1 order-0">
@@ -414,7 +358,7 @@ const ChatWidget = ({ className = "" }) => {
                         )}
                       </motion.div>
                     ))}
-                    {/* Typing indicator */}
+                    {/* Thinking indicator (before the first token arrives) */}
                     <AnimatePresence>
                       {isTyping && (
                         <div className="flex justify-start">
@@ -429,29 +373,6 @@ const ChatWidget = ({ className = "" }) => {
                     </AnimatePresence>
                     <div ref={messagesEndRef} />
                   </div>
-                  {/* Error message */}
-                  <AnimatePresence>
-                    {error && (
-                      <motion.div
-                        className="px-4 py-2 bg-red-50 border-t border-red-100"
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                      >
-                        <div className="flex items-center text-red-600 text-sm">
-                          <ExclamationTriangleIcon className="h-4 w-4 mr-2" />
-                          {error}
-                          <button
-                            onClick={() => setError(null)}
-                            className="ml-auto text-red-500 hover:text-red-700 focus:outline-hidden"
-                            aria-label="Dismiss error"
-                          >
-                            <XMarkIcon className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                   {/* Input */}
                   <div className="p-4 bg-white/5 border-t border-white/10">
                     <div className="flex items-end space-x-2">
@@ -460,64 +381,56 @@ const ChatWidget = ({ className = "" }) => {
                           ref={inputRef}
                           value={inputValue}
                           onChange={(e) => setInputValue(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          placeholder="Ask me anything about studies..."
+                          onKeyDown={handleKeyDown}
+                          placeholder="Ask anything — e.g. explain recursion, solve 2x+5=15…"
                           className="w-full px-3 py-2 border border-white/15 rounded-lg focus:ring-2 focus:ring-brand-500/30 focus:border-brand-500 resize-none transition-colors"
                           rows={1}
                           style={{ minHeight: '40px', maxHeight: '120px' }}
                           disabled={isLoading}
                         />
                       </div>
-                      <motion.button
-                        className={`btn btn-icon ${
-                          inputValue.trim() && !isLoading
-                            ? 'btn-primary'
-                            : 'btn-ghost'
-                        }`}
-                        onClick={handleSendMessage}
-                        disabled={!inputValue.trim() || isLoading}
-                        aria-label="Send message"
-                      >
-                        {isLoading ? (
-                          <ArrowPathIcon className="h-5 w-5 animate-spin" />
-                        ) : (
-                          <PaperAirplaneIcon className="h-5 w-5" />
-                        )}
-                      </motion.button>
-                    </div>
-                    {/* Quick actions */}
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {messages.length <= 1 && (
-                        <>
-                          <button
-                            className="btn btn-sm btn-ghost btn-pill"
-                            onClick={() => setInputValue('Help me find previous year papers for computer science')}
-                          >
-                            Find Papers
-                          </button>
-                          <button
-                            className="btn btn-sm btn-ghost btn-pill"
-                            onClick={() => setInputValue('What are some good study tips for exams?')}
-                          >
-                            Study Tips
-                          </button>
-                          <button
-                            className="btn btn-sm btn-ghost btn-pill"
-                            onClick={() => setInputValue('Explain this topic to me')}
-                          >
-                            Explain Topic
-                          </button>
-                        </>
-                      )}
-                      {messages.length > 2 && (
-                        <button
-                          className="btn btn-xs btn-danger btn-pill"
-                          onClick={clearChat}
+                      {isLoading ? (
+                        <motion.button
+                          className="btn btn-icon btn-danger"
+                          onClick={handleStop}
+                          aria-label="Stop generating"
+                          title="Stop generating"
                         >
-                          Clear Chat
-                        </button>
+                          <StopIcon className="h-5 w-5" />
+                        </motion.button>
+                      ) : (
+                        <motion.button
+                          className={`btn btn-icon ${inputValue.trim() ? 'btn-primary' : 'btn-ghost'}`}
+                          onClick={handleSendMessage}
+                          disabled={!inputValue.trim()}
+                          aria-label="Send message"
+                        >
+                          <PaperAirplaneIcon className="h-5 w-5" />
+                        </motion.button>
                       )}
                     </div>
+                    {/* Starter prompts (fresh chat only) */}
+                    {messages.length <= 1 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {[
+                          'What is artificial intelligence?',
+                          'Solve 2x + 5 = 15',
+                          'Write a Python binary search program',
+                          'Explain gravity in simple words'
+                        ].map((suggestion) => (
+                          <button
+                            key={suggestion}
+                            className="btn btn-sm btn-ghost btn-pill"
+                            onClick={() => setInputValue(suggestion)}
+                          >
+                            {suggestion}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <p className="mt-2 text-[10px] text-gray-500 text-center">
+                      Answers are AI-generated — verify important information. Enter to send, Shift+Enter for a new line.
+                    </p>
                   </div>
                 </motion.div>
               )}
@@ -527,9 +440,7 @@ const ChatWidget = ({ className = "" }) => {
       </AnimatePresence>
       {/* Chat toggle button */}
       <motion.button
-        className={`btn btn-icon btn-lg w-14 h-14 ${
-          isOpen ? 'btn-secondary' : 'btn-primary'
-        }`}
+        className={`btn btn-icon btn-lg w-14 h-14 ${isOpen ? 'btn-secondary' : 'btn-primary'}`}
         onClick={toggleChat}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
@@ -571,4 +482,5 @@ const ChatWidget = ({ className = "" }) => {
     </div>
   );
 };
+
 export default ChatWidget;
