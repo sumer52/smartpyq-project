@@ -269,8 +269,14 @@ class AIService:
             )
             
             for chunk in response:
-                if chunk.text:
-                    yield chunk.text
+                # chunk.text raises when a chunk carries multiple Parts
+                # (e.g. markdown + code fences); drain .parts instead. Skip
+                # empty/None parts (thought summaries, tool calls, etc.).
+                parts = getattr(chunk, "parts", None) or []
+                for part in parts:
+                    text = getattr(part, "text", None)
+                    if text:
+                        yield text
                     
         except Exception as e:
             logger.error(f"Gemini streaming error: {e}")
