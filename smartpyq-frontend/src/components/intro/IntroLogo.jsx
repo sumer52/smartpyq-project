@@ -19,7 +19,7 @@ export default function IntroLogo({ reducedMotion, onEnter }) {
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: reducedMotion ? 0.3 : 1.25, ease: cinematicEase }}
       />
-      <img className="sp-intro__logo" src="/logo.png" alt="SmartPYQ — Learn Smarter, Score Better" />
+      <img className="sp-intro__logo" src="/logo.webp" alt="SmartPYQ — Learn Smarter, Score Better" />
       <motion.p
         className="sp-intro__brand-support"
         initial={{ opacity: 0, y: reducedMotion ? 0 : 8 }}

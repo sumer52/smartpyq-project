@@ -104,7 +104,7 @@ export default function SmartPYQIntro({ onFinish }) {
         goNext();
       }}
     >
-      <img className="sp-intro__background" src="/intro-background.png" alt="" aria-hidden="true" />
+      <img className="sp-intro__background" src="/intro-background.webp" alt="" aria-hidden="true" />
       <div className="sp-intro__vignette" aria-hidden="true" />
       <div className="sp-intro__aurora sp-intro__aurora--left" aria-hidden="true" />
       <div className="sp-intro__aurora sp-intro__aurora--right" aria-hidden="true" />

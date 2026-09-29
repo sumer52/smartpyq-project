@@ -84,7 +84,7 @@ const Footer = ({ className = "" }) => {
           <motion.div variants={itemVariants} className="lg:col-span-1">
             <div className="mb-6">
               <Link to="/" viewTransition className="flex items-center group">
-                <img src="/logo.png" alt="SmartPYQ" className="h-12 sm:h-14 md:h-16 w-auto object-contain group-hover:scale-105 transition-transform"  />
+                <img src="/logo-128.webp" alt="SmartPYQ" width="128" height="85" className="h-12 sm:h-14 md:h-16 w-auto object-contain group-hover:scale-105 transition-transform"  />
               </Link>
             </div>
             <p className="text-gray-300 mb-6 leading-relaxed">

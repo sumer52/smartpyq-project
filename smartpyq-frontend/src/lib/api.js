@@ -51,9 +51,12 @@ class NotFoundError extends ApiError {
 class ApiClient {
   constructor(baseURL = BACKEND_URL) {
     this.baseURL = baseURL;
-    this.defaultHeaders = {
-      'Content-Type': 'application/json',
-    };
+    // NOTE: no default Content-Type. GET/DELETE requests carry no body, and a
+    // Content-Type header on a body-less request makes it a non-simple CORS
+    // request, forcing a preflight OPTIONS round-trip to the backend before
+    // every call (~2x perceived latency). JSON bodies set it explicitly in
+    // request() below.
+    this.defaultHeaders = {};
     this.onUnauthorized = null; // Callback for 401 errors
   }
 
@@ -120,8 +123,11 @@ class ApiClient {
       headers: this.getAuthHeaders(),
       ...options,
     };
-    // Multipart bodies must set their own boundary — never send the default
-    // JSON content-type with a FormData payload.
+    // JSON bodies need the JSON content-type. FormData must set its own
+    // boundary — never send a JSON content-type with a FormData payload.
+    if (options.body && !(options.body instanceof FormData)) {
+      config.headers = { 'Content-Type': 'application/json', ...config.headers };
+    }
     if (options.body instanceof FormData) {
       const headers = { ...config.headers };
       delete headers['Content-Type'];

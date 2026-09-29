@@ -1,5 +1,23 @@
 {
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
+  ],
+  "redirects": [
+    { "source": "/logo.png", "destination": "/logo.webp", "permanent": false },
+    { "source": "/intro-background.png", "destination": "/intro-background.webp", "permanent": false }
+  ],
+  "headers": [
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(logo.webp|logo-128.webp|intro-background.webp|favicon-32.png|logo.png|intro-background.png|ai-mascot.png)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=86400, stale-while-revalidate=604800" }
+      ]
+    }
   ]
 }

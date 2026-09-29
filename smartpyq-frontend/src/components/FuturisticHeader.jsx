@@ -77,7 +77,7 @@ const FuturisticHeader = memo(() => {
       style={{ viewTransitionName: 'site-header' }}>
       <div className='fh__pill'>
         <Link to='/' onClick={handleHomeClick} className='fh__logo' aria-label='SmartPYQ Home'>
-          <img src='/logo.png' alt='SmartPYQ' className='fh__logo-img' />
+          <img src='/logo-128.webp' alt='SmartPYQ' className='fh__logo-img' width='128' height='85' />
         </Link>
 
         <nav className='fh__nav' role='navigation' aria-label='Main navigation'>
