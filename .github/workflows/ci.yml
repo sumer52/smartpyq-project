@@ -130,3 +130,73 @@ jobs:
             tmp/serve_dist.log
           if-no-files-found: ignore
           retention-days: 7
+
+  devtools-check:
+    name: DevTools freedom guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: smartpyq-frontend/package-lock.json
+
+      - name: Install frontend dependencies
+        working-directory: smartpyq-frontend
+        run: npm ci
+
+      - name: Production build
+        working-directory: smartpyq-frontend
+        env:
+          VITE_BACKEND_URL: https://smartpyq-backend.onrender.com
+        run: npm run build
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install harness dependency
+        run: pip install websockets
+
+      - name: Ensure Chrome is installed
+        id: chrome
+        uses: browser-actions/setup-chrome@v1
+
+      - name: Export Chrome path
+        run: echo "CHROME_PATH=${{ steps.chrome.outputs.chrome-path }}" >> "$GITHUB_ENV"
+
+      - name: Serve dist and run DevTools guard (source + runtime)
+        id: devtools
+        run: |
+          mkdir -p tmp
+          python serve_dist.py 5176 > tmp/serve_dist.log 2>&1 &
+          SERVER_PID=$!
+          for i in $(seq 1 30); do
+            curl -sf http://127.0.0.1:5176/ > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://127.0.0.1:5176/ > /dev/null || { echo "server did not start"; cat tmp/serve_dist.log; exit 1; }
+          python devtools_check.py http://127.0.0.1:5176
+          HARNESS_EXIT=$?
+          kill $SERVER_PID || true
+          [ $HARNESS_EXIT -eq 0 ] || exit $HARNESS_EXIT
+
+      - name: Job summary
+        if: always() && steps.devtools.outcome == 'failure'
+        run: cat tmp/devtools_summary.md >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+
+      - name: Upload guard results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: devtools-guard-results
+          path: |
+            tmp/devtools_results.json
+            tmp/devtools_summary.md
+          if-no-files-found: ignore
+          retention-days: 7
