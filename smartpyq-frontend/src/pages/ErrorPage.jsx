@@ -15,7 +15,7 @@ const errorConfig = {
     icon: ServerIcon,
     title: 'Server Error',
     message: 'Something went wrong on our end. Please try again later or contact support if the problem persists.',
-    gradient: 'from-red-400/20 to-pink-500/20',
+    gradient: 'from-red-400/20 to-brand-500/20',
     iconColor: 'text-red-400',
   },
   default: {
@@ -56,7 +56,7 @@ const ErrorPage = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
         >
           {errorCode ? (
-            <h1 className="text-[10rem] font-bold leading-none bg-linear-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent select-none">
+            <h1 className="text-[10rem] font-bold leading-none text-brand-300 select-none">
               {errorCode}
             </h1>
           ) : (

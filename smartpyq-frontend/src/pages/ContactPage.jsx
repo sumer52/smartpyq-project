@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import api from '../lib/api';
 import {
   EnvelopeIcon,
   PhoneIcon,
@@ -27,9 +28,12 @@ const ContactPage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      console.log('Contact form submitted:', formData);
+      // Recorded server-side by POST /api/v1/support/message. Success is only
+      // shown once the backend has confirmed the message was persisted.
+      await api.request('/api/v1/support/message', {
+        method: 'POST',
+        body: JSON.stringify({ kind: 'contact', ...formData }),
+      });
       setSubmitStatus('success');
       setFormData({
         name: '',
@@ -58,7 +62,7 @@ const ContactPage = () => {
       icon: ChatBubbleLeftRightIcon,
       title: 'Live Chat',
       description: 'Get quick answers to frequently asked questions',
-      contact: 'Available 9 AM - 6 PM ',
+      contact: 'Available 9 AM - 6 PM IST',
       action: '#'
     },
     {
@@ -72,7 +76,7 @@ const ContactPage = () => {
       icon: MapPinIcon,
       title: 'Address',
       description: '',
-      contact: 'hyderabad telangana',
+      contact: 'Hyderabad, Telangana',
       action: '#'
     }
   ];
@@ -95,7 +99,7 @@ const ContactPage = () => {
             className="text-center mb-16"
           >
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Contact <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Support</span>
+              Contact <span className="text-brand-300 ">Support</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Have a question, found a bug, or want to suggest a feature? We would love to hear from you and improve SmartPYQ.
@@ -110,10 +114,14 @@ const ContactPage = () => {
           >
             {contactMethods.map((method, index) => {
               const IconComponent = method.icon;
+              // Cards with no destination (action '#') render as plain panels so
+              // they are not keyboard-focusable dead links.
+              const isLink = Boolean(method.action) && method.action !== '#';
+              const Card = isLink ? motion.a : motion.div;
               return (
-                <motion.a
+                <Card
                   key={index}
-                  href={method.action}
+                  {...(isLink ? { href: method.action } : {})}
                   className="card-nav p-6"
                 >
                   <div className="w-12 h-12 bg-linear-to-r from-brand-500 to-accent-500 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300">
@@ -122,7 +130,7 @@ const ContactPage = () => {
                   <h3 className="text-lg font-semibold text-white mb-2">{method.title}</h3>
                   <p className="text-gray-400 text-sm mb-3">{method.description}</p>
                   <p className="text-brand-400 font-medium">{method.contact}</p>
-                </motion.a>
+                </Card>
               );
             })}
           </motion.div>

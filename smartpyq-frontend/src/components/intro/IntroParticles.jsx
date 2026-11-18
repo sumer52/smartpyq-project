@@ -4,7 +4,7 @@ const DESKTOP_COUNT = 54;
 const MOBILE_COUNT = 25;
 // Alpha buckets for link segments: one stroke call per bucket instead of one
 // per segment (software rasterizers choke on hundreds of stroke state changes).
-const LINK_ALPHAS = ['rgba(132, 86, 246, 0.018)', 'rgba(132, 86, 246, 0.038)', 'rgba(132, 86, 246, 0.062)', 'rgba(132, 86, 246, 0.09)'];
+const LINK_ALPHAS = ['rgba(246,147,86,0.018)', 'rgba(246,147,86,0.038)', 'rgba(246,147,86,0.062)', 'rgba(246,147,86,0.09)'];
 
 export default function IntroParticles({ exiting = false, converging = false, reducedMotion = false }) {
   const canvasRef = useRef(null);

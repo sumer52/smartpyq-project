@@ -554,6 +554,15 @@ async def _fake_audit(*a, **k):
     not (os.environ.get("SUPABASE_URL") and os.environ.get("SUPABASE_SERVICE_ROLE_KEY")),
     reason="SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY not set — staging integration skipped",
 )
+def _live_storage_test_requested() -> bool:
+    """Live bucket round-trips are opt-in: they need a reachable private project."""
+    return os.getenv("RUN_LIVE_STORAGE_TEST") == "1"
+
+
+@pytest.mark.skipif(
+    not _live_storage_test_requested(),
+    reason="Set RUN_LIVE_STORAGE_TEST=1 with real Supabase credentials to run this live round-trip",
+)
 class TestSupabaseStagingIntegration:
     """Real round-trip against a live private bucket. Skipped unless real
     credentials are exported (e.g., SUPABASE_URL=... pytest -k staging)."""

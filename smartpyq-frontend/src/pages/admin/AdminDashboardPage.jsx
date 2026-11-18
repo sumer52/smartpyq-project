@@ -80,7 +80,7 @@ const AdminDashboardPage = () => {
   const loadPapers = useCallback(async (filter) => {
     setListLoading(true);
     try {
-      const data = await api.request(`/api/v1/papers?paper_status=${filter.toLowerCase()}&per_page=50`);
+      const data = await api.request(`/api/v1/papers/?paper_status=${filter.toLowerCase()}&per_page=50`);
       setPapers(Array.isArray(data?.papers) ? data.papers : []);
       setPapersTotal(data?.total ?? 0);
     } catch (e) {
@@ -211,10 +211,10 @@ const AdminDashboardPage = () => {
     { label: 'Published PYQs', value: stats.approved_papers, icon: GlobeAltIcon, tone: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20' },
     { label: 'Drafts', value: stats.draft_papers, icon: PencilSquareIcon, tone: 'text-amber-400 bg-amber-500/10 border-amber-500/20' },
     { label: 'Unpublished', value: stats.unpublished_papers, icon: ArchiveBoxIcon, tone: 'text-slate-400 bg-slate-500/10 border-slate-500/20' },
-    { label: 'Uploaded PDFs', value: stats.total_papers, icon: DocumentTextIcon, tone: 'text-indigo-400 bg-indigo-500/10 border-indigo-500/20' },
-    { label: 'AI Analyses', value: stats.ai_analyses, icon: SparklesIcon, tone: 'text-fuchsia-400 bg-fuchsia-500/10 border-fuchsia-500/20' },
-    { label: 'Users', value: stats.total_users, icon: UsersIcon, tone: 'text-sky-400 bg-sky-500/10 border-sky-500/20' },
-    { label: 'Downloads', value: stats.total_downloads, icon: CloudArrowDownIcon, tone: 'text-cyan-400 bg-cyan-500/10 border-cyan-500/20' },
+    { label: 'Uploaded PDFs', value: stats.total_papers, icon: DocumentTextIcon, tone: 'text-brand-400 bg-brand-500/10 border-brand-500/20' },
+    { label: 'AI Analyses', value: stats.ai_analyses, icon: SparklesIcon, tone: 'text-brand-400 bg-brand-500/10 border-brand-500/20' },
+    { label: 'Users', value: stats.total_users, icon: UsersIcon, tone: 'text-accent-400 bg-accent-500/10 border-accent-500/20' },
+    { label: 'Downloads', value: stats.total_downloads, icon: CloudArrowDownIcon, tone: 'text-accent-400 bg-accent-500/10 border-accent-500/20' },
     { label: 'Pending Review', value: stats.pending_papers, icon: ClockIcon, tone: 'text-yellow-400 bg-yellow-500/10 border-yellow-500/20' },
   ] : [], [stats]);
 
@@ -235,7 +235,7 @@ const AdminDashboardPage = () => {
           <div className="flex items-center gap-2">
             <Link
               to="/upload"
-              className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-emerald-500 to-teal-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-emerald-400 hover:to-teal-500"
+              className="inline-flex items-center gap-2 rounded-lg bg-linear-to-r from-emerald-500 to-accent-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:from-emerald-400 hover:to-accent-500"
             >
               <ArrowUpTrayIcon className="h-4 w-4" /> Upload PDF
             </Link>
@@ -294,9 +294,9 @@ const AdminDashboardPage = () => {
         {/* AI analysis result panel */}
         {analyzeResult && (
           <motion.section initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}
-            className="mb-8 rounded-xl border border-fuchsia-500/30 bg-fuchsia-500/5 overflow-hidden">
-            <div className="px-5 py-4 border-b border-fuchsia-500/20 flex items-center gap-2">
-              <SparklesIcon className="h-5 w-5 text-fuchsia-400" />
+            className="mb-8 rounded-xl border border-brand-500/30 bg-brand-500/5 overflow-hidden">
+            <div className="px-5 py-4 border-b border-brand-500/20 flex items-center gap-2">
+              <SparklesIcon className="h-5 w-5 text-brand-400" />
               <h2 className="font-semibold text-white">AI Analyze Result</h2>
               <span className="ml-auto text-xs text-gray-400">status: {analyzeResult.analysis?.status}</span>
             </div>
@@ -371,7 +371,7 @@ const AdminDashboardPage = () => {
                       <td className="px-3 py-3"><span className="inline-flex items-center gap-1.5 rounded-full border px-2 py-0.5 text-[11px] font-semibold bg-yellow-500/15 text-yellow-300 border-yellow-500/30">🟠 Pending</span></td>
                       <td className="px-5 py-3 text-right">
                         <button onClick={() => openReview(p)} disabled={busyId === p.id}
-                          className="inline-flex items-center gap-1 rounded-lg bg-indigo-500/15 border border-indigo-500/30 px-2.5 py-1.5 text-xs text-indigo-300 hover:bg-indigo-500/25 disabled:opacity-50">
+                          className="inline-flex items-center gap-1 rounded-lg bg-brand-500/15 border border-brand-500/30 px-2.5 py-1.5 text-xs text-brand-300 hover:bg-brand-500/25 disabled:opacity-50">
                           <EyeIcon className="h-3.5 w-3.5" /> Review
                         </button>
                       </td>
@@ -387,8 +387,8 @@ const AdminDashboardPage = () => {
         <section className="rounded-xl border border-white/10 bg-white/5 overflow-hidden">
           <div className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-b border-white/10">
             <h2 className="font-semibold text-white flex items-center gap-2">
-              <DocumentTextIcon className="h-5 w-5 text-indigo-400" /> Uploaded PDFs
-              <span className="ml-1 rounded-full bg-indigo-500/15 px-2 py-0.5 text-xs text-indigo-300">{papersTotal}</span>
+              <DocumentTextIcon className="h-5 w-5 text-brand-400" /> Uploaded PDFs
+              <span className="ml-1 rounded-full bg-brand-500/15 px-2 py-0.5 text-xs text-brand-300">{papersTotal}</span>
             </h2>
             <div className="flex flex-wrap items-center gap-1 rounded-lg border border-white/10 bg-white/5 p-1 max-w-full">
               {['APPROVED', 'DRAFT', 'ARCHIVED', 'PENDING', 'REJECTED'].map((s) => (
@@ -396,7 +396,7 @@ const AdminDashboardPage = () => {
                   key={s}
                   onClick={() => setStatusFilter(s)}
                   className={`rounded-md px-2.5 py-1 text-xs font-medium transition ${
-                    statusFilter === s ? 'bg-indigo-500/30 text-white' : 'text-gray-400 hover:text-gray-200'
+                    statusFilter === s ? 'bg-brand-500/30 text-white' : 'text-gray-400 hover:text-gray-200'
                   }`}
                 >
                   {STATUS_BADGES[s]?.label || s}
@@ -459,7 +459,7 @@ const AdminDashboardPage = () => {
                           <button
                             onClick={() => runAnalyze(p.id)}
                             disabled={busyId === p.id}
-                            className="inline-flex items-center gap-1 rounded-lg bg-fuchsia-500/15 border border-fuchsia-500/30 px-2.5 py-1.5 text-xs text-fuchsia-300 hover:bg-fuchsia-500/25 disabled:opacity-50"
+                            className="inline-flex items-center gap-1 rounded-lg bg-brand-500/15 border border-brand-500/30 px-2.5 py-1.5 text-xs text-brand-300 hover:bg-brand-500/25 disabled:opacity-50"
                             title="Run AI analysis (questions, repeats, patterns)"
                           >
                             <SparklesIcon className="h-3.5 w-3.5" /> Analyze
@@ -531,7 +531,7 @@ const AdminDashboardPage = () => {
                   </label>
                   <textarea id="review-note" rows={2} value={reviewNote} onChange={(e) => setReviewNote(e.target.value)}
                     placeholder="Visible in the audit trail; student sees it on rejection"
-                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-none" />
+                    className="w-full bg-white/5 border border-white/10 rounded-xl px-3 py-2 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-brand-500 resize-none" />
                 </div>
 
                 {rejectMode && (
@@ -576,7 +576,7 @@ const AdminDashboardPage = () => {
                 <div className="rounded-xl border border-white/10 bg-white/5 h-[480px] flex items-center justify-center overflow-hidden">
                   {reviewLoadingFile ? (
                     <div className="text-center">
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto" />
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto" />
                       <p className="text-gray-400 text-xs mt-3">Loading preview…</p>
                     </div>
                   ) : reviewUrl ? (
@@ -590,12 +590,12 @@ const AdminDashboardPage = () => {
                       <ExclamationTriangleIcon className="h-8 w-8 text-amber-400 mx-auto" />
                       <p className="text-gray-400 text-sm mt-3">Preview unavailable.</p>
                       <a href={`/api/v1/papers/${reviewItem.id}/download`} target="_blank" rel="noreferrer"
-                        className="text-indigo-300 text-sm underline mt-2 inline-block">Try opening the file directly</a>
+                        className="text-brand-300 text-sm underline mt-2 inline-block">Try opening the file directly</a>
                     </div>
                   )}
                 </div>
                 {reviewUrl && (
-                  <a href={reviewUrl.url} download={reviewUrl.name} className="text-indigo-300 hover:text-indigo-200 text-xs underline mt-2 inline-block">
+                  <a href={reviewUrl.url} download={reviewUrl.name} className="text-brand-300 hover:text-brand-200 text-xs underline mt-2 inline-block">
                     Download original file
                   </a>
                 )}

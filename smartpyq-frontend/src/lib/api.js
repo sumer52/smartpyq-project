@@ -227,25 +227,33 @@ class ApiClient {
         throw error;
       }
 
-      // Network errors or other fetch failures
+      // Network errors or other fetch failures — name the backend so the
+      // message tells the user what to check instead of a bare "Failed to fetch".
       console.error('API request failed:', error);
-      throw new ApiError(`Network error: ${error.message}`, 0);
+      const unreachable = error instanceof TypeError ||
+        /failed to fetch|load failed|networkerror/i.test(error?.message || '');
+      throw new ApiError(
+        unreachable
+          ? `Can't reach the server at ${this.baseURL}. Check that the backend is running, then try again.`
+          : `Network error: ${error.message}`,
+        0
+      );
     }
   }
 
   async getFeatures() {
-    return this.request('/api/v1/features');
+    return this.request('/api/v1/features/');
   }
 
   async getPapers(params = {}) {
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/v1/papers?${queryString}`);
+    return this.request(`/api/v1/papers/?${queryString}`);
   }
 
   async searchPapers(query = '', filters = {}) {
     const params = { q: query, ...filters };
     const queryString = new URLSearchParams(params).toString();
-    return this.request(`/api/v1/papers?${queryString}`);
+    return this.request(`/api/v1/papers/?${queryString}`);
   }
 
   async getPaperById(id) {

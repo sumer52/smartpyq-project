@@ -86,11 +86,17 @@ const PracticePage = () => {
           setQuestions(localQs);
         }
       }
-      try {
-        const hist = await api.getPracticeHistory();
-        setHistory(hist || []);
-      } catch (e) {
+      // Practice history is account-scoped. Without a token the call always
+      // returns 401, so skip it and render the empty history state.
+      if (!api.isAuthenticated()) {
         setHistory([]);
+      } else {
+        try {
+          const hist = await api.getPracticeHistory();
+          setHistory(hist || []);
+        } catch (e) {
+          setHistory([]);
+        }
       }
       setLoading(false);
     };
@@ -181,7 +187,7 @@ const PracticePage = () => {
 
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading questions">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500"></div>
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
     </div>
   );
 
@@ -223,14 +229,14 @@ const PracticePage = () => {
             {/* Subject Filter */}
             <div className="flex flex-wrap gap-2 mb-6">
               <button onClick={() => handleFilter('')}
-                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!subjectFilter ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!subjectFilter ? 'bg-brand-600 text-white border-brand-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                 All ({allQuestions.length})
               </button>
               {subjects.map(s => {
                 const count = allQuestions.filter(q => q.subject === s).length;
                 return (
                   <button key={s} onClick={() => handleFilter(s)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${subjectFilter === s ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${subjectFilter === s ? 'bg-brand-600 text-white border-brand-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                     {s} ({count})
                   </button>
                 );
@@ -246,7 +252,7 @@ const PracticePage = () => {
                 <div className="text-center mb-6">
                   <span className="text-gray-400 text-sm">Question {currentIdx + 1} of {questions.length}</span>
                   <div className="w-full bg-white/10 rounded-full h-2 mt-2">
-                    <div className="bg-indigo-500 h-2 rounded-full transition-all" style={{width: ((currentIdx + 1) / questions.length * 100) + '%'}}></div>
+                    <div className="bg-brand-500 h-2 rounded-full transition-all" style={{width: ((currentIdx + 1) / questions.length * 100) + '%'}}></div>
                   </div>
                 </div>
 
@@ -255,7 +261,7 @@ const PracticePage = () => {
                   <motion.div key={current.id} initial={{ opacity: 0, x: 24 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -24 }} transition={{ duration: 0.25, ease: EASE }}
                     className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-8 mb-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <span className="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-1 rounded">Q{current.question_number || currentIdx + 1}</span>
+                      <span className="bg-brand-500/20 text-brand-400 text-xs px-2 py-1 rounded">Q{current.question_number || currentIdx + 1}</span>
                       <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.subject}</span>
                       {current.marks && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.marks} marks</span>}
                       {current.question_type && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded">{current.question_type}</span>}
@@ -282,7 +288,7 @@ const PracticePage = () => {
                         ) : null}
                         <textarea value={userAnswer} onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Write your own answer here to test your understanding..."
-                          className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-none" />
+                          className="w-full h-32 bg-white/5 border border-white/10 rounded-xl p-4 text-white placeholder-gray-500 focus:outline-hidden focus:border-brand-500 resize-none" />
                         <div className="flex flex-col sm:flex-row gap-3">
                           <Button onClick={() => handlePractice('reviewed')} size="sm"
                             className="flex-1">I Knew This</Button>

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const fadeUp = { hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.22,1,0.36,1] } } };
 const stagger = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.06 } } };
@@ -12,8 +13,14 @@ const AnalysisHistoryPage = () => {
   const [analyses, setAnalyses] = useState([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-  useEffect(() => { loadAnalyses(); }, []);
+  // Analysis history is account-scoped: an anonymous visitor would always
+  // get a 401 here, so show the empty state instead of firing the request.
+  useEffect(() => {
+    if (!isAuthenticated) { setLoading(false); return; }
+    loadAnalyses();
+  }, [isAuthenticated]);
 
   const loadAnalyses = async () => {
     try {
@@ -34,8 +41,8 @@ const AnalysisHistoryPage = () => {
   const statusColors = {
     completed: 'bg-green-500/20 text-green-400',
     pending: 'bg-yellow-500/20 text-yellow-400',
-    extracting: 'bg-blue-500/20 text-blue-400',
-    analyzing: 'bg-blue-500/20 text-blue-400',
+    extracting: 'bg-accent-500/20 text-accent-400',
+    analyzing: 'bg-accent-500/20 text-accent-400',
     failed: 'bg-red-500/20 text-red-400',
   };
 
@@ -48,7 +55,7 @@ const AnalysisHistoryPage = () => {
         </motion.div>
 
         {loading ? (
-          <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div></div>
+          <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div></div>
         ) : analyses.length === 0 ? (
           <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
             <p className="text-gray-400 text-lg">No analyses yet</p>
@@ -81,7 +88,7 @@ const AnalysisHistoryPage = () => {
                   <div className="flex items-center gap-2">
                     {a.status === 'completed' && (
                       <button onClick={() => navigate('/repeated-questions')}
-                        className="text-indigo-400 hover:text-indigo-300 text-sm">View</button>
+                        className="text-brand-400 hover:text-brand-300 text-sm">View</button>
                     )}
                     <button onClick={() => handleDelete(a.id)}
                       className="text-gray-500 hover:text-red-400 text-sm">Delete</button>

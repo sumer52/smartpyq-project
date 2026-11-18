@@ -8,6 +8,16 @@ REM set OPENAI_BASE_URL=https://openrouter.ai/api/v1
 REM set OPENAI_MODEL=openai/gpt-4o-mini
 REM set GEMINI_API_KEY=your_key_here
 
+REM Migrations own the schema (see app/main.py); without this the local DB
+REM can lag behind the models and endpoints 500 on missing tables.
+echo Applying database migrations...
+python -m alembic upgrade head
+if errorlevel 1 (
+  echo Migration failed - fix the database before starting the API.
+  pause
+  exit /b 1
+)
+echo.
 echo Starting backend on http://localhost:8000...
 start "SmartPYQ Backend" python -m uvicorn app.main:app --host 127.0.0.1 --port 8000 --reload
 

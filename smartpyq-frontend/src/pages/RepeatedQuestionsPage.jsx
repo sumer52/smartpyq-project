@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 const RepeatedQuestionsPage = () => {
   const [tab, setTab] = useState('repeated'); // 'repeated' | 'history'
@@ -15,8 +16,16 @@ const RepeatedQuestionsPage = () => {
   const [analyses, setAnalyses] = useState([]);
   const [historyLoading, setHistoryLoading] = useState(true);
   const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
-  useEffect(() => { loadGroups(); loadAnalyses(); }, []);
+  useEffect(() => { loadGroups(); }, []);
+
+  // The Analysis History tab is account-scoped; skip the call for anonymous
+  // visitors (it always 401s) and show its empty state instead.
+  useEffect(() => {
+    if (!isAuthenticated) { setAnalyses([]); setHistoryLoading(false); return; }
+    loadAnalyses();
+  }, [isAuthenticated]);
 
   const loadGroups = async (subject) => {
     try {
@@ -62,8 +71,8 @@ const RepeatedQuestionsPage = () => {
   const statusColors = {
     completed: 'bg-green-500/20 text-green-400',
     pending: 'bg-yellow-500/20 text-yellow-400',
-    extracting: 'bg-blue-500/20 text-blue-400',
-    analyzing: 'bg-blue-500/20 text-blue-400',
+    extracting: 'bg-accent-500/20 text-accent-400',
+    analyzing: 'bg-accent-500/20 text-accent-400',
     failed: 'bg-red-500/20 text-red-400',
   };
 
@@ -78,11 +87,11 @@ const RepeatedQuestionsPage = () => {
         {/* Tabs */}
         <div className="flex gap-1 mb-6 bg-white/5 rounded-xl p-1 border border-white/10 w-fit">
           <button onClick={() => setTab('repeated')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'repeated' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'repeated' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}>
             Repeated Questions ({groups.length})
           </button>
           <button onClick={() => setTab('history')}
-            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'history' ? 'bg-indigo-600 text-white' : 'text-gray-400 hover:text-white'}`}>
+            className={`px-5 py-2 rounded-lg text-sm font-medium transition-all ${tab === 'history' ? 'bg-brand-600 text-white' : 'text-gray-400 hover:text-white'}`}>
             Analysis History ({analyses.length})
           </button>
         </div>
@@ -93,14 +102,14 @@ const RepeatedQuestionsPage = () => {
             {subjects.length > 0 && (
               <div className="flex flex-wrap gap-2 mb-6">
                 <button onClick={() => handleSubjectFilter('')}
-                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!subjectFilter ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                  className={`text-xs px-3 py-1.5 rounded-full border transition-all ${!subjectFilter ? 'bg-brand-600 text-white border-brand-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                   All ({groups.length})
                 </button>
                 {subjects.map(s => {
                   const count = groups.filter(g => g.subject === s).length;
                   return (
                     <button key={s} onClick={() => handleSubjectFilter(s)}
-                      className={`text-xs px-3 py-1.5 rounded-full border transition-all ${subjectFilter === s ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                      className={`text-xs px-3 py-1.5 rounded-full border transition-all ${subjectFilter === s ? 'bg-brand-600 text-white border-brand-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                       {s} ({count})
                     </button>
                   );
@@ -112,7 +121,7 @@ const RepeatedQuestionsPage = () => {
               <div className="lg:col-span-1 space-y-3">
                 {loading ? (
                   <div className="text-center py-12 text-gray-400">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-4"></div>Loading...
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto mb-4"></div>Loading...
                   </div>
                 ) : groups.length === 0 ? (
                   <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
@@ -122,7 +131,7 @@ const RepeatedQuestionsPage = () => {
                 ) : groups.map((group, idx) => (
                   <motion.div key={group.id} initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: idx * 0.05 }}
                     onClick={() => loadDetail(group.id)}
-                    className={"cursor-pointer p-4 rounded-xl border transition-all " + (selectedGroup === group.id ? "bg-indigo-600/20 border-indigo-500/50 shadow-lg" : "bg-white/5 border-white/10 hover:bg-white/10")}>
+                    className={"cursor-pointer p-4 rounded-xl border transition-all " + (selectedGroup === group.id ? "bg-brand-600/20 border-brand-500/50 shadow-lg" : "bg-white/5 border-white/10 hover:bg-white/10")}>
                     <div className="flex items-center gap-2 mb-2">
                       <span className="bg-orange-500/20 text-orange-400 text-xs font-bold px-2 py-1 rounded-full">{group.frequency}x</span>
                       <span className="text-gray-500 text-xs">{group.subject}</span>
@@ -134,13 +143,13 @@ const RepeatedQuestionsPage = () => {
               <div className="lg:col-span-2">
                 {detailLoading ? (
                   <div className="text-center py-12 text-gray-400">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto mb-4"></div>
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto mb-4"></div>
                   </div>
                 ) : detail ? (
                   <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white/5 backdrop-blur-xl rounded-2xl border border-white/10 p-6">
                     <div className="flex items-center gap-3 mb-4">
                       <span className="bg-orange-500 text-white text-sm font-bold px-3 py-1 rounded-full">Asked {detail.frequency}x</span>
-                      <span className="bg-indigo-500/20 text-indigo-400 text-sm px-3 py-1 rounded-full">{detail.subject}</span>
+                      <span className="bg-brand-500/20 text-brand-400 text-sm px-3 py-1 rounded-full">{detail.subject}</span>
                     </div>
                     <h2 className="text-xl font-bold text-white mb-6">{detail.representative_text}</h2>
                     <h3 className="text-lg font-semibold text-white mb-4">Evidence Across Years</h3>
@@ -149,7 +158,7 @@ const RepeatedQuestionsPage = () => {
                         <div key={idx} className="bg-white/5 rounded-xl p-4 border border-white/5">
                           <div className="flex items-center justify-between mb-2">
                             <div className="flex items-center gap-2">
-                              <span className="bg-blue-500/20 text-blue-400 text-sm font-bold px-2 py-1 rounded">{ev.paper_year || 'N/A'}</span>
+                              <span className="bg-accent-500/20 text-accent-400 text-sm font-bold px-2 py-1 rounded">{ev.paper_year || 'N/A'}</span>
                               <span className="text-white text-sm">{ev.paper_title || 'Untitled'}</span>
                             </div>
                           </div>
@@ -173,7 +182,7 @@ const RepeatedQuestionsPage = () => {
           /* Analysis History Tab */
           <>
             {historyLoading ? (
-              <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-500 mx-auto"></div></div>
+              <div className="text-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500 mx-auto"></div></div>
             ) : analyses.length === 0 ? (
               <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
                 <p className="text-gray-400 text-lg">No analyses yet</p>
@@ -205,7 +214,7 @@ const RepeatedQuestionsPage = () => {
                       <div className="flex items-center gap-2">
                         {a.status === 'completed' && (
                           <button onClick={() => { setTab('repeated'); }}
-                            className="text-indigo-400 hover:text-indigo-300 text-sm">View Questions</button>
+                            className="text-brand-400 hover:text-brand-300 text-sm">View Questions</button>
                         )}
                         <button onClick={() => handleDeleteAnalysis(a.id)}
                           className="text-gray-500 hover:text-red-400 text-sm">Delete</button>

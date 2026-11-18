@@ -7,7 +7,7 @@ import { useReducedMotionSafe } from '../../lib/motion';
  * Creates a premium hover effect where light appears to shine on the card.
  * Gated on touch-only devices and for reduced-motion users (static card).
  */
-const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(139,92,246,0.15)', ...props }) => {
+const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(192,57,43,0.15)', ...props }) => {
   const ref = useRef(null);
   const skipSpotlight = useReducedMotionSafe();
   const [position, setPosition] = useState({ x: 0, y: 0 });
@@ -29,7 +29,7 @@ const SpotlightCard = ({ children, className = '', spotlightColor = 'rgba(139,92
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setOpacity(1)}
       onMouseLeave={() => setOpacity(0)}
-      whileHover={{ borderColor: 'rgba(139,92,246,0.3)' }}
+      whileHover={{ borderColor: 'rgba(192,57,43,0.3)' }}
       {...props}
     >
       {/* Spotlight gradient */}

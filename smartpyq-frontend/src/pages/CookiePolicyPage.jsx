@@ -115,7 +115,7 @@ const CookiePolicyPage = () => {
               <CogIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Cookie <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Policy</span>
+              Cookie <span className="text-brand-300 ">Policy</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-4">
               This policy explains how SmartPYQ uses cookies and similar technologies when you visit our platform.

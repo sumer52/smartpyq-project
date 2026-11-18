@@ -28,7 +28,7 @@ const Footer = ({ className = "" }) => {
       name: 'LinkedIn',
       icon: LinkedInIcon,
       url: 'https://www.linkedin.com/in/sumer2201',
-      color: 'hover:text-blue-300'
+      color: 'hover:text-accent-300'
     },
     {
       name: 'GitHub',

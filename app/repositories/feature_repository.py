@@ -36,7 +36,12 @@ class FeatureRepository(BaseRepository[Feature]):
         Returns:
             List of active features
         """
-        query = select(Feature).where(Feature.is_active == True)
+        # The Feature model has no is_active column: features are switched on
+        # with is_enabled and exposed to the public site with is_public.
+        query = select(Feature).where(
+            Feature.is_enabled.is_(True),
+            Feature.is_public.is_(True),
+        )
         
         if feature_type:
             query = query.where(Feature.feature_type == feature_type)

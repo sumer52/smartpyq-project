@@ -25,7 +25,7 @@ const NotFoundPage = () => {
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <h1 className="text-[10rem] font-bold leading-none bg-linear-to-r from-brand-400 to-accent-500 bg-clip-text text-transparent select-none">
+          <h1 className="text-[10rem] font-bold leading-none text-brand-300 select-none">
             404
           </h1>
         </motion.div>

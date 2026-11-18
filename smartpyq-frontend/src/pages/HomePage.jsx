@@ -3,13 +3,14 @@ import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'fr
 import { useNavigate } from 'react-router-dom';
 import {
   FileText, Bot, Search, BookOpen, Upload, TrendingUp,
-  ArrowRight, Repeat, Brain, Sparkles, ChevronRight,
+  ArrowRight, Repeat, Brain, ChevronRight,
   BarChart3, Zap, CheckCircle, Target, Flame, Lightbulb, GraduationCap, Play
 } from 'lucide-react';
 import { apiClient } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import { useSmartPYQIntroSafe } from '../components/intro/IntroExperienceContext';
 import { getStreams, getAllSubjectsForStreamSemester, getAvailableSemesters, getPyqYears } from '../data/pyqData';
+import { getStreamIcon } from '../data/streamIcons';
 import MagneticButton from '../components/ui/MagneticButton';
 import ThumbnailCarousel from '../components/ui/ThumbnailCarousel';
 import SpotlightCard from '../components/ui/SpotlightCard';
@@ -94,7 +95,7 @@ const AnnotatedPaper = () => {
                 transition={{ duration: D(0.3), delay: D(1.7) }}
               >'23 '24 '25</motion.span>
               <motion.span
-                className="absolute left-1/2 -translate-x-1/2 -bottom-6 whitespace-nowrap rounded-full bg-[#0b0620] px-3 py-1 text-[11px] font-medium text-cyan-200 shadow-lg"
+                className="absolute left-1/2 -translate-x-1/2 -bottom-6 whitespace-nowrap rounded-full bg-[#14110C] px-3 py-1 text-[11px] font-medium text-accent-200 shadow-lg"
                 initial={reduced ? false : { opacity: 0, y: 8, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: D(0.4), delay: D(2.0), ease: EASE_OUT }}
@@ -145,13 +146,7 @@ const WordReveal = ({ text, className, delay = 0 }) => {
 };
 
 const GradientText = ({ children, className = '' }) => (
-  <motion.span
-    className={`bg-linear-to-r from-cyan-200 via-blue-200 to-purple-200 bg-clip-text text-transparent bg-[length:200%_auto] ${className}`}
-    animate={{ backgroundPosition: ['0% center', '200% center'] }}
-    transition={{ duration: 6, repeat: Infinity, ease: 'linear' }}
-  >
-    {children}
-  </motion.span>
+  <span className={`text-brand-300 ${className}`}>{children}</span>
 );
 
 const FloatingParticles = () => {
@@ -170,7 +165,7 @@ const FloatingParticles = () => {
       {particles.map(p => (
         <motion.div
           key={p.id}
-          className="absolute rounded-full bg-purple-400/20"
+          className="absolute rounded-full bg-brand-400/20"
           style={{ width: p.size, height: p.size, left: `${p.x}%`, top: `${p.y}%` }}
           animate={{ y: [0, -30, 0, 20, 0], x: [0, 15, -10, 5, 0], opacity: [0.15, 0.35, 0.15] }}
           transition={{ duration: p.duration, repeat: Infinity, delay: p.delay, ease: 'easeInOut' }}
@@ -187,7 +182,7 @@ const AnimatedUnderline = ({ children, className = '' }) => {
     <span ref={ref} className={`relative inline-block ${className}`}>
       {children}
       <motion.span
-        className="absolute -bottom-1 left-0 h-[2px] bg-linear-to-r from-purple-400 to-cyan-400 rounded-full"
+        className="absolute -bottom-1 left-0 h-[2px] bg-linear-to-r from-brand-400 to-accent-400 rounded-full"
         initial={{ width: 0 }}
         animate={isInView ? { width: '100%' } : { width: 0 }}
         transition={{ duration: 0.6, delay: 0.3, ease: [0.22,1,0.36,1] }}
@@ -223,11 +218,11 @@ const demoRepeatedQuestions = [
 ];
 
 const demoTopicFrequency = [
-  { topic: 'SQL Queries', percent: 85, color: 'bg-purple-500' },
-  { topic: 'Normalization', percent: 72, color: 'bg-blue-500' },
-  { topic: 'ER Model', percent: 58, color: 'bg-indigo-500' },
-  { topic: 'Transactions', percent: 42, color: 'bg-cyan-500' },
-  { topic: 'Indexing', percent: 31, color: 'bg-teal-500' },
+  { topic: 'SQL Queries', percent: 85, color: 'bg-brand-500' },
+  { topic: 'Normalization', percent: 72, color: 'bg-accent-500' },
+  { topic: 'ER Model', percent: 58, color: 'bg-brand-500' },
+  { topic: 'Transactions', percent: 42, color: 'bg-accent-500' },
+  { topic: 'Indexing', percent: 31, color: 'bg-accent-500' },
 ];
 
 const demoTrendingTopics = [
@@ -269,7 +264,7 @@ const TestimonialCard = ({ t }) => (
     </div>
     <p className="text-sm text-gray-300 leading-relaxed mb-4">"{t.text}"</p>
     <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-linear-to-br from-purple-500 to-blue-500 flex items-center justify-center text-xs font-bold text-white">
+      <div className="w-8 h-8 rounded-full bg-linear-to-br from-brand-500 to-accent-500 flex items-center justify-center text-xs font-bold text-white">
         {t.name.split(' ').map(n => n[0]).join('')}
       </div>
       <div>
@@ -343,11 +338,11 @@ const HomePage = () => {
 
   /* ---- Preparation Modes ---- */
   const prepModes = [
-    { icon: BookOpen, title: 'PYQ Hub', desc: 'Browse and download previous-year papers organized by course and semester.', color: 'text-blue-400', bg: 'bg-blue-500/10', href: '/pyq' },
-    { icon: Zap, title: 'AI Analyze', desc: 'Upload papers and discover patterns, repeated questions, and topic frequency.', color: 'text-purple-400', bg: 'bg-purple-500/10', href: '/analyze' },
+    { icon: BookOpen, title: 'PYQ Hub', desc: 'Browse and download previous-year papers organized by course and semester.', color: 'text-accent-400', bg: 'bg-accent-500/10', href: '/pyq' },
+    { icon: Zap, title: 'AI Analyze', desc: 'Upload papers and discover patterns, repeated questions, and topic frequency.', color: 'text-brand-400', bg: 'bg-brand-500/10', href: '/analyze' },
     { icon: Repeat, title: 'Repeated Questions', desc: 'Find questions that appear across multiple exams — focus on what matters most.', color: 'text-orange-400', bg: 'bg-orange-500/10', href: '/repeated-questions' },
     { icon: Target, title: 'Practice Mode', desc: 'Test yourself with questions extracted from previous year papers.', color: 'text-green-400', bg: 'bg-green-500/10', href: '/practice' },
-    { icon: Bot, title: 'AI Assistant', desc: 'Ask questions about subjects, concepts, and exam strategies.', color: 'text-indigo-400', bg: 'bg-indigo-500/10', href: '/ai' },
+    { icon: Bot, title: 'AI Assistant', desc: 'Ask questions about subjects, concepts, and exam strategies.', color: 'text-brand-400', bg: 'bg-brand-500/10', href: '/ai' },
   ];
 
   return (
@@ -367,28 +362,11 @@ const HomePage = () => {
           <div className="grid lg:grid-cols-[1.1fr_0.9fr] gap-12 lg:gap-16 items-center">
             {/* ---- Pitch column ---- */}
             <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.7, ease: EASE_OUT }}>
-              {/* Welcome eyebrow — spec: WELCOME TO SMARTPYQ */}
-              <motion.p
-                className="text-[11px] sm:text-xs font-semibold tracking-[0.28em] uppercase text-purple-300/80 mb-3"
-                initial={{ opacity: 0, y: -8 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.1 }}
-              >
-                Welcome to SmartPYQ
-              </motion.p>
-              {/* Badge */}
-              <motion.div
-                className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 mb-6"
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.2 }}
-              >
-                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
-                <span className="text-xs font-medium text-purple-300">AI-Powered Exam Preparation</span>
-              </motion.div>
-
               {/* Headline — spec: Analyze PYQs. Find Patterns. / Predict Exam Trends. */}
+              {/* aria-label restores the word spacing the per-word spans drop:
+                  without it the accessible name reads "AnalyzePYQs.FindPatterns." */}
               <motion.h1
+                aria-label="Analyze PYQs. Find Patterns. Predict Exam Trends."
                 className="text-4xl sm:text-5xl lg:text-[3.4rem] font-bold text-white mb-5 leading-[1.08] [text-wrap:balance]"
               >
                 <WordReveal text="Analyze PYQs. Find Patterns." delay={0.3} />
@@ -405,10 +383,10 @@ const HomePage = () => {
                 transition={{ duration: 0.6, delay: 0.9 }}
               >
                 Upload or search previous-year papers and let SmartPYQ identify
-                <span className="text-purple-300 font-medium"> repeated questions</span>,
-                <span className="text-purple-300 font-medium"> important topics</span>,
-                <span className="text-purple-300 font-medium"> exam patterns</span>, and
-                <span className="text-purple-300 font-medium"> practice priorities</span>.
+                <span className="text-brand-300 font-medium"> repeated questions</span>,
+                <span className="text-brand-300 font-medium"> important topics</span>,
+                <span className="text-brand-300 font-medium"> exam patterns</span>, and
+                <span className="text-brand-300 font-medium"> practice priorities</span>.
               </motion.p>
 
               {/* Primary action + search: one clear hierarchy */}
@@ -430,7 +408,7 @@ const HomePage = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     aria-label="Search papers, subjects, and courses"
                     placeholder="or search by subject, course, year…"
-                    className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-hidden focus:border-purple-500/50 transition-[border-color]"
+                    className="w-full pl-11 pr-4 py-3.5 bg-white/5 border border-white/10 rounded-xl text-sm text-white placeholder-gray-400 focus:outline-hidden focus:border-brand-500/50 transition-[border-color]"
                   />
                 </form>
               </motion.div>
@@ -442,14 +420,14 @@ const HomePage = () => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 1.35 }}
               >
-                <button onClick={() => navigate('/analyze')} className="inline-flex items-center gap-1.5 text-purple-300 hover:text-purple-200 transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                <button onClick={() => navigate('/analyze')} className="inline-flex items-center gap-1.5 text-brand-300 hover:text-brand-200 transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60 rounded">
                   <Zap className="h-3.5 w-3.5" /> Analyze a paper
                 </button>
-                <button onClick={() => navigate('/practice')} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                <button onClick={() => navigate('/practice')} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60 rounded">
                   <Target className="h-3.5 w-3.5" /> Practice questions
                 </button>
                 {replayIntro && (
-                  <button onClick={replayIntro} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-purple-400/60 rounded">
+                  <button onClick={replayIntro} className="inline-flex items-center gap-1.5 text-gray-400 hover:text-white transition-colors focus:outline-hidden focus-visible:ring-2 focus-visible:ring-brand-400/60 rounded">
                     <Play className="h-3.5 w-3.5" /> Replay intro
                   </button>
                 )}
@@ -537,7 +515,7 @@ const HomePage = () => {
               <SpotlightCard
                 key={i}
                 className="group p-6 rounded-2xl bg-white/[0.03] border border-white/10 cursor-pointer"
-                spotlightColor="rgba(139,92,246,0.12)"
+                spotlightColor="rgba(192,57,43,0.12)"
               >
                 <motion.div
                   variants={cardUp}
@@ -550,7 +528,7 @@ const HomePage = () => {
                   </div>
                   <h3 className="text-base font-semibold text-white mb-2">{mode.title}</h3>
                   <p className="text-sm text-gray-400 leading-relaxed">{mode.desc}</p>
-                  <div className="mt-3 flex items-center gap-1 text-xs text-purple-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="mt-3 flex items-center gap-1 text-xs text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     Get started <ArrowRight className="h-3 w-3" />
                   </div>
                 </motion.div>
@@ -585,18 +563,23 @@ const HomePage = () => {
             <p className="text-gray-400 mt-3">Select your course to explore available question papers</p>
           </motion.div>
           <motion.div className="grid grid-cols-2 sm:grid-cols-4 gap-4" variants={stagger} initial="hidden" whileInView="visible" viewport={{ once: true }}>
-            {streamEntries.map((s) => (
+            {streamEntries.map((s) => {
+              const StreamIcon = getStreamIcon(s.key);
+              return (
               <motion.button key={s.key} variants={cardUp}
-                className="group relative p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-purple-500/40 transition-all duration-300 text-left overflow-hidden"
-                whileHover={{ y: -4, boxShadow: '0 8px 32px rgba(139,92,246,0.15)' }}
+                className="group relative p-6 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-brand-500/40 transition-all duration-300 text-left overflow-hidden"
+                whileHover={{ y: -4, boxShadow: '0 8px 32px rgba(192,57,43,0.15)' }}
                 onClick={() => navigate('/pyq?stream=' + s.key)}>
-                <div className="absolute inset-0 bg-linear-to-br from-purple-500/0 to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-                <span className="relative text-3xl mb-3 block">{s.icon || '📚'}</span>
-                <h3 className="relative text-lg font-semibold text-white mb-1 group-hover:text-purple-300 transition-colors">{s.displayName}</h3>
+                <div className="absolute inset-0 bg-linear-to-br from-brand-500/0 to-brand-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+                <span className="relative inline-flex w-12 h-12 items-center justify-center rounded-xl bg-brand-500/10 border border-brand-500/20 mb-3 group-hover:bg-brand-500/20 transition-colors">
+                  <StreamIcon className="h-6 w-6 text-brand-300" />
+                </span>
+                <h3 className="relative text-lg font-semibold text-white mb-1 group-hover:text-brand-300 transition-colors">{s.displayName}</h3>
                 <p className="relative text-sm text-gray-500">View papers</p>
-                <ArrowRight className="relative h-4 w-4 text-gray-600 group-hover:text-purple-400 group-hover:translate-x-1 transition-all mt-3" />
+                <ArrowRight className="relative h-4 w-4 text-gray-600 group-hover:text-brand-400 group-hover:translate-x-1 transition-all mt-3" />
               </motion.button>
-            ))}
+              );
+            })}
           </motion.div>
         </div>
       </motion.section>
@@ -661,12 +644,12 @@ const HomePage = () => {
             </BorderBeam>
 
             {/* Topic Frequency */}
-            <BorderBeam className="rounded-2xl" colorFrom="rgba(139,92,246,0.4)" colorTo="rgba(59,130,246,0.3)">
-              <CursorGlow className="p-6" glowColor="rgba(139,92,246,0.12)">
+            <BorderBeam className="rounded-2xl" colorFrom="rgba(192,57,43,0.4)" colorTo="rgba(217,166,60,0.3)">
+              <CursorGlow className="p-6" glowColor="rgba(192,57,43,0.12)">
               <motion.div variants={cardUp} initial="hidden" whileInView="visible" viewport={{ once: true }} transition={{ delay: 0.1 }}>
                 <div className="flex items-center gap-2 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                    <BarChart3 className="h-4 w-4 text-purple-400" />
+                  <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center">
+                    <BarChart3 className="h-4 w-4 text-brand-400" />
                   </div>
                   <h3 className="text-sm font-semibold text-white">Topic Frequency</h3>
                 </div>
@@ -675,7 +658,7 @@ const HomePage = () => {
                     <div key={i}>
                       <div className="flex justify-between text-sm mb-1.5">
                         <span className="text-gray-300">{t.topic}</span>
-                        <span className="text-purple-400 font-medium">{t.percent}%</span>
+                        <span className="text-brand-400 font-medium">{t.percent}%</span>
                       </div>
                       <div className="h-2 bg-white/5 rounded-full overflow-hidden">
                         {/* scaleX (transform-only) instead of width — GPU-composited */}
@@ -695,16 +678,16 @@ const HomePage = () => {
             </BorderBeam>
 
             {/* Exam Pattern Insight */}
-            <BorderBeam className="rounded-2xl" colorFrom="rgba(59,130,246,0.4)" colorTo="rgba(34,211,238,0.3)">
-              <CursorGlow className="p-6" glowColor="rgba(59,130,246,0.12)">
+            <BorderBeam className="rounded-2xl" colorFrom="rgba(217,166,60,0.4)" colorTo="rgba(217,166,60,0.3)">
+              <CursorGlow className="p-6" glowColor="rgba(217,166,60,0.12)">
               <motion.div variants={cardUp} initial="hidden" whileInView="visible" viewport={{ once: true }} transition={{ delay: 0.2 }}>
                 <div className="flex items-center gap-2 mb-5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center">
-                    <Lightbulb className="h-4 w-4 text-blue-400" />
+                  <div className="w-8 h-8 rounded-lg bg-accent-500/10 flex items-center justify-center">
+                    <Lightbulb className="h-4 w-4 text-accent-400" />
                   </div>
                   <h3 className="text-sm font-semibold text-white">Exam Pattern Insight</h3>
                 </div>
-                <div className="p-4 bg-linear-to-br from-blue-500/5 to-purple-500/5 rounded-xl border border-blue-500/10 mb-4">
+                <div className="p-4 bg-linear-to-br from-accent-500/5 to-brand-500/5 rounded-xl border border-accent-500/10 mb-4">
                   <p className="text-sm text-gray-300 leading-relaxed italic">
                     "SQL and Normalization account for approximately <span className="text-white font-semibold">42% of questions</span> across the analyzed papers."
                   </p>
@@ -803,7 +786,7 @@ const HomePage = () => {
               items={demoTrendingTopics.map((stream, i) => ({
                 id: `trend-${i}`,
                 label: stream.stream,
-                thumbClass: i === 0 ? 'bg-linear-to-br from-purple-600/40 to-indigo-700/40' : i === 1 ? 'bg-linear-to-br from-blue-600/40 to-cyan-700/40' : 'bg-linear-to-br from-rose-600/40 to-orange-600/40',
+                thumbClass: i === 0 ? 'bg-linear-to-br from-brand-600/40 to-brand-700/40' : i === 1 ? 'bg-linear-to-br from-accent-600/40 to-accent-700/40' : 'bg-linear-to-br from-rose-600/40 to-orange-600/40',
                 render: () => (
                   <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10">
                     <h3 className="text-base font-semibold text-white mb-4">{stream.stream}</h3>
@@ -873,12 +856,12 @@ const HomePage = () => {
                 whileHover={{ y: -3 }}
               >
                 <motion.div
-                  className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto mb-4 text-purple-400 relative z-10"
-                  whileHover={{ scale: 1.1, borderColor: 'rgba(139,92,246,0.5)' }}
+                  className="w-12 h-12 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-4 text-brand-400 relative z-10"
+                  whileHover={{ scale: 1.1, borderColor: 'rgba(192,57,43,0.5)' }}
                 >
                   {item.icon}
                 </motion.div>
-                <div className="text-xs font-bold text-purple-400 mb-2">Step {item.step}</div>
+                <div className="text-xs font-bold text-brand-400 mb-2">Step {item.step}</div>
                 <h3 className="text-sm font-semibold text-white mb-1">{item.title}</h3>
                 <p className="text-xs text-gray-500">{item.desc}</p>
               </motion.div>
@@ -903,16 +886,16 @@ const HomePage = () => {
             whileHover={{ scale: 1.01 }}
             transition={{ duration: 0.3 }}
           >
-            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-purple-900/20 to-blue-900/20 border border-purple-500/15" />
+            <div className="absolute inset-0 rounded-2xl bg-linear-to-br from-brand-900/20 to-accent-900/20 border border-brand-500/15" />
             <motion.div
               className="absolute inset-0 rounded-2xl"
-              style={{ background: 'conic-gradient(from 0deg, transparent, rgba(139,92,246,0.15), transparent, rgba(59,130,246,0.15), transparent)' }}
+              style={{ background: 'conic-gradient(from 0deg, transparent, rgba(192,57,43,0.15), transparent, rgba(217,166,60,0.15), transparent)' }}
               animate={{ rotate: 360 }}
               transition={{ duration: 10, repeat: Infinity, ease: 'linear' }}
             />
             <div className="relative z-10">
               <motion.div animate={{ y: [0, -5, 0] }} transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}>
-                <Upload className="h-10 w-10 text-purple-400 mx-auto mb-4" />
+                <Upload className="h-10 w-10 text-brand-400 mx-auto mb-4" />
               </motion.div>
               <h2 className="text-2xl font-bold text-white mb-3"><TextScramble text="Help Students Prepare Smarter" delay={200} /></h2>
               <p className="text-gray-400 mb-4 max-w-lg mx-auto">
@@ -949,11 +932,9 @@ const HomePage = () => {
             transition={{ duration: 0.6 }}
           >
             <motion.div
-              className="w-16 h-16 rounded-2xl bg-indigo-500/15 border border-indigo-500/25 flex items-center justify-center mx-auto mb-6"
-              animate={{ boxShadow: ['0 0 0 0 rgba(99,102,241,0)', '0 0 0 12px rgba(99,102,241,0.08)', '0 0 0 0 rgba(99,102,241,0)'] }}
-              transition={{ duration: 3, repeat: Infinity }}
+              className="w-16 h-16 rounded-2xl bg-brand-500/15 border border-brand-500/25 flex items-center justify-center mx-auto mb-6"
             >
-              <Bot className="h-8 w-8 text-indigo-400" />
+              <Bot className="h-8 w-8 text-brand-400" />
             </motion.div>
             <h2 className="text-3xl font-bold text-white mb-4">
               <AnimatedUnderline><TextScramble text="Ask SmartPYQ Anything" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>

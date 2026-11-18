@@ -129,7 +129,7 @@ const FAQPage = () => {
             className="text-center mb-16"
           >
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Frequently Asked <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Questions</span>
+              Frequently Asked <span className="text-brand-300 ">Questions</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto mb-8">
               Find answers to common questions about SmartPYQ. Can't find what you're looking for? Contact our support team.

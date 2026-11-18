@@ -180,7 +180,16 @@ export const AuthProvider = ({ children }) => {
       return { success: true, user: userData };
     } catch (error) {
       setIsLoading(false);
-      return { success: false, error: error.message || 'Admin login failed. Please try again.' };
+      // A blocked/offline fetch throws a bare "Failed to fetch" — name the
+      // backend instead so the message is actionable.
+      const unreachable = error instanceof TypeError ||
+        /failed to fetch|load failed|networkerror/i.test(error?.message || '');
+      return {
+        success: false,
+        error: unreachable
+          ? `Can't reach the server at ${BACKEND_URL}. Check that the backend is running, then try again.`
+          : (error.message || 'Admin login failed. Please try again.'),
+      };
     }
   }, []);
 

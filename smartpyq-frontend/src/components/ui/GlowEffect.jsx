@@ -4,7 +4,7 @@ import React, { useRef, useState } from 'react';
  * GlowEffect - Adds a subtle glow that follows the cursor within a container.
  * Wrap any element to add this effect.
  */
-const GlowEffect = ({ children, className = '', color = 'rgba(139,92,246,0.12)', size = 300 }) => {
+const GlowEffect = ({ children, className = '', color = 'rgba(246,152,92,0.12)', size = 300 }) => {
   const ref = useRef(null);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [visible, setVisible] = useState(false);

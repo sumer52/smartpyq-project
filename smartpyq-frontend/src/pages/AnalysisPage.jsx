@@ -420,7 +420,7 @@ const AnalysisPage = () => {
                           <span className="text-gray-400">{t.count} ({Math.round(100 * t.count / Math.max(1, insights.total_questions))}%)</span>
                         </div>
                         <div className="h-2 bg-white/10 rounded-full overflow-hidden">
-                          <div className="h-full rounded-full bg-linear-to-r from-indigo-500 to-blue-500"
+                          <div className="h-full rounded-full bg-linear-to-r from-brand-500 to-accent-500"
                             style={{ width: Math.round(100 * t.count / Math.max(1, insights.total_questions)) + '%' }} />
                         </div>
                       </div>
@@ -496,7 +496,7 @@ const AnalysisPage = () => {
                   ['C', '🟡 Priority C'], ['D', '⚪ Priority D'],
                 ].map(([key, label]) => (
                   <button key={key} onClick={() => setExplorerFilter(key)}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${explorerFilter === key ? 'bg-indigo-600 text-white border-indigo-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
+                    className={`text-xs px-3 py-1.5 rounded-full border transition-all ${explorerFilter === key ? 'bg-brand-600 text-white border-brand-500' : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10'}`}>
                     {label}
                   </button>
                 ))}
@@ -535,7 +535,7 @@ const AnalysisPage = () => {
                     <button key={q.id} onClick={() => openDetail(q.id)}
                       className="w-full text-left bg-white/5 rounded-xl p-3 hover:bg-white/10 transition-colors">
                       <div className="flex flex-wrap items-center gap-2 mb-1">
-                        {q.topic && <span className="text-[10px] px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300">{q.topic}</span>}
+                        {q.topic && <span className="text-[10px] px-2 py-0.5 rounded-full bg-accent-500/20 text-accent-300">{q.topic}</span>}
                         {q.priority && <PriorityBadge p={q.priority} label="" />}
                         {q.frequency > 1 && <span className="text-[10px] text-orange-300">appeared {q.frequency}×</span>}
                       </div>

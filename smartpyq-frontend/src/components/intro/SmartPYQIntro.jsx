@@ -4,7 +4,6 @@ import IntroParticles from './IntroParticles';
 import IntroTypingText from './IntroTypingText';
 import IntroAnalysisVisual from './IntroAnalysisVisual';
 import IntroLogo from './IntroLogo';
-import { ThumbnailCarousel } from '../ui/thumbnail-carousel';
 import './intro.css';
 
 const INTRO_SCENES = [
@@ -49,10 +48,6 @@ export default function SmartPYQIntro({ onFinish }) {
 
   const goBack = useCallback(() => {
     setStep((current) => Math.max(0, current - 1));
-  }, []);
-
-  const selectStep = useCallback((index) => {
-    setStep(Math.min(TOTAL_STEPS - 1, Math.max(0, index)));
   }, []);
 
   useEffect(() => {
@@ -161,12 +156,6 @@ export default function SmartPYQIntro({ onFinish }) {
           <div className="sp-intro__navigation-actions">
             {step > 0 && <button type="button" className="sp-intro__back" onClick={goBack}>← Back</button>}
           </div>
-          <ThumbnailCarousel
-            items={INTRO_SCENES}
-            activeIndex={step}
-            onSelect={selectStep}
-            ariaLabel="Choose an intro scene"
-          />
           <p className="sp-intro__click-hint">Click anywhere to continue</p>
         </nav>
       )}

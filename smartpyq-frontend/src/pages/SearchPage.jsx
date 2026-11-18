@@ -86,15 +86,15 @@ const SearchPage = () => {
       <main className="max-w-4xl mx-auto px-4 py-8">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} className="mb-8">
           <div className="flex items-center gap-3 mb-2">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center">
-              <Search className="h-5 w-5 text-indigo-400" />
+            <div className="w-10 h-10 rounded-xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+              <Search className="h-5 w-5 text-brand-400" />
             </div>
             <h1 className="text-3xl font-bold text-white"><TextScramble text="Question Search" delay={100} /></h1>
           </div>
           <p className="text-gray-400 ml-13">Search through all extracted questions by keyword, subject, topic, or concept.</p>
         </motion.div>
 
-        <GlowEffect className="mb-8" color="rgba(99,102,241,0.12)" size={400}>
+        <GlowEffect className="mb-8" color="rgba(241,136,99,0.12)" size={400}>
           <form onSubmit={handleSearch}>
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="relative flex-1">
@@ -102,7 +102,7 @@ const SearchPage = () => {
                 <input type="text" value={query} onChange={(e) => setQuery(e.target.value)}
                   onFocus={handleFocus} onBlur={handleBlur}
                   placeholder={!query ? placeholderText : ''}
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 sm:py-3 text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500/50 min-h-[48px] transition-colors" />
+                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-12 pr-4 py-3.5 sm:py-3 text-white placeholder-gray-500 focus:outline-hidden focus:border-brand-500/50 min-h-[48px] transition-colors" />
               </div>
               <MagneticButton type="submit" disabled={loading}
                 className="btn btn-primary btn-lg w-full sm:w-auto">
@@ -139,18 +139,18 @@ const SearchPage = () => {
               {results.length > 0 ? (
                 <motion.div key="results" className="space-y-3" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                   {results.map((q, i) => (
-                    <CursorGlow key={q.id} className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4" glowColor="rgba(99,102,241,0.1)">
+                    <CursorGlow key={q.id} className="bg-white/5 backdrop-blur-sm rounded-xl border border-white/10 p-4" glowColor="rgba(241,136,99,0.1)">
                       <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}>
                         <div className="flex items-start gap-3">
-                          <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center shrink-0 mt-0.5">
-                            <FileText className="h-4 w-4 text-indigo-400" />
+                          <div className="w-8 h-8 rounded-lg bg-brand-500/10 flex items-center justify-center shrink-0 mt-0.5">
+                            <FileText className="h-4 w-4 text-brand-400" />
                           </div>
                           <div className="flex-1 min-w-0">
                             <p className="text-white font-medium text-sm sm:text-base leading-relaxed">{q.question_text}</p>
                             <div className="flex flex-wrap items-center gap-2 mt-2">
-                              {q.subject && <span className="bg-indigo-500/20 text-indigo-400 text-xs px-2 py-1 rounded-full">{q.subject}</span>}
+                              {q.subject && <span className="bg-brand-500/20 text-brand-400 text-xs px-2 py-1 rounded-full">{q.subject}</span>}
                               {q.marks && <span className="bg-white/10 text-gray-400 text-xs px-2 py-1 rounded-full">{q.marks} marks</span>}
-                              {q.stream && <span className="bg-purple-500/15 text-purple-400 text-xs px-2 py-1 rounded-full">{q.stream}</span>}
+                              {q.stream && <span className="bg-brand-500/15 text-brand-400 text-xs px-2 py-1 rounded-full">{q.stream}</span>}
                             </div>
                           </div>
                         </div>
@@ -176,8 +176,8 @@ const SearchPage = () => {
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-16">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-2xl mx-auto">
               {[
-                { icon: BookOpen, title: 'By Subject', desc: 'Search by course subject name', color: 'text-blue-400', bg: 'bg-blue-500/10' },
-                { icon: Brain, title: 'By Topic', desc: 'Search by specific topic or concept', color: 'text-purple-400', bg: 'bg-purple-500/10' },
+                { icon: BookOpen, title: 'By Subject', desc: 'Search by course subject name', color: 'text-accent-400', bg: 'bg-accent-500/10' },
+                { icon: Brain, title: 'By Topic', desc: 'Search by specific topic or concept', color: 'text-brand-400', bg: 'bg-brand-500/10' },
                 { icon: FileText, title: 'By Keyword', desc: 'Search by any keyword in questions', color: 'text-green-400', bg: 'bg-green-500/10' },
               ].map((item, i) => (
                 <motion.div key={i} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}

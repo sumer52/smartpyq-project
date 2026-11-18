@@ -38,7 +38,7 @@ const Typewriter = ({ words = [], className = '', speed = 80, deleteSpeed = 40, 
   return (
     <span ref={ref} className={className}>
       {text}
-      <span className="animate-pulse text-purple-400">|</span>
+      <span className="animate-pulse text-brand-400">|</span>
     </span>
   );
 };

@@ -18,7 +18,7 @@ function InlineText({ text }) {
       if (match.index > lastIndex) parts.push(text.slice(lastIndex, match.index));
       const token = match[0];
       if (token.startsWith('`')) {
-        parts.push(<code key={key++} className="px-1.5 py-0.5 rounded bg-white/10 text-purple-200 text-[0.85em] font-mono">{token.slice(1, -1)}</code>);
+        parts.push(<code key={key++} className="px-1.5 py-0.5 rounded bg-white/10 text-brand-200 text-[0.85em] font-mono">{token.slice(1, -1)}</code>);
       } else if (token.startsWith('**')) {
         parts.push(<strong key={key++} className="font-semibold text-white">{token.slice(2, -2)}</strong>);
       } else if (token.startsWith('*')) {
@@ -26,7 +26,7 @@ function InlineText({ text }) {
       } else {
         const label = token.slice(1, token.indexOf(']'));
         const href = token.slice(token.indexOf('(') + 1, -1);
-        parts.push(<a key={key++} href={href} target="_blank" rel="noopener noreferrer" className="text-purple-300 underline underline-offset-2 hover:text-purple-200">{label}</a>);
+        parts.push(<a key={key++} href={href} target="_blank" rel="noopener noreferrer" className="text-brand-300 underline underline-offset-2 hover:text-brand-200">{label}</a>);
       }
       lastIndex = match.index + token.length;
     }
@@ -58,7 +58,7 @@ function CodeBlock({ code, lang }) {
           {copied ? 'Copied!' : 'Copy'}
         </button>
       </div>
-      <pre className="overflow-x-auto p-3 text-xs leading-relaxed"><code className="font-mono text-purple-100 whitespace-pre">{code}</code></pre>
+      <pre className="overflow-x-auto p-3 text-xs leading-relaxed"><code className="font-mono text-brand-100 whitespace-pre">{code}</code></pre>
     </div>
   );
 }

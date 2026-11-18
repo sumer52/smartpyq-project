@@ -5,15 +5,9 @@ from httpx import AsyncClient
 
 
 class TestAdminTenants:
-    """Tests for /api/v1/admin/tenants
-    
-    NOTE: Admin router uses module-level repos without db sessions.
-    These endpoints return 500 until the admin router is refactored
-    to inject db sessions via Depends(get_db).
-    """
+    """Tests for /api/v1/admin/tenants."""
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Admin router uses module-level repos without db session - known pre-existing bug")
     async def test_get_tenants_as_admin(self, admin_client, tenant):
         """Admin can list tenants."""
         resp = await admin_client.get("/api/v1/admin/tenants")
@@ -42,13 +36,9 @@ class TestAdminTenants:
 
 
 class TestAdminUsers:
-    """Tests for /api/v1/admin/users
-    
-    NOTE: Skipped — same module-level repo bug as TestAdminTenants.
-    """
+    """Tests for /api/v1/admin/users."""
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Admin router uses module-level repos without db session - known pre-existing bug")
     async def test_get_users_as_admin(self, admin_client, tenant):
         """Admin can list users."""
         resp = await admin_client.get("/api/v1/admin/users")
@@ -76,13 +66,9 @@ class TestAdminUsers:
 
 
 class TestAdminStats:
-    """Tests for /api/v1/admin/stats
-    
-    NOTE: Skipped — same module-level repo bug.
-    """
+    """Tests for /api/v1/admin/stats."""
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Admin router uses module-level repos without db session - known pre-existing bug")
     async def test_get_stats_as_admin(self, admin_client, tenant):
         """Admin can view system stats."""
         resp = await admin_client.get("/api/v1/admin/stats")
@@ -110,13 +96,9 @@ class TestAdminStats:
 
 
 class TestAdminAuditLogs:
-    """Tests for /api/v1/admin/audit-logs
-    
-    NOTE: Skipped — same module-level repo bug.
-    """
+    """Tests for /api/v1/admin/audit-logs."""
 
     @pytest.mark.asyncio
-    @pytest.mark.skip(reason="Admin router uses module-level repos without db session - known pre-existing bug")
     async def test_get_audit_logs_as_admin(self, admin_client, tenant):
         """Admin can view audit logs."""
         resp = await admin_client.get("/api/v1/admin/audit-logs")

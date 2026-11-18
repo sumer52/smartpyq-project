@@ -4,6 +4,7 @@ Handles administrative functions including tenant management, user management,
 and audit logging.
 """
 
+import logging
 from datetime import datetime, timedelta
 from typing import List, Optional
 
@@ -32,6 +33,8 @@ from ..core.exceptions import (
 )
 from ..models.user import User, UserRole, UserStatus
 from ..models.paper import Paper, PaperStatus
+from ..models.audit_log import AuditLog
+from ..core.auth import AuthManager
 from ..models.tenant import Tenant
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -44,6 +47,8 @@ from ..repositories import (
 
 router = APIRouter(prefix="/admin", tags=["admin"])
 
+logger = logging.getLogger(__name__)
+
 # Request/Response Models
 class TenantResponse(BaseModel):
     """Tenant response model"""
@@ -52,8 +57,8 @@ class TenantResponse(BaseModel):
     slug: str
     allowed_domains: List[str]
     is_active: bool
-    settings: dict
-    created_at: datetime
+    settings: dict = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
     user_count: int
     paper_count: int
     
@@ -67,15 +72,16 @@ class TenantCreateRequest(BaseModel):
 class UserResponse(BaseModel):
     """User response model"""
     id: int
-    name: str
+    name: Optional[str] = None
     email: str
     role: str
-    tenant_id: int
-    tenant_name: str
-    domain_verified: bool
-    is_active: bool
-    created_at: datetime
-    last_login_at: Optional[datetime]
+    # Both are nullable in the users table (admin/demo accounts have no tenant).
+    tenant_id: Optional[int] = None
+    tenant_name: Optional[str] = None
+    domain_verified: bool = False
+    is_active: bool = True
+    created_at: Optional[datetime] = None
+    last_login_at: Optional[datetime] = None
     
 class UserUpdateRequest(BaseModel):
     """User update request"""
@@ -86,14 +92,15 @@ class UserUpdateRequest(BaseModel):
 class AuditLogResponse(BaseModel):
     """Audit log response model"""
     id: int
-    actor_id: Optional[int]
-    actor_name: Optional[str]
+    actor_id: Optional[int] = None
+    actor_name: Optional[str] = None
     action: str
-    target_type: str
-    target_id: Optional[int]
-    meta: dict
-    created_at: datetime
-    client_ip: Optional[str]
+    # audit_logs.target_type and .target_id are nullable strings (see model).
+    target_type: Optional[str] = None
+    target_id: Optional[str] = None
+    meta: dict = Field(default_factory=dict)
+    created_at: Optional[datetime] = None
+    client_ip: Optional[str] = None
     
 class SystemStatsResponse(BaseModel):
     """System statistics response"""
@@ -115,11 +122,87 @@ class MessageResponse(BaseModel):
     message: str
     success: bool = True
 
-# Initialize repositories
-user_repo = UserRepository()
-tenant_repo = TenantRepository()
-paper_repo = PaperRepository()
-audit_repo = AuditLogRepository()
+# ---------------------------------------------------------------------------
+# Request-scoped helpers
+#
+# These handlers used to call module-level repository instances that were
+# constructed without a database session, so every request raised
+# AttributeError and was reported as HTTP 500. They now receive the request
+# session via Depends(get_db). The methods they called
+# (get_all_with_stats, get_users_with_tenant_info, update_user, log_action,
+# get_logs_with_filters) were never implemented, and TenantRepository writes a
+# `Tenant.status` column the model does not have (it uses is_active), so the
+# queries below are written against the real model columns.
+# ---------------------------------------------------------------------------
+
+def _enum_value(value) -> str:
+    return value.value if hasattr(value, "value") else str(value)
+
+
+def _user_payload(user: User, tenant_name: Optional[str] = None) -> dict:
+    """Serialise a User row into the admin UserResponse shape."""
+    return {
+        "id": user.id,
+        "name": user.full_name or user.username or (user.email or "").split("@")[0],
+        "email": user.email,
+        "role": _enum_value(user.role),
+        "tenant_id": user.tenant_id,
+        "tenant_name": tenant_name,
+        "domain_verified": bool(user.domain_verified),
+        "is_active": _enum_value(user.status) == UserStatus.ACTIVE.value,
+        "created_at": user.created_at,
+        "last_login_at": user.last_login_at,
+    }
+
+
+async def _write_audit(
+    db: AsyncSession,
+    *,
+    actor: User,
+    action: str,
+    target_type: Optional[str] = None,
+    target_id=None,
+    meta: Optional[dict] = None,
+    client_ip: Optional[str] = None,
+) -> None:
+    """Record an administrative action in audit_logs.
+
+    Best-effort: the mutation is already committed, so an audit-write failure
+    is logged rather than turning a successful action into a 500.
+    """
+    try:
+        db.add(AuditLog(
+            actor_id=actor.id,
+            actor_type="user",
+            actor_email=actor.email,
+            action=action,
+            severity="low",
+            target_type=target_type,
+            target_id=str(target_id) if target_id is not None else None,
+            description=f"{actor.email} performed {action}",
+            event_metadata=meta or {},
+            ip_address=client_ip,
+            tenant_id=actor.tenant_id,
+        ))
+        await db.commit()
+    except Exception:
+        await db.rollback()
+        logger.exception("Failed to write audit log for action %s", action)
+
+
+def _tenant_payload(tenant: Tenant, user_count: int = 0, paper_count: int = 0) -> dict:
+    return {
+        "id": tenant.id,
+        "name": tenant.name,
+        "slug": tenant.slug,
+        "allowed_domains": tenant.allowed_domains or [],
+        "is_active": bool(tenant.is_active),
+        "settings": tenant.settings or {},
+        "created_at": tenant.created_at,
+        "user_count": user_count,
+        "paper_count": paper_count,
+    }
+
 
 # Tenant Management
 @router.get("/tenants", response_model=List[TenantResponse], responses=PROTECTED)
@@ -127,134 +210,146 @@ async def get_tenants(
     page: int = Query(1, ge=1),
     per_page: int = Query(20, ge=1, le=100),
     active_only: bool = Query(True),
-    current_user: User = Depends(require_roles(["admin"]))
+    current_user: User = Depends(require_roles(["admin"])),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get all tenants (admin only)
-    
-    Returns paginated list of tenants with statistics.
+
+    Returns a paginated list of tenants with per-tenant user/paper counts.
     """
-    try:
-        tenants = await tenant_repo.get_all_with_stats(
-            page=page,
-            per_page=per_page,
-            active_only=active_only
-        )
-        
-        return [TenantResponse(**tenant) for tenant in tenants]
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve tenants"
-        )
+    query = select(Tenant)
+    if active_only:
+        query = query.where(Tenant.is_active.is_(True))
+    query = (
+        query.order_by(Tenant.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    tenants = (await db.execute(query)).scalars().all()
+
+    user_counts = dict((await db.execute(
+        select(User.tenant_id, func.count(User.id)).group_by(User.tenant_id)
+    )).all())
+    paper_counts = dict((await db.execute(
+        select(Paper.tenant_id, func.count(Paper.id)).group_by(Paper.tenant_id)
+    )).all())
+
+    return [
+        TenantResponse(**_tenant_payload(
+            tenant,
+            user_count=user_counts.get(tenant.id, 0),
+            paper_count=paper_counts.get(tenant.id, 0),
+        ))
+        for tenant in tenants
+    ]
+
 
 @router.post("/tenants", response_model=TenantResponse, status_code=status.HTTP_201_CREATED, responses=PROTECTED)
 async def create_tenant(
     request: TenantCreateRequest,
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db),
 ):
-    """Create new tenant (admin only)
-    
-    Creates a new tenant with specified domains and access code.
+    """Create new tenant (admin only).
+
+    The access code is stored hashed; it is never returned.
     """
-    try:
-        tenant = await tenant_repo.create_tenant(
-            name=request.name,
-            slug=request.slug,
-            allowed_domains=request.allowed_domains,
-            access_code=request.access_code,
-            creator_id=current_user.id
-        )
-        
-        # Log tenant creation
-        await audit_repo.log_action(
-            actor_id=current_user.id,
-            action="tenant_created",
-            target_type="tenant",
-            target_id=tenant["id"],
-            meta={"tenant_name": tenant["name"], "domains": request.allowed_domains},
-            client_ip=client_ip
-        )
-        
-        return TenantResponse(**tenant)
-        
-    except ValidationError as e:
+    existing = (await db.execute(
+        select(Tenant).where(Tenant.slug == request.slug)
+    )).scalar_one_or_none()
+    if existing:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
+            detail=f"Tenant slug '{request.slug}' already exists",
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to create tenant"
-        )
+
+    tenant = Tenant(
+        name=request.name,
+        slug=request.slug,
+        allowed_domains=[d.lower().strip() for d in request.allowed_domains if d.strip()],
+        access_code_hash=AuthManager().hash_password(request.access_code),
+        is_active=True,
+        settings={},
+    )
+    db.add(tenant)
+    await db.commit()
+    await db.refresh(tenant)
+
+    await _write_audit(
+        db,
+        actor=current_user,
+        action="tenant_created",
+        target_type="tenant",
+        target_id=tenant.id,
+        meta={"tenant_name": tenant.name, "domains": request.allowed_domains},
+        client_ip=client_ip,
+    )
+    return TenantResponse(**_tenant_payload(tenant))
+
 
 @router.put("/tenants/{tenant_id}/activate", responses=PROTECTED_WITH_NOT_FOUND)
 async def activate_tenant(
     tenant_id: int,
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db),
 ):
     """Activate tenant (admin only)"""
-    try:
-        result = await tenant_repo.activate_tenant(tenant_id)
-        
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
-            
-        await audit_repo.log_action(
-            actor_id=current_user.id,
-            action="tenant_activated",
-            target_type="tenant",
-            target_id=tenant_id,
-            client_ip=client_ip
-        )
-        
-        return {"message": "Tenant activated successfully"}
-        
-    except Exception as e:
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to activate tenant"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found",
         )
+
+    tenant.is_active = True
+    await db.commit()
+    await _write_audit(
+        db,
+        actor=current_user,
+        action="tenant_activated",
+        target_type="tenant",
+        target_id=tenant_id,
+        client_ip=client_ip,
+    )
+    return {"message": "Tenant activated successfully"}
+
 
 @router.put("/tenants/{tenant_id}/suspend", responses=PROTECTED_WITH_NOT_FOUND)
 async def suspend_tenant(
     tenant_id: int,
     reason: str = Form(..., min_length=10, max_length=500),
     current_user: User = Depends(require_roles(["admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db),
 ):
     """Suspend tenant (admin only)"""
-    try:
-        result = await tenant_repo.suspend_tenant(tenant_id)
-        
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tenant not found"
-            )
-            
-        await audit_repo.log_action(
-            actor_id=current_user.id,
-            action="tenant_suspended",
-            target_type="tenant",
-            target_id=tenant_id,
-            meta={"reason": reason},
-            client_ip=client_ip
-        )
-        
-        return {"message": "Tenant suspended successfully"}
-        
-    except Exception as e:
+    tenant = await db.get(Tenant, tenant_id)
+    if not tenant:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to suspend tenant"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Tenant not found",
         )
+
+    tenant.is_active = False
+    # Reassign the dict so SQLAlchemy detects the JSON column change.
+    settings = dict(tenant.settings or {})
+    settings["suspension_reason"] = reason
+    settings["suspended_at"] = datetime.utcnow().isoformat()
+    tenant.settings = settings
+    await db.commit()
+
+    await _write_audit(
+        db,
+        actor=current_user,
+        action="tenant_suspended",
+        target_type="tenant",
+        target_id=tenant_id,
+        meta={"reason": reason},
+        client_ip=client_ip,
+    )
+    return {"message": "Tenant suspended successfully"}
 
 # User Management
 @router.get("/users", response_model=List[UserResponse], responses=PROTECTED)
@@ -264,175 +359,165 @@ async def get_users(
     tenant_id: Optional[int] = Query(None),
     role: Optional[UserRole] = Query(None),
     active_only: bool = Query(True),
-    current_user: User = Depends(require_roles(["admin", "tenant_admin"]))
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get users with filtering
-    
+
     Admin can see all users, tenant_admin can only see users in their tenant.
     """
-    try:
-        # Restrict tenant_admin to their own tenant
-        if current_user.role == "tenant_admin":
-            tenant_id = current_user.tenant_id
-            
-        users = await user_repo.get_users_with_tenant_info(
-            page=page,
-            per_page=per_page,
-            tenant_id=tenant_id,
-            role=role,
-            active_only=active_only
-        )
-        
-        return [UserResponse(**user) for user in users]
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve users"
-        )
+    # Restrict tenant_admin to their own tenant
+    if _enum_value(current_user.role) == "tenant_admin":
+        tenant_id = current_user.tenant_id
+
+    query = select(User, Tenant.name).outerjoin(Tenant, User.tenant_id == Tenant.id)
+    if tenant_id is not None:
+        query = query.where(User.tenant_id == tenant_id)
+    if role is not None:
+        query = query.where(User.role == role)
+    if active_only:
+        query = query.where(User.status == UserStatus.ACTIVE)
+    query = (
+        query.order_by(User.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+
+    rows = (await db.execute(query)).all()
+    return [UserResponse(**_user_payload(user, tenant_name)) for user, tenant_name in rows]
 
 @router.put("/users/{user_id}", response_model=UserResponse, responses=PROTECTED_WITH_NOT_FOUND)
 async def update_user(
     user_id: int,
     request: UserUpdateRequest,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db),
 ):
     """Update user (admin/tenant_admin)
-    
+
     Tenant_admin can only update users in their tenant.
     """
-    try:
-        # Get target user to check permissions
-        target_user = await user_repo.get_by_id(user_id)
-        if not target_user:
+    target_user = await db.get(User, user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+
+    if _enum_value(current_user.role) == "tenant_admin":
+        if target_user.tenant_id != current_user.tenant_id:
             raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Access denied",
             )
-            
-        # Check tenant_admin permissions
-        if current_user.role == "tenant_admin":
-            if target_user.tenant_id != current_user.tenant_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied"
-                )
-                
-        # Filter out None values
-        update_data = {k: v for k, v in request.dict().items() if v is not None}
-        
-        updated_user = await user_repo.update_user(
-            user_id=user_id,
-            update_data=update_data
-        )
-        
-        # Log user update
-        await audit_repo.log_action(
-            actor_id=current_user.id,
-            action="user_updated",
-            target_type="user",
-            target_id=user_id,
-            meta={"changes": update_data},
-            client_ip=client_ip
-        )
-        
-        return UserResponse(**updated_user)
-        
-    except ValidationError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e)
-        )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to update user"
-        )
+
+    changes = {}
+    if request.name is not None:
+        target_user.full_name = request.name
+        changes["name"] = request.name
+    if request.role is not None:
+        target_user.role = request.role
+        changes["role"] = _enum_value(request.role)
+    if request.is_active is not None:
+        target_user.status = UserStatus.ACTIVE if request.is_active else UserStatus.SUSPENDED
+        changes["is_active"] = request.is_active
+
+    await db.commit()
+    await db.refresh(target_user)
+
+    await _write_audit(
+        db,
+        actor=current_user,
+        action="user_updated",
+        target_type="user",
+        target_id=user_id,
+        meta={"changes": changes},
+        client_ip=client_ip,
+    )
+
+    tenant_name = None
+    if target_user.tenant_id is not None:
+        tenant_name = (await db.execute(
+            select(Tenant.name).where(Tenant.id == target_user.tenant_id)
+        )).scalar_one_or_none()
+    return UserResponse(**_user_payload(target_user, tenant_name))
 
 @router.put("/users/{user_id}/activate", responses=PROTECTED_WITH_NOT_FOUND)
 async def activate_user(
     user_id: int,
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db),
 ):
     """Activate user account"""
-    try:
-        # Check permissions for tenant_admin
-        if current_user.role == "tenant_admin":
-            target_user = await user_repo.get_by_id(user_id)
-            if not target_user or target_user.tenant_id != current_user.tenant_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied"
-                )
-                
-        result = await user_repo.activate_user(user_id)
-        
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-            
-        await audit_repo.log_action(
-            actor_id=current_user.id,
-            action="user_activated",
-            target_type="user",
-            target_id=user_id,
-            client_ip=client_ip
-        )
-        
-        return {"message": "User activated successfully"}
-        
-    except Exception as e:
+    target_user = await db.get(User, user_id)
+    if not target_user:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to activate user"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
         )
+    if _enum_value(current_user.role) == "tenant_admin" \
+            and target_user.tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+
+    target_user.status = UserStatus.ACTIVE
+    await db.commit()
+
+    await _write_audit(
+        db,
+        actor=current_user,
+        action="user_activated",
+        target_type="user",
+        target_id=user_id,
+        client_ip=client_ip,
+    )
+    return {"message": "User activated successfully"}
 
 @router.put("/users/{user_id}/suspend", responses=PROTECTED_WITH_NOT_FOUND)
 async def suspend_user(
     user_id: int,
     reason: str = Form(..., min_length=10, max_length=500),
     current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
-    client_ip: str = Depends(get_client_ip)
+    client_ip: str = Depends(get_client_ip),
+    db: AsyncSession = Depends(get_db),
 ):
     """Suspend user account"""
-    try:
-        # Check permissions for tenant_admin
-        if current_user.role == "tenant_admin":
-            target_user = await user_repo.get_by_id(user_id)
-            if not target_user or target_user.tenant_id != current_user.tenant_id:
-                raise HTTPException(
-                    status_code=status.HTTP_403_FORBIDDEN,
-                    detail="Access denied"
-                )
-                
-        result = await user_repo.suspend_user(user_id)
-        
-        if not result:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-            
-        await audit_repo.log_action(
-            actor_id=current_user.id,
-            action="user_suspended",
-            target_type="user",
-            target_id=user_id,
-            meta={"reason": reason},
-            client_ip=client_ip
-        )
-        
-        return {"message": "User suspended successfully"}
-        
-    except Exception as e:
+    if user_id == current_user.id:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to suspend user"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="You cannot suspend your own account",
         )
+
+    target_user = await db.get(User, user_id)
+    if not target_user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found",
+        )
+    if _enum_value(current_user.role) == "tenant_admin" \
+            and target_user.tenant_id != current_user.tenant_id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Access denied",
+        )
+
+    target_user.status = UserStatus.SUSPENDED
+    await db.commit()
+
+    await _write_audit(
+        db,
+        actor=current_user,
+        action="user_suspended",
+        target_type="user",
+        target_id=user_id,
+        meta={"reason": reason},
+        client_ip=client_ip,
+    )
+    return {"message": "User suspended successfully"}
 
 # Audit Logs
 @router.get("/audit-logs", response_model=List[AuditLogResponse], responses=PROTECTED)
@@ -443,38 +528,47 @@ async def get_audit_logs(
     target_type: Optional[str] = Query(None),
     actor_id: Optional[int] = Query(None),
     days: int = Query(30, ge=1, le=365, description="Number of days to look back"),
-    current_user: User = Depends(require_roles(["admin", "tenant_admin"]))
+    current_user: User = Depends(require_roles(["admin", "tenant_admin"])),
+    db: AsyncSession = Depends(get_db),
 ):
     """Get audit logs with filtering
-    
+
     Admin can see all logs, tenant_admin can see logs for their tenant.
     """
-    try:
-        # Calculate date range
-        start_date = datetime.utcnow() - timedelta(days=days)
-        
-        # Restrict tenant_admin to their tenant's activities
-        tenant_filter = None
-        if current_user.role == "tenant_admin":
-            tenant_filter = current_user.tenant_id
-            
-        logs = await audit_repo.get_logs_with_filters(
-            page=page,
-            per_page=per_page,
-            action=action,
-            target_type=target_type,
-            actor_id=actor_id,
-            start_date=start_date,
-            tenant_id=tenant_filter
+    start_date = datetime.utcnow() - timedelta(days=days)
+
+    query = select(AuditLog).where(AuditLog.created_at >= start_date)
+    if action:
+        query = query.where(AuditLog.action == action)
+    if target_type:
+        query = query.where(AuditLog.target_type == target_type)
+    if actor_id is not None:
+        query = query.where(AuditLog.actor_id == actor_id)
+    # Restrict tenant_admin to their tenant's activities
+    if _enum_value(current_user.role) == "tenant_admin":
+        query = query.where(AuditLog.tenant_id == current_user.tenant_id)
+
+    query = (
+        query.order_by(AuditLog.created_at.desc())
+        .offset((page - 1) * per_page)
+        .limit(per_page)
+    )
+    logs = (await db.execute(query)).scalars().all()
+
+    return [
+        AuditLogResponse(
+            id=log.id,
+            actor_id=log.actor_id,
+            actor_name=log.actor_email,
+            action=log.action,
+            target_type=log.target_type,
+            target_id=log.target_id,
+            meta=log.event_metadata or {},
+            created_at=log.created_at,
+            client_ip=log.ip_address,
         )
-        
-        return [AuditLogResponse(**log) for log in logs]
-        
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail="Failed to retrieve audit logs"
-        )
+        for log in logs
+    ]
 
 # System Statistics
 @router.get("/stats", response_model=SystemStatsResponse, responses=PROTECTED)

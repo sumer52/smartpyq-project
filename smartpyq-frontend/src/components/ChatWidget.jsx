@@ -368,7 +368,7 @@ Question: ${raw.slice(0, 3400)}`
                         </div>
                         {message.type === 'bot' && (
                           <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center mr-2 mt-1 order-0">
-                            <SparklesIcon className="h-4 w-4 text-indigo-300" />
+                            <SparklesIcon className="h-4 w-4 text-brand-300" />
                           </div>
                         )}
                       </motion.div>
@@ -378,7 +378,7 @@ Question: ${raw.slice(0, 3400)}`
                       {isTyping && (
                         <div className="flex justify-start">
                           <div className="w-8 h-8 bg-brand-100 rounded-full flex items-center justify-center mr-2">
-                            <SparklesIcon className="h-4 w-4 text-indigo-300" />
+                            <SparklesIcon className="h-4 w-4 text-brand-300" />
                           </div>
                           <div className="bg-white/5 rounded-2xl rounded-bl-md shadow-xs border border-white/10">
                             <TypingIndicator />

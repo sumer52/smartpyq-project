@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Flame, CheckSquare, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { getStreams, getSpecializations, getSemesters, getSubjects, getPyqYears, getSemesterOptions } from '../data/pyqData';
+import { getStreamIcon } from '../data/streamIcons';
 import { apiClient } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import SpotlightCard from './ui/SpotlightCard';
@@ -172,8 +173,8 @@ const PYQNavigator = () => {
   const renderStreams = () => {
     const s = getStreams();
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" variants={container} initial="hidden" animate="visible" exit="exit">
-      {Object.entries(s).map(([k, v]) => { const unlocked = isUnlocked(k); return (<motion.div key={k} variants={card} className={"card-nav p-8 cursor-pointer text-center " + (!unlocked ? "opacity-40" : "")} onClick={() => unlocked && handleStreamSelect(k, v)}>
-        <div className="text-5xl mb-4">{v.icon}</div>
+      {Object.entries(s).map(([k, v]) => { const unlocked = isUnlocked(k); const StreamIcon = getStreamIcon(k); return (<motion.div key={k} variants={card} className={"card-nav p-8 cursor-pointer text-center " + (!unlocked ? "opacity-40" : "")} onClick={() => unlocked && handleStreamSelect(k, v)}>
+        <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-600 rounded-full flex items-center justify-center mx-auto mb-4"><StreamIcon className="w-8 h-8 text-white" /></div>
         <h3 className="text-2xl font-bold text-white mb-2">{v.displayName}</h3>
         <p className="text-gray-400 text-sm">{Object.keys(v.specializations).length} specialization{Object.keys(v.specializations).length > 1 ? 's' : ''}</p></motion.div>);})}
     </motion.div>);
@@ -182,7 +183,7 @@ const PYQNavigator = () => {
     const specs = getSpecializations(selectedStream.key);
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6" variants={container} initial="hidden" animate="visible" exit="exit">
       {Object.entries(specs).map(([k, v]) => (<motion.div key={k} variants={card} className="card-nav p-8 cursor-pointer text-center" onClick={() => handleSpecSelect(k, v)}>
-        <div className="w-16 h-16 bg-linear-to-r from-indigo-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4"><GraduationCap className="w-8 h-8 text-white" /></div>
+        <div className="w-16 h-16 bg-linear-to-r from-brand-500 to-accent-600 rounded-full flex items-center justify-center mx-auto mb-4"><GraduationCap className="w-8 h-8 text-white" /></div>
         <h3 className="text-xl font-bold text-white mb-2">{v.displayName}</h3>
         <p className="text-gray-400 text-sm">{v.name}</p>
       </motion.div>))}
@@ -194,7 +195,7 @@ const PYQNavigator = () => {
     return (<motion.div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4" variants={container} initial="hidden" animate="visible" exit="exit">
       {opts.map((s) => { const has = sems[s.id] && sems[s.id].length > 0; return (
         <motion.div key={s.id} variants={card} className={`card-nav p-6 cursor-pointer text-center ${!has ? 'opacity-40' : ''}`} onClick={() => has && handleSemSelect(s)}>
-          <div className="w-14 h-14 bg-linear-to-r from-green-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-3"><BookOpen className="w-7 h-7 text-white" /></div>
+          <div className="w-14 h-14 bg-linear-to-r from-green-500 to-accent-600 rounded-full flex items-center justify-center mx-auto mb-3"><BookOpen className="w-7 h-7 text-white" /></div>
           <h3 className="text-xl font-bold text-white mb-1">{s.displayName}</h3>
           <p className="text-gray-400 text-xs">{has ? sems[s.id].length + ' subjects' : 'No subjects'}</p>
         </motion.div>); })}
@@ -205,7 +206,7 @@ const PYQNavigator = () => {
     const filtered = subs.filter(s => s.toLowerCase().includes(searchTerm.toLowerCase()));
     return (<motion.div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" variants={container} initial="hidden" animate="visible" exit="exit">
       {filtered.map((s) => (<motion.div key={s} variants={card} className="card-nav p-6 cursor-pointer flex items-center gap-4" onClick={() => handleSubjectSelect(s)}>
-        <div className="w-12 h-12 bg-linear-to-r from-blue-500 to-cyan-600 rounded-full flex items-center justify-center shrink-0"><FileText className="w-6 h-6 text-white" /></div>
+        <div className="w-12 h-12 bg-linear-to-r from-accent-500 to-accent-600 rounded-full flex items-center justify-center shrink-0"><FileText className="w-6 h-6 text-white" /></div>
         <div><h3 className="text-lg font-bold text-white">{s}</h3><p className="text-gray-400 text-sm">View PYQ papers</p></div>
       </motion.div>))}
       {filtered.length === 0 && <p className="text-gray-400 text-center col-span-full py-8">No subjects match your search.</p>}
@@ -265,10 +266,10 @@ const PYQNavigator = () => {
     if (isLoadingPapers) return (<div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" aria-busy="true" aria-label="Loading papers">{[1,2,3,4,5,6].map((i) => <SkeletonCard key={i} lines={3} />)}</div>);
     return (
       <motion.div className="space-y-6" variants={container} initial="hidden" animate="visible" exit="exit">
-        <motion.div variants={card} className="bg-linear-to-r from-indigo-500 to-blue-600 rounded-2xl p-6 text-white">
+        <motion.div variants={card} className="bg-linear-to-r from-brand-500 to-accent-600 rounded-2xl p-6 text-white">
           <div className="flex items-center justify-between">
-            <div><h3 className="text-2xl font-bold">{selectedSubject}</h3><p className="text-indigo-100">{selectedStream?.displayName} / {selectedSpec?.displayName} / {selectedSem?.displayName} / {selectedPyqYear}</p></div>
-            <div className="text-right"><div className="text-2xl font-bold">{papers.length}</div><div className="text-indigo-100 text-sm">Papers</div></div>
+            <div><h3 className="text-2xl font-bold">{selectedSubject}</h3><p className="text-brand-100">{selectedStream?.displayName} / {selectedSpec?.displayName} / {selectedSem?.displayName} / {selectedPyqYear}</p></div>
+            <div className="text-right"><div className="text-2xl font-bold">{papers.length}</div><div className="text-brand-100 text-sm">Papers</div></div>
           </div>
         </motion.div>
         {paperError && <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4"><p className="text-yellow-400">{paperError}</p></div>}
@@ -277,11 +278,11 @@ const PYQNavigator = () => {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4">
             {papers.map((p) => (
-              <SpotlightCard key={p.id} className="group bg-white/5 border border-white/10 rounded-xl p-4" spotlightColor="rgba(99,102,241,0.1)">
+              <SpotlightCard key={p.id} className="group bg-white/5 border border-white/10 rounded-xl p-4" spotlightColor="rgba(241,136,99,0.1)">
                 <motion.div variants={card}>
-                  <h4 className="font-semibold text-white mb-2 group-hover:text-indigo-300 transition-colors line-clamp-2">{p.title}</h4>
+                  <h4 className="font-semibold text-white mb-2 group-hover:text-brand-300 transition-colors line-clamp-2">{p.title}</h4>
                   <div className="flex items-center gap-3 text-xs text-gray-400 mb-3">
-                    <span className="bg-blue-500/20 text-blue-400 px-2 py-1 rounded">{p.exam_type || 'Exam'}</span>
+                    <span className="bg-accent-500/20 text-accent-400 px-2 py-1 rounded">{p.exam_type || 'Exam'}</span>
                     <span>{p.year}</span>
                     {p.file_size && <span>{formatFileSize(p.file_size)}</span>}
                   </div>
@@ -306,7 +307,7 @@ const PYQNavigator = () => {
     <div className="min-h-screen py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center mb-8">
-          <motion.h1 className="text-4xl md:text-5xl font-bold bg-linear-to-r from-cyan-200 to-blue-200 bg-clip-text text-transparent mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>PYQ Hub</motion.h1>
+          <motion.h1 className="text-4xl md:text-5xl font-bold text-brand-300 mb-4" initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>PYQ Hub</motion.h1>
           <motion.p className="text-xl text-gray-400 max-w-3xl mx-auto" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6, delay: 0.2 }}>Browse Osmania University previous year question papers by stream, subject, and year</motion.p>
         </div>
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">

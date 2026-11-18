@@ -32,7 +32,7 @@ const renderInline = (text) => {
       return <strong key={i} className="font-semibold text-white">{p.slice(2, -2)}</strong>;
     }
     if (p.startsWith('`') && p.endsWith('`') && p.length > 2) {
-      return <code key={i} className="px-1 py-0.5 rounded bg-white/10 text-indigo-200 text-[0.85em] font-mono">{p.slice(1, -1)}</code>;
+      return <code key={i} className="px-1 py-0.5 rounded bg-white/10 text-brand-200 text-[0.85em] font-mono">{p.slice(1, -1)}</code>;
     }
     if (p.startsWith('*') && p.endsWith('*') && p.length > 2) {
       return <em key={i} className="italic text-gray-200">{p.slice(1, -1)}</em>;
@@ -85,17 +85,17 @@ export const FormattedText = ({ text }) => {
     <div className="space-y-3 text-white text-sm leading-relaxed">
       {blocks.map((b, i) => {
         if (b.type === 'ul') return (
-          <ul key={i} className="list-disc pl-5 space-y-1.5 marker:text-indigo-400">
+          <ul key={i} className="list-disc pl-5 space-y-1.5 marker:text-brand-400">
             {b.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}
           </ul>
         );
         if (b.type === 'ol') return (
-          <ol key={i} className="list-decimal pl-5 space-y-1.5 marker:text-indigo-400">
+          <ol key={i} className="list-decimal pl-5 space-y-1.5 marker:text-brand-400">
             {b.items.map((it, j) => <li key={j}>{renderInline(it)}</li>)}
           </ol>
         );
         if (b.type === 'quote') return (
-          <blockquote key={i} className="border-l-2 border-indigo-500/50 pl-3 text-gray-300 italic">{renderInline(b.text)}</blockquote>
+          <blockquote key={i} className="border-l-2 border-brand-500/50 pl-3 text-gray-300 italic">{renderInline(b.text)}</blockquote>
         );
         if (b.type === 'indent') return <p key={i} className="pl-6 text-gray-200">{renderInline(b.text)}</p>;
         return <p key={i}>{b.lines.map((l, j) => <React.Fragment key={j}>{j > 0 && <br />}{renderInline(l)}</React.Fragment>)}</p>;

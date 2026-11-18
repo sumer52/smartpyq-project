@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
  * Creates a perspective grid with fading lines for a tech/premium feel.
  * Used behind AI Analysis and Trending sections.
  */
-const PerspectiveGrid = ({ className = '', color = 'rgba(139,92,246,0.06)', lines = 20, opacity = 0.5 }) => {
+const PerspectiveGrid = ({ className = '', color = 'rgba(192,57,43,0.06)', lines = 20, opacity = 0.5 }) => {
   const gridLines = useMemo(() => {
     return Array.from({ length: lines }, (_, i) => ({
       id: i,
@@ -50,7 +50,7 @@ const PerspectiveGrid = ({ className = '', color = 'rgba(139,92,246,0.06)', line
       <div
         className="absolute inset-0"
         style={{
-          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(10,6,24,0.8) 100%)',
+          background: 'radial-gradient(ellipse at center, transparent 30%, rgba(24,12,6,0.8) 100%)',
         }}
       />
 
@@ -58,7 +58,7 @@ const PerspectiveGrid = ({ className = '', color = 'rgba(139,92,246,0.06)', line
       <motion.div
         className="absolute w-[300px] h-[300px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(139,92,246,0.08) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(192,57,43,0.08) 0%, transparent 70%)',
           filter: 'blur(40px)',
           top: '50%',
           left: '50%',

@@ -61,7 +61,7 @@ const AdminLoginPage = () => {
       >
         <div className="rounded-2xl border border-white/10 bg-slate-900/70 backdrop-blur-xl shadow-2xl overflow-hidden">
           {/* Accent bar */}
-          <div className="h-1.5 bg-linear-to-r from-emerald-500 via-teal-500 to-cyan-500" />
+          <div className="h-1.5 bg-linear-to-r from-emerald-500 via-accent-500 to-accent-500" />
 
           <div className="p-8">
             <div className="flex items-center gap-3 mb-2">
@@ -136,7 +136,7 @@ const AdminLoginPage = () => {
               <button
                 type="submit"
                 disabled={isSubmitting}
-                className="w-full rounded-lg bg-linear-to-r from-emerald-500 to-teal-600 px-4 py-2.5 font-semibold text-white shadow-lg transition hover:from-emerald-400 hover:to-teal-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full rounded-lg bg-linear-to-r from-emerald-500 to-accent-600 px-4 py-2.5 font-semibold text-white shadow-lg transition hover:from-emerald-400 hover:to-accent-500 disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isSubmitting ? 'Verifying…' : 'Sign in to Admin'}
               </button>

@@ -23,7 +23,7 @@ const IMAGE_EXTS = ['jpg', 'jpeg', 'png', 'webp'];
 
 const ANSWER_TYPE_BADGE = {
   text: { label: 'TEXT ANSWER', cls: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30' },
-  image: { label: 'IMAGE ANSWER', cls: 'bg-sky-500/15 text-sky-300 border-sky-500/30' },
+  image: { label: 'IMAGE ANSWER', cls: 'bg-accent-500/15 text-accent-300 border-accent-500/30' },
   pdf: { label: 'PDF ANSWER', cls: 'bg-amber-500/15 text-amber-300 border-amber-500/30' },
 };
 
@@ -225,7 +225,7 @@ const AdminAnswersPage = () => {
         <div className="bg-white/5 rounded-2xl border border-white/10 p-5 mb-6">
           <label htmlFor="subject-select" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">1 · Choose subject</label>
           <select id="subject-select" value={subject} onChange={(e) => { setSubject(e.target.value); setSelected(null); setDetail(null); }}
-            className="w-full sm:w-auto min-w-[260px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-indigo-500">
+            className="w-full sm:w-auto min-w-[260px] bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-white focus:outline-hidden focus:border-brand-500">
             <option value="" className="bg-gray-900">— Select a subject —</option>
             {subjects.map(s => <option key={s} value={s} className="bg-gray-900">{s}</option>)}
           </select>
@@ -243,18 +243,18 @@ const AdminAnswersPage = () => {
                 <div className="relative">
                   <MagnifyingGlassIcon className="h-4 w-4 text-gray-500 absolute left-3 top-1/2 -translate-y-1/2" />
                   <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search questions…"
-                    className="w-44 sm:w-56 bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-indigo-500" />
+                    className="w-44 sm:w-56 bg-white/5 border border-white/10 rounded-lg pl-9 pr-3 py-1.5 text-sm text-white placeholder-gray-500 focus:outline-hidden focus:border-brand-500" />
                 </div>
               </div>
               {loading ? (
-                <div className="py-10 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" /></div>
+                <div className="py-10 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500" /></div>
               ) : filtered.length === 0 ? (
                 <p className="text-gray-500 text-sm py-8 text-center">No questions found. Run a paper analysis first.</p>
               ) : (
                 <div className="space-y-2 max-h-[480px] overflow-y-auto pr-1">
                   {filtered.map(q => (
                     <button key={q.id} onClick={() => openEditor(q)}
-                      className={`w-full text-left p-3 rounded-xl border transition-all ${selected?.id === q.id ? 'bg-indigo-500/15 border-indigo-500/40' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
+                      className={`w-full text-left p-3 rounded-xl border transition-all ${selected?.id === q.id ? 'bg-brand-500/15 border-brand-500/40' : 'bg-white/5 border-white/10 hover:bg-white/10'}`}>
                       <div className="flex items-start justify-between gap-3">
                         <p className="text-white text-sm leading-snug line-clamp-2 flex-1">{q.question_text}</p>
                         <AnswerTypeBadge type={q.answer_type || (q.has_answer ? 'text' : null)} />
@@ -312,7 +312,7 @@ const AdminAnswersPage = () => {
                       {detail.answer_type === 'image' ? (
                         <img src={detail.answer_url} alt="Current answer" className="max-h-40 rounded-lg border border-white/10" />
                       ) : (
-                        <a href={detail.answer_url} target="_blank" rel="noreferrer" className="text-indigo-300 text-sm underline hover:text-indigo-200">Open current PDF</a>
+                        <a href={detail.answer_url} target="_blank" rel="noreferrer" className="text-brand-300 text-sm underline hover:text-brand-200">Open current PDF</a>
                       )}
                     </div>
                   )}
@@ -333,7 +333,7 @@ const AdminAnswersPage = () => {
                         { id: 'pdf', label: 'Upload Document', icon: DocumentIcon },
                       ].map(t => (
                         <button key={t.id} onClick={() => { setTab(t.id); clearFile(); }}
-                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${tab === t.id ? 'bg-indigo-500/20 border-indigo-500/50 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}>
+                          className={`flex flex-col items-center gap-1.5 p-3 rounded-xl border text-xs font-medium transition-all ${tab === t.id ? 'bg-brand-500/20 border-brand-500/50 text-white' : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'}`}>
                           <t.icon className="h-5 w-5" /> {t.label}
                         </button>
                       ))}
@@ -346,7 +346,7 @@ const AdminAnswersPage = () => {
                       <label htmlFor="answer-text" className="block text-xs font-semibold text-gray-400 uppercase tracking-wide mb-2">Write the answer</label>
                       <textarea id="answer-text" value={textValue} onChange={(e) => setTextValue(e.target.value)}
                         placeholder={'Write the complete answer…\n\nSupports paragraphs, line breaks,\n- bullet points\n1. numbered steps\n> quotes and indents'}
-                        className="w-full h-44 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder-gray-500 focus:outline-hidden focus:border-indigo-500 resize-y" />
+                        className="w-full h-44 bg-white/5 border border-white/10 rounded-xl p-4 text-white text-sm placeholder-gray-500 focus:outline-hidden focus:border-brand-500 resize-y" />
                       <p className="text-[11px] text-gray-500 mt-1.5">Blank line starts a new paragraph. Lines starting with “- ” become bullets, “1.” numbered steps, “&gt;” quotes.</p>
                       {textValue.trim() && (
                         <div className="mt-3 p-3 rounded-xl border border-white/10 bg-white/5">
@@ -363,7 +363,7 @@ const AdminAnswersPage = () => {
                         {tab === 'image' ? `Upload image (JPG, JPEG, PNG, WEBP · max ${MAX_IMAGE / (1024 * 1024)} MB)` : `Upload document (PDF · max ${MAX_PDF / (1024 * 1024)} MB)`}
                       </label>
                       {!file ? (
-                        <label className="flex flex-col items-center justify-center gap-2 p-8 rounded-xl border-2 border-dashed border-white/15 hover:border-indigo-500/50 hover:bg-white/5 cursor-pointer transition-colors">
+                        <label className="flex flex-col items-center justify-center gap-2 p-8 rounded-xl border-2 border-dashed border-white/15 hover:border-brand-500/50 hover:bg-white/5 cursor-pointer transition-colors">
                           <CloudArrowUpIcon className="h-8 w-8 text-gray-500" />
                           <span className="text-gray-400 text-sm">Click to choose a {tab === 'image' ? 'image' : 'PDF'} file</span>
                           <input type="file" accept={tab === 'image' ? 'image/jpeg,image/png,image/webp' : 'application/pdf'} onChange={onPickFile} className="hidden" />

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import api from '../lib/api';
 import {
   ExclamationTriangleIcon,
   BugAntIcon,
@@ -49,9 +50,25 @@ const ReportIssuePage = () => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // TODO: Replace with actual API call
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      console.log('Issue report submitted:', formData);
+      // Recorded server-side by POST /api/v1/support/message. File contents are
+      // not uploaded, so the report carries the attachment names only.
+      await api.request('/api/v1/support/message', {
+        method: 'POST',
+        body: JSON.stringify({
+          kind: 'issue',
+          title: formData.title,
+          category: formData.category,
+          priority: formData.priority,
+          description: formData.description,
+          steps_to_reproduce: formData.stepsToReproduce,
+          expected_behavior: formData.expectedBehavior,
+          actual_behavior: formData.actualBehavior,
+          browser_info: formData.browserInfo,
+          device_info: formData.deviceInfo,
+          email: formData.email || undefined,
+          attachments: formData.attachments.map(f => f.name),
+        }),
+      });
       setSubmitStatus('success');
       setFormData({
         title: '',
@@ -113,7 +130,7 @@ const ReportIssuePage = () => {
               <ExclamationTriangleIcon className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-4xl md:text-6xl font-bold text-white mb-6">
-              Report an <span className="text-transparent bg-clip-text bg-linear-to-r from-brand-500 to-accent-500">Issue</span>
+              Report an <span className="text-brand-300 ">Issue</span>
             </h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
               Help us make SmartPYQ better by reporting bugs, suggesting improvements, or letting us know about issues you encounter.

@@ -130,7 +130,7 @@ const MySubmissionsPage = () => {
             <div className="flex items-center gap-2 text-xs">
               <FunnelIcon className="h-4 w-4 text-gray-500" />
               <select value={yearFilter} onChange={(e) => setYearFilter(e.target.value)}
-                className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-gray-300 focus:outline-hidden focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30">
+                className="bg-white/5 border border-white/10 rounded-lg px-2.5 py-1.5 text-gray-300 focus:outline-hidden focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30">
                 <option value="all" className="bg-gray-900">All years</option>
                 {yearsPresent.map(y => <option key={y} value={y} className="bg-gray-900">{y}</option>)}
               </select>
@@ -140,7 +140,7 @@ const MySubmissionsPage = () => {
         </div>
 
         {subsLoading ? (
-          <div className="py-10 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-500" /></div>
+          <div className="py-10 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500" /></div>
         ) : visibleSubs.length === 0 ? (
           <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
             <p className="text-gray-400">You haven't uploaded any papers yet.</p>
@@ -162,7 +162,7 @@ const MySubmissionsPage = () => {
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
                   {s.status === 'approved' && (
-                    <a href={`/pyq?year=${s.year}`} className="text-indigo-300 hover:text-indigo-200 text-xs inline-flex items-center gap-1" title="View in PYQ Hub">
+                    <a href={`/pyq?year=${s.year}`} className="text-brand-300 hover:text-brand-200 text-xs inline-flex items-center gap-1" title="View in PYQ Hub">
                       <EyeIcon className="h-3.5 w-3.5" /> In PYQ Hub
                     </a>
                   )}

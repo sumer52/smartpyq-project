@@ -13,7 +13,7 @@ import { useReducedMotionSafe } from '../../lib/motion';
 const CursorGlow = ({
   children,
   className = '',
-  glowColor = 'rgba(139,92,246,0.15)',
+  glowColor = 'rgba(192,57,43,0.15)',
   glowSize = 250,
   springConfig = { stiffness: 300, damping: 25 },
   ...props
@@ -63,7 +63,7 @@ const CursorGlow = ({
         setIsHovering(true);
       }}
       onTouchEnd={() => setIsHovering(false)}
-      whileHover={{ borderColor: 'rgba(139,92,246,0.3)' }}
+      whileHover={{ borderColor: 'rgba(192,57,43,0.3)' }}
       {...props}
     >
       {/* Radial glow that follows cursor with spring physics */}

@@ -36,9 +36,9 @@ const UploadPage = () => {
   return (
     <motion.div className="min-h-screen bg-white/[0.02]" variants={stagger} initial="hidden" animate="visible">
       <motion.div variants={fadeUp} className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-linear-to-b from-purple-900/10 via-transparent to-transparent" />
+        <div className="absolute inset-0 bg-linear-to-b from-brand-900/10 via-transparent to-transparent" />
         <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-10 text-center">
-          <motion.div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-purple-500/10 border border-purple-500/20 text-purple-300 text-sm font-medium mb-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
+          <motion.div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 text-brand-300 text-sm font-medium mb-6" initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.2 }}>
             <ArrowUpTrayIcon className="h-4 w-4" />
             Admin Upload
           </motion.div>
@@ -56,7 +56,7 @@ const UploadPage = () => {
                   className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30 flex items-center gap-3">
                   <SparklesIcon className="h-5 w-5 text-green-400 shrink-0" />
                   <div><p className="text-green-300 font-medium text-sm">Upload successful!</p>
-                  <p className="text-green-400/70 text-xs mt-0.5">Saved as DRAFT — publish it from the Admin Dashboard when reviewed.</p></div>
+                  <p className="text-green-400/70 text-xs mt-0.5">Published to the PYQ Hub — it is live in browse, search and analysis right away.</p></div>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -64,8 +64,8 @@ const UploadPage = () => {
               <UploadStepper onUploadComplete={handleUploadComplete} />
             ) : (
               <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-10 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center mx-auto mb-6">
-                  <ShieldCheckIcon className="h-8 w-8 text-purple-400" />
+                <div className="w-16 h-16 rounded-2xl bg-brand-500/10 border border-brand-500/20 flex items-center justify-center mx-auto mb-6">
+                  <ShieldCheckIcon className="h-8 w-8 text-brand-400" />
                 </div>
                 <h3 className="text-xl font-semibold text-white mb-2">Admin access required</h3>
                 <p className="text-gray-400 mb-8 max-w-md mx-auto">Uploading is restricted to SmartPYQ administrators. Students can browse, search, practice, and download every published paper — no account needed.</p>
@@ -79,7 +79,7 @@ const UploadPage = () => {
           <motion.div className="space-y-6" variants={fadeUp}>
             <div className="bg-white/[0.03] rounded-2xl border border-white/10 p-6">
               <h3 className="text-base font-semibold text-white mb-5 flex items-center gap-2">
-                <SparklesIcon className="h-5 w-5 text-purple-400" /> How It Works
+                <SparklesIcon className="h-5 w-5 text-brand-400" /> How It Works
               </h3>
               <div className="space-y-4">
                 {[
@@ -88,7 +88,7 @@ const UploadPage = () => {
                   { step: 3, title: 'Publish from the dashboard', desc: 'Drafts go public only after you click Publish' }
                 ].map((item) => (
                   <div key={item.step} className="flex gap-3">
-                    <div className="shrink-0 w-7 h-7 rounded-lg bg-purple-500/15 border border-purple-500/25 flex items-center justify-center text-purple-300 text-xs font-bold">{item.step}</div>
+                    <div className="shrink-0 w-7 h-7 rounded-lg bg-brand-500/15 border border-brand-500/25 flex items-center justify-center text-brand-300 text-xs font-bold">{item.step}</div>
                     <div><p className="text-white text-sm font-medium">{item.title}</p><p className="text-gray-500 text-xs mt-0.5">{item.desc}</p></div>
                   </div>
                 ))}
@@ -114,7 +114,7 @@ const UploadPage = () => {
                 ))}
               </div>
             </div>
-            <div className="bg-linear-to-br from-purple-900/20 to-blue-900/20 rounded-2xl border border-purple-500/15 p-6">
+            <div className="bg-linear-to-br from-brand-900/20 to-accent-900/20 rounded-2xl border border-brand-500/15 p-6">
               <h3 className="text-base font-semibold text-white mb-3 flex items-center gap-2">
                 <StarIcon className="h-5 w-5 text-yellow-400" /> Why Contribute?
               </h3>
@@ -138,7 +138,7 @@ const UploadPage = () => {
         <motion.section className="mt-16 max-w-3xl mx-auto" variants={fadeUp}>
           <div className="text-center mb-10">
             <h2 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
-              <QuestionMarkCircleIcon className="h-6 w-6 text-purple-400" />
+              <QuestionMarkCircleIcon className="h-6 w-6 text-brand-400" />
               Frequently Asked Questions
             </h2>
             <p className="text-gray-400">Everything you need to know about uploading papers</p>

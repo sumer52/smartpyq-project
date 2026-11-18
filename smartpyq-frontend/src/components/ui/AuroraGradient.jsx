@@ -26,7 +26,7 @@ const AuroraGradient = ({ className = '' }) => {
       <motion.div
         className="absolute w-[600px] h-[600px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(139,92,246,0.25) 0%, rgba(88,28,135,0.1) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(192,57,43,0.25) 0%, rgba(135,81,28,0.1) 50%, transparent 70%)',
           top: '10%',
           left: '20%',
           filter: 'blur(80px)',
@@ -47,7 +47,7 @@ const AuroraGradient = ({ className = '' }) => {
       <motion.div
         className="absolute w-[500px] h-[500px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(34,211,238,0.15) 0%, rgba(6,182,212,0.08) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(217,166,60,0.15) 0%, rgba(217,166,60,0.08) 50%, transparent 70%)',
           top: '30%',
           right: '15%',
           filter: 'blur(90px)',
@@ -68,7 +68,7 @@ const AuroraGradient = ({ className = '' }) => {
       <motion.div
         className="absolute w-[400px] h-[400px] rounded-full"
         style={{
-          background: 'radial-gradient(circle, rgba(59,130,246,0.18) 0%, rgba(37,99,235,0.08) 50%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(217,166,60,0.18) 0%, rgba(217,166,60,0.08) 50%, transparent 70%)',
           bottom: '20%',
           left: '40%',
           filter: 'blur(70px)',
@@ -89,7 +89,7 @@ const AuroraGradient = ({ className = '' }) => {
       {Array.from({ length: 12 }, (_, i) => (
         <motion.div
           key={i}
-          className="absolute w-1 h-1 rounded-full bg-purple-300/30"
+          className="absolute w-1 h-1 rounded-full bg-brand-300/15"
           style={{
             left: `${10 + Math.random() * 80}%`,
             top: `${10 + Math.random() * 80}%`,

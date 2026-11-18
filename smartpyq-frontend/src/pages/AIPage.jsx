@@ -143,7 +143,7 @@ const AIPage = () => {
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-white mb-2 flex items-center gap-2">
-                  <Sparkles className="h-6 w-6 text-purple-400" /> <TextScramble text="SmartPYQ" delay={100} /> <span className="text-brand-gradient">AI</span>
+                  <Sparkles className="h-6 w-6 text-brand-400" /> <TextScramble text="SmartPYQ" delay={100} /> <span className="text-brand-gradient">AI</span>
                 </h1>
                 <p className="text-lg text-gray-400">
                   Ask anything — academics, programming, concepts, study tips, or any question you have.
@@ -163,8 +163,8 @@ const AIPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
           {/* Chat Interface */}
           <div className="lg:col-span-3">
-            <BorderBeam className="rounded-xl" colorFrom="rgba(139,92,246,0.2)" colorTo="rgba(59,130,246,0.15)">
-            <CursorGlow className="bg-white/5 rounded-xl shadow-xs border border-white/10 h-[600px] flex flex-col" glowColor="rgba(139,92,246,0.06)">
+            <BorderBeam className="rounded-xl" colorFrom="rgba(246,152,92,0.2)" colorTo="rgba(246,80,59,0.15)">
+            <CursorGlow className="bg-white/5 rounded-xl shadow-xs border border-white/10 h-[600px] flex flex-col" glowColor="rgba(246,152,92,0.06)">
               {/* Chat Messages */}
               <div className="flex-1 overflow-y-auto p-6 space-y-4">
                 <AnimatePresence>
@@ -249,9 +249,9 @@ const AIPage = () => {
                         </div>
                         <div className="bg-white/10 rounded-2xl px-4 py-3">
                           <div className="flex space-x-1">
-                            <div className="w-2 h-2 bg-white/30 rounded-full animate-bounce"></div>
-                            <div className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
-                            <div className="w-2 h-2 bg-white/30 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
+                            <div className="w-2 h-2 bg-white/30 rounded-full animate-pulse"></div>
+                            <div className="w-2 h-2 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: '0.1s' }}></div>
+                            <div className="w-2 h-2 bg-white/30 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
                           </div>
                         </div>
                       </div>
@@ -270,7 +270,7 @@ const AIPage = () => {
                       onChange={(e) => setInputMessage(e.target.value)}
                       onKeyPress={handleKeyPress}
                       placeholder="Ask me anything..."
-                      className="w-full px-4 py-3 border border-white/15 rounded-xl focus:ring-2 focus:ring-purple-500/50 focus:border-purple-500/50 resize-none transition-colors bg-white/5 text-white placeholder-gray-500"
+                      className="w-full px-4 py-3 border border-white/15 rounded-xl focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 resize-none transition-colors bg-white/5 text-white placeholder-gray-500"
                       rows={1}
                       style={{ minHeight: '48px', maxHeight: '120px' }}
                       disabled={isLoading}
