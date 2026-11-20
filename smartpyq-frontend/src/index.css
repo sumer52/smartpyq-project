@@ -1430,7 +1430,10 @@ display: inline-flex;
   input[type="url"], select, textarea {
     min-height: 44px !important;
     font-size: 16px !important; /* Prevents iOS zoom on focus */
-    padding: 10px 12px !important;
+    /* Vertical only. A blanket `padding` short-hand here overrode each
+       field's own horizontal padding (e.g. the hero search's pl-11), which
+       dropped the caret/placeholder under the inline search icon on phones. */
+    padding-block: 10px !important;
   }
   
   /* Ensure all buttons have minimum 44px touch targets */
