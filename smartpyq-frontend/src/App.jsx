@@ -5,6 +5,7 @@ import { IntroExperienceProvider } from './components/intro/IntroExperienceConte
 
 import FuturisticHeader from './components/FuturisticHeader';
 import Footer from './components/Footer';
+import ErrorBoundary from './components/ErrorBoundary';
 import ChatWidget from './components/ChatWidget';
 import ScrollToTop from './components/ScrollToTop';
 import SessionExpiredBanner from './components/SessionExpiredBanner';
@@ -66,16 +67,29 @@ const AdminRoute = ({ children }) => {
   return children;
 };
 
+// Per-route error boundary. Keyed on the pathname so navigating somewhere
+// else mounts a clean boundary and clears the previous crash — that is what
+// keeps one broken page from blanking the whole app (header included).
+function RouteBoundary({ children }) {
+  const location = useLocation();
+  return <ErrorBoundary key={location.pathname}>{children}</ErrorBoundary>;
+}
+
 // Route element helper: optional auth guard + per-route Suspense around the
-// lazy page. Route changes animate via the native View Transition API
-// (navigations tagged with `viewTransition`); no per-page motion wrappers.
+// lazy page, all inside a route-level error boundary. Route changes animate
+// via the native View Transition API (navigations tagged with
+// `viewTransition`); no per-page motion wrappers.
 function pageElement(Guard, Page) {
   const content = (
     <Suspense fallback={<SpinLoader />}>
       <Page />
     </Suspense>
   );
-  return Guard ? <Guard>{content}</Guard> : content;
+  return (
+    <RouteBoundary>
+      {Guard ? <Guard>{content}</Guard> : content}
+    </RouteBoundary>
+  );
 }
 
 const REDIRECTS_TO_HOME = ['/login', '/register', '/signup', '/forgot-password', '/dashboard', '/profile'];
