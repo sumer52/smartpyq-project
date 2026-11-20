@@ -37,6 +37,7 @@ from .routers.analysis import router as analysis_router
 from .routers.answers import router as answers_router
 from .routers.intro_analytics import router as intro_analytics_router
 from .routers.support import router as support_router
+from .routers.search import router as search_router
 
 # Setup logging
 setup_logging()
@@ -212,6 +213,7 @@ app.include_router(answers_router, prefix="/api/v1")
 app.include_router(analysis_router, prefix="/api/v1/analysis")
 app.include_router(intro_analytics_router, prefix="/api/v1")
 app.include_router(support_router, prefix="/api/v1")
+app.include_router(search_router, prefix="/api/v1")
 
 # Health check endpoint (liveness)
 @app.get("/health")

@@ -570,6 +570,23 @@ async def get_audit_logs(
         for log in logs
     ]
 
+# Search coverage: what visitors searched for and found nothing
+@router.get("/search-gaps", responses=PROTECTED)
+async def get_search_gaps(
+    limit: int = 20,
+    current_user: User = Depends(require_roles(["admin", "tenant_admin", "super_admin"])),
+):
+    """Most frequent zero-result search queries (admin only).
+
+    Read straight from logs/search_zero_results.jsonl, which the public
+    /search endpoint appends to. This is the shortlist of what content to add:
+    a query that keeps returning nothing is a paper (or a subject name) the
+    library is missing.
+    """
+    from ..routers.search import read_zero_result_log
+
+    return read_zero_result_log(limit=max(1, min(limit, 100)))
+
 # System Statistics
 @router.get("/stats", response_model=SystemStatsResponse, responses=PROTECTED)
 async def get_system_stats(

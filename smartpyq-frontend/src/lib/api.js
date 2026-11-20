@@ -387,6 +387,15 @@ class ApiClient {
     return this.request('/api/v1/analysis/questions' + (qs ? '?' + qs : ''));
   }
 
+  // Unified, ranked search: returns papers and their extracted questions with
+  // snippets and links back to the paper. Zero-result queries are logged
+  // server-side so the library's gaps are visible.
+  async searchAll(query, options = {}) {
+    const params = new URLSearchParams({ q: query });
+    if (options.limit) params.set('limit', options.limit);
+    return this.request('/api/v1/search?' + params.toString());
+  }
+
   async searchQuestions(query, subject) {
     const params = new URLSearchParams();
     if (query) params.set('q', query);
