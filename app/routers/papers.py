@@ -215,6 +215,20 @@ class AnalyzeResponse(BaseModel):
 # Initialize service
 paper_service = PaperService()
 
+# Catalog placeholder for papers that are missing a level (e.g. no
+# specialization recorded). It travels through URLs as a real filter value so
+# those papers stay reachable instead of becoming a dead end in the tree.
+UNSPECIFIED_LEVEL = "Unspecified"
+
+
+def _level_condition(column, value: str):
+    """Filter a browse level, treating the placeholder as "missing"."""
+    from sqlalchemy import or_
+
+    if (value or "").strip().lower() == UNSPECIFIED_LEVEL.lower():
+        return or_(column.is_(None), column == "")
+    return column.ilike(f"%{value}%")
+
 @router.get("/", response_model=PaperListResponse)
 async def get_papers(
     page: int = Query(1, ge=1, description="Page number"),
@@ -225,11 +239,17 @@ async def get_papers(
     specialization: Optional[str] = Query(None, description="Filter by specialization"),
     year: Optional[int] = Query(None, ge=2000, le=2030, description="Filter by year"),
     semester: Optional[str] = Query(None, description="Filter by semester"),
+    q: Optional[str] = Query(None, max_length=200, description="Free-text search over title/subject/university/stream/specialization"),
     paper_status: Optional[PaperStatus] = Query(PaperStatus.APPROVED, description="Filter by status"),
     current_user: Optional[User] = Depends(get_current_user_optional),
     db: AsyncSession = Depends(get_db)
 ):
-    """Get paginated list of papers with filters (public browsing)"""
+    """Get paginated list of papers with filters (public browsing).
+
+    ``q`` makes this endpoint the single search entry point: it matches the
+    paper's own metadata, so a visitor can go straight from a search box to a
+    paper instead of navigating a stream tree first.
+    """
     try:
         from sqlalchemy import select, func
         from app.models.paper import Paper as PaperModel
@@ -249,14 +269,35 @@ async def get_papers(
         if university:
             conditions.append(PaperModel.university.ilike(f'%{university}%'))
         if stream:
-            conditions.append(PaperModel.stream.ilike(f'%{stream}%'))
+            conditions.append(_level_condition(PaperModel.stream, stream))
         if specialization:
-            conditions.append(PaperModel.specialization.ilike(f'%{specialization}%'))
+            conditions.append(_level_condition(PaperModel.specialization, specialization))
         if year:
             conditions.append(PaperModel.year == year)
         if semester:
-            conditions.append(PaperModel.semester.ilike(f'%{semester}%'))
-        
+            conditions.append(_level_condition(PaperModel.semester, semester))
+        if q and q.strip():
+            from sqlalchemy import or_
+            terms = [t for t in q.strip().split() if t]
+            # A bare 4-digit year inside the query ("DBMS 2023") is a year
+            # filter, not a title substring — students type it that way.
+            text_terms = []
+            for term in terms:
+                if term.isdigit() and 2000 <= int(term) <= 2030:
+                    conditions.append(PaperModel.year == int(term))
+                else:
+                    text_terms.append(term)
+            for term in text_terms:
+                like = f'%{term}%'
+                conditions.append(or_(
+                    PaperModel.title.ilike(like),
+                    PaperModel.subject.ilike(like),
+                    PaperModel.university.ilike(like),
+                    PaperModel.stream.ilike(like),
+                    PaperModel.specialization.ilike(like),
+                    PaperModel.semester.ilike(like),
+                ))
+
         count_q = select(func.count(PaperModel.id)).where(*conditions)
         total = (await db.execute(count_q)).scalar() or 0
         
@@ -315,9 +356,9 @@ async def get_available_years(
         if subject:
             conditions.append(PaperModel.subject.ilike(f"%{subject}%"))
         if stream:
-            conditions.append(PaperModel.stream.ilike(f"%{stream}%"))
+            conditions.append(_level_condition(PaperModel.stream, stream))
         if semester:
-            conditions.append(PaperModel.semester == semester)
+            conditions.append(_level_condition(PaperModel.semester, semester))
 
         # Per-year counts (used by the PYQ Hub year cards).
         counts_result = await db.execute(
@@ -336,6 +377,89 @@ async def get_available_years(
         }
     except Exception as e:
         return {"years": [], "year_counts": [], "error": str(e)}
+
+@router.get("/catalog")
+async def get_paper_catalog(db: AsyncSession = Depends(get_db)):
+    """Browse tree built from the papers actually in the database.
+
+    The PYQ Hub used to read a hardcoded catalog file, so any paper whose
+    stream/specialization/semester/subject was not in that file could not be
+    reached at all. This endpoint derives the tree from approved papers, which
+    makes every published paper reachable by construction.
+
+    Values are the stored ones (the navigation passes them straight back as
+    filters). Papers missing a level are grouped under an empty name, which
+    the UI labels "Unspecified" rather than hiding them.
+    """
+    try:
+        from sqlalchemy import select, func
+        from app.models.paper import Paper as PaperModel
+
+        rows = await db.execute(
+            select(
+                PaperModel.stream,
+                PaperModel.specialization,
+                PaperModel.semester,
+                PaperModel.subject,
+                func.count(PaperModel.id),
+            )
+            .where(PaperModel.status == PaperStatus.APPROVED)
+            .group_by(
+                PaperModel.stream,
+                PaperModel.specialization,
+                PaperModel.semester,
+                PaperModel.subject,
+            )
+        )
+
+        streams: dict = {}
+        total = 0
+        for stream, spec, sem, subject, count in rows.all():
+            # Missing levels get the placeholder name so they stay selectable
+            # (the filters above map it back to NULL/empty).
+            stream_name = (stream or "").strip() or UNSPECIFIED_LEVEL
+            spec_name = (spec or "").strip() or UNSPECIFIED_LEVEL
+            sem_name = (sem or "").strip() or UNSPECIFIED_LEVEL
+            subject_name = (subject or "").strip() or UNSPECIFIED_LEVEL
+            total += count
+
+            s = streams.setdefault(stream_name, {"name": stream_name, "paper_count": 0, "specializations": {}})
+            s["paper_count"] += count
+            sp = s["specializations"].setdefault(spec_name, {"name": spec_name, "paper_count": 0, "semesters": {}})
+            sp["paper_count"] += count
+            se = sp["semesters"].setdefault(sem_name, {"name": sem_name, "paper_count": 0, "subjects": []})
+            se["paper_count"] += count
+            existing = next((x for x in se["subjects"] if x["name"] == subject_name), None)
+            if existing:
+                existing["paper_count"] += count
+            else:
+                se["subjects"].append({"name": subject_name, "paper_count": count})
+
+        def _sem_key(name: str):
+            # sem1..sem6 first, in numeric order, then anything custom.
+            digits = "".join(ch for ch in name if ch.isdigit())
+            return (0, int(digits), name) if digits else (1, 0, name.lower())
+
+        catalog = []
+        for stream_name in sorted(streams, key=lambda n: (n == "", n.lower())):
+            stream_entry = streams[stream_name]
+            specializations = []
+            for spec_name in sorted(stream_entry["specializations"], key=lambda n: (n == "", n.lower())):
+                spec_entry = stream_entry["specializations"][spec_name]
+                semesters = []
+                for sem_name in sorted(spec_entry["semesters"], key=lambda n: _sem_key(n)):
+                    sem_entry = spec_entry["semesters"][sem_name]
+                    sem_entry["subjects"].sort(key=lambda x: (x["name"] == "", x["name"].lower()))
+                    semesters.append({**sem_entry, "name": sem_name})
+                specializations.append({**spec_entry, "semesters": semesters})
+            catalog.append({**stream_entry, "specializations": specializations})
+
+        return {"streams": catalog, "paper_count": total}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to build the paper catalog: {type(e).__name__}",
+        )
 
 @router.post("/analyze", response_model=AnalyzeResponse)
 async def analyze_paper(

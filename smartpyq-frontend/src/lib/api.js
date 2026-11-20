@@ -349,6 +349,13 @@ class ApiClient {
     return this.request('/api/v1/analysis/questions/' + questionId + '/detail' + (qs ? '?' + qs : ''));
   }
 
+  // Browse tree derived from the papers actually in the database, so every
+  // published paper is reachable (the old hardcoded catalog hid anything it
+  // didn't know about).
+  async getPaperCatalog() {
+    return this.request('/api/v1/papers/catalog');
+  }
+
   // Available PYQ years with per-year approved-paper counts (public).
   async getYearAvailability(filters = {}) {
     const params = new URLSearchParams();

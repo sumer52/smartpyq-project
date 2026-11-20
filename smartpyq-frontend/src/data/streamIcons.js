@@ -15,4 +15,8 @@ export const STREAM_ICONS = {
   bba: Briefcase,
 };
 
-export const getStreamIcon = (key) => STREAM_ICONS[key] || GraduationCap;
+// Accepts either a catalog id ('bsc') or the stored stream name ('B.Sc'), so
+// the same map serves the home grid and the backend-driven PYQ tree.
+const normalizeKey = (key) => String(key || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+
+export const getStreamIcon = (key) => STREAM_ICONS[normalizeKey(key)] || GraduationCap;
