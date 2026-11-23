@@ -16,6 +16,7 @@ import ScrollProgress from './components/ui/ScrollProgress';
 
 const HomePage = lazy(() => import('./pages/HomePage'));
 const PYQPage = lazy(() => import('./pages/PYQPage'));
+const PaperPage = lazy(() => import('./pages/PaperPage'));
 const UploadPage = lazy(() => import('./pages/UploadPage'));
 const AIPage = lazy(() => import('./pages/AIPage'));
 const ContactPage = lazy(() => import('./pages/ContactPage'));
@@ -105,6 +106,8 @@ const router = createBrowserRouter([
       ...REDIRECTS_TO_HOME.map((p) => ({ path: p, element: <Navigate to="/" replace /> })),
 
       { path: '/pyq', element: pageElement(null, PYQPage) },
+      // One linkable, indexable page per paper (sitemap.xml points here).
+      { path: '/paper/:id', element: pageElement(null, PaperPage) },
       { path: '/repeated-questions', element: pageElement(null, RepeatedQuestionsPage) },
       { path: '/analyze', element: pageElement(null, AnalysisPage) },
       { path: '/practice', element: pageElement(null, PracticePage) },

@@ -206,7 +206,7 @@ const SearchPage = () => {
                         </div>
                         <div className="flex flex-wrap gap-2">
                           <Link to={paper.href} className="btn btn-sm btn-primary">
-                            <ExternalLink className="h-4 w-4" aria-hidden="true" /> Open in PYQ Hub
+                            <ExternalLink className="h-4 w-4" aria-hidden="true" /> View paper
                           </Link>
                           <Link to={`/analyze?papers=${paper.id}`} className="btn btn-sm btn-secondary">
                             <Flame className="h-4 w-4" aria-hidden="true" /> Analyze

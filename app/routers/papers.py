@@ -869,6 +869,136 @@ async def list_pending_review(
         })
     return {"papers": out}
 
+@router.get("/{paper_id}/detail", responses=NOT_FOUND)
+async def get_paper_detail(
+    paper_id: int,
+    current_user: Optional[User] = Depends(get_current_user_optional),
+    db: AsyncSession = Depends(get_db)
+):
+    """Everything the public paper page (`/paper/:id`) renders, in one call.
+
+    Returns the paper, its extracted questions, and related papers from the
+    same subject. Individual papers are linkable, indexable pages, so this
+    endpoint keeps that page to a single round trip.
+
+    Non-approved papers 404 for everyone except admins: an unpublished or
+    rejected upload must not be reachable by guessing an id.
+    """
+    from sqlalchemy import select, and_, or_, func
+    from app.models.paper import Paper as PaperModel
+    from app.models.question import Question
+
+    paper = (await db.execute(
+        select(PaperModel).where(PaperModel.id == paper_id)
+    )).scalar_one_or_none()
+
+    if not paper:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Paper not found")
+    if paper.status != PaperStatus.APPROVED and not _is_admin_user(current_user):
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Paper not found")
+
+    # ---- extracted questions --------------------------------------------
+    question_rows = (await db.execute(
+        select(Question)
+        .where(Question.paper_id == paper_id)
+        .order_by(Question.id.asc())
+        .limit(200)
+    )).scalars().all()
+
+    questions = [
+        {
+            "id": q.id,
+            "question_number": q.question_number,
+            "text": (q.question_text or q.original_question_text or "").strip(),
+            "section": q.section,
+            "marks": q.marks,
+            "question_type": q.question_type,
+            "topic": q.topic,
+            "has_answer": bool(q.answer_type),
+        }
+        for q in question_rows
+        if (q.question_text or q.original_question_text)
+    ]
+
+    # ---- related papers ---------------------------------------------------
+    # Same subject first (other years), then anything else from the same
+    # stream/semester. Metadata-only ordering: no per-row scoring needed.
+    def _related_row(p: "PaperModel") -> dict:
+        return {
+            "id": p.id,
+            "title": p.title,
+            "subject": p.subject,
+            "stream": p.stream,
+            "semester": p.semester,
+            "year": p.year,
+            "exam_type": p.exam_type.value if p.exam_type else None,
+            "file_size": p.file_size,
+        }
+
+    same_subject = (await db.execute(
+        select(PaperModel)
+        .where(
+            PaperModel.status == PaperStatus.APPROVED,
+            PaperModel.id != paper_id,
+            func.lower(PaperModel.subject) == (paper.subject or "").lower(),
+        )
+        .order_by(PaperModel.year.desc(), PaperModel.id.desc())
+        .limit(6)
+    )).scalars().all()
+
+    related = [_related_row(p) for p in same_subject]
+    if len(related) < 4:
+        filler_conditions = [
+            PaperModel.status == PaperStatus.APPROVED,
+            PaperModel.id != paper_id,
+        ]
+        peers = []
+        if paper.stream:
+            peers.append(PaperModel.stream == paper.stream)
+        if paper.semester:
+            peers.append(PaperModel.semester == paper.semester)
+        if peers:
+            filler_conditions.append(or_(*peers))
+        seen = {row["id"] for row in related}
+        filler_rows = (await db.execute(
+            select(PaperModel)
+            .where(and_(*filler_conditions))
+            .order_by(PaperModel.year.desc(), PaperModel.id.desc())
+            .limit(12)
+        )).scalars().all()
+        for p in filler_rows:
+            if p.id in seen:
+                continue
+            related.append(_related_row(p))
+            if len(related) >= 6:
+                break
+
+    return {
+        "paper": {
+            "id": paper.id,
+            "title": paper.title,
+            "description": paper.description,
+            "subject": paper.subject,
+            "university": paper.university or "",
+            "stream": paper.stream or "",
+            "specialization": paper.specialization or "",
+            "semester": paper.semester or "",
+            "year": paper.year,
+            "exam_type": paper.exam_type.value if paper.exam_type else "",
+            "tags": paper.tags or [],
+            "file_name": paper.file_name,
+            "file_size": paper.file_size,
+            "page_count": paper.page_count,
+            "download_count": paper.download_count or 0,
+            "question_count": len(questions),
+            "created_at": paper.created_at.isoformat() if paper.created_at else None,
+            "approved_at": paper.approved_at.isoformat() if paper.approved_at else None,
+        },
+        "questions": questions,
+        "related_papers": related,
+    }
+
+
 @router.get("/{paper_id}", response_model=PaperResponse, responses=NOT_FOUND)
 async def get_paper(
     paper_id: int,

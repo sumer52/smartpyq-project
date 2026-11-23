@@ -24,7 +24,6 @@ import unicodedata
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import List, Optional
-from urllib.parse import urlencode
 
 from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy import or_, select
@@ -103,17 +102,15 @@ def _paper_haystack(paper: Paper) -> str:
     return _normalize(" ".join(p for p in parts if p))
 
 
-def _paper_href(paper: Paper) -> str:
-    """Deep link to this paper's spot in the PYQ Hub."""
-    params = {
-        "stream": paper.stream,
-        "specialization": paper.specialization,
-        "semester": paper.semester,
-        "subject": paper.subject,
-        "year": paper.year,
-    }
-    filtered = {k: v for k, v in params.items() if v not in (None, "")}
-    return "/pyq" + ("?" + urlencode(filtered) if filtered else "")
+def _paper_href(paper: Optional[Paper]) -> str:
+    """Link to this paper's own page.
+
+    Every paper has a stable, indexable URL (`/paper/:id`), so results point at
+    the paper itself instead of a filtered PYQ Hub view that can hold several.
+    """
+    if paper is not None and paper.id:
+        return f"/paper/{paper.id}"
+    return "/pyq"
 
 
 def _score_paper(paper: Paper, phrase: str, terms: List[str]) -> float:

@@ -260,6 +260,12 @@ class ApiClient {
     return this.request(`/api/v1/papers/${id}`);
   }
 
+  // Everything the public /paper/:id page shows: the paper, its extracted
+  // questions, and related papers from the same subject.
+  async getPaperDetail(id) {
+    return this.request(`/api/v1/papers/${id}/detail`);
+  }
+
   async authorizePaperDownload(id) {
     ensureBackendConfigured();
     const url = `${this.baseURL}/api/v1/papers/${id}/download`;

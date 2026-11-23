@@ -6,6 +6,7 @@
   "description": "SmartPYQ - Intelligent Previous Year Question Papers Platform",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node scripts/generate-sitemap.mjs",
     "build": "vite build",
     "preview": "vite preview",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 200"

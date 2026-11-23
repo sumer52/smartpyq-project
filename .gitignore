@@ -78,6 +78,10 @@ supabase/.temp/
 smartpyq-frontend/dist/
 smartpyq-frontend/build/
 
+# Generated at build time by scripts/generate-sitemap.mjs
+smartpyq-frontend/public/sitemap.xml
+smartpyq-frontend/public/robots.txt
+
 # Local tooling / session artifacts
 .freebuff/
 freebuff-visuals/

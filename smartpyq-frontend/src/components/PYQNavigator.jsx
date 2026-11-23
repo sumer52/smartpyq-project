@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Flame, CheckSquare, Loader2, X } from 'lucide-react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getStreamIcon } from '../data/streamIcons';
 import { apiClient } from '../lib/api';
 import SpotlightCard from './ui/SpotlightCard';
@@ -533,7 +533,14 @@ const PYQNavigator = () => {
             {papers.map((paper) => (
               <SpotlightCard key={paper.id} className="group bg-white/5 border border-white/10 rounded-xl p-4" spotlightColor="rgba(241,136,99,0.1)">
                 <motion.div variants={card}>
-                  <h4 className="font-semibold text-white mb-2 group-hover:text-brand-300 transition-colors line-clamp-2">{paper.title}</h4>
+                  <h4 className="font-semibold mb-2 line-clamp-2">
+                    <Link
+                      to={`/paper/${paper.id}`}
+                      className="text-white group-hover:text-brand-300 transition-colors"
+                    >
+                      {paper.title}
+                    </Link>
+                  </h4>
                   <div className="flex items-center gap-3 text-xs text-gray-400 mb-3 flex-wrap">
                     <span className="bg-accent-500/20 text-accent-400 px-2 py-1 rounded">{paper.exam_type || 'Exam'}</span>
                     {paper.year && <span>{paper.year}</span>}
