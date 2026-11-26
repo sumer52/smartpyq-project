@@ -159,7 +159,9 @@ function AppLayout() {
         <BackendConfigBanner />
         <MaintenanceBanner />
 
-        <main id="main-content" className="flex-1 relative" style={{zIndex:10, paddingTop: "70px"}}>
+        {/* .page-content owns the clearance for the fixed header and the
+            floating chat widget (see index.css). */}
+        <main id="main-content" className="page-content flex-1 relative" style={{ zIndex: 10 }}>
           <Outlet />
         </main>
 

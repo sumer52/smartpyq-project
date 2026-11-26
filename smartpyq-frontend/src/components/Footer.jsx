@@ -101,7 +101,7 @@ const Footer = ({ className = "" }) => {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`text-gray-500 ${social.color} transition-colors p-2 rounded-lg hover:bg-white/5 focus:outline-hidden focus:ring-2 focus:ring-brand-500/30`}
+                    className={`text-gray-300 ${social.color} transition-colors p-2 rounded-lg hover:bg-white/5 focus:outline-hidden focus:ring-2 focus:ring-brand-500/30`}
                     aria-label={`Follow us on ${social.name}`}
                   >
                     <IconComponent className="h-5 w-5" />
@@ -110,7 +110,7 @@ const Footer = ({ className = "" }) => {
               })}
             </div>
             {/* Contact Info */}
-            <div className="mt-6 space-y-2 text-sm text-gray-500">
+            <div className="mt-6 space-y-2 text-sm text-gray-300">
               <div className="flex items-center">
                 <EnvelopeIcon className="h-4 w-4 mr-2" />
                 <a href="mailto:smartpyq@gmail.com" className="relative inline-block hover:text-white transition-colors after:content-[''] after:absolute after:inset-x-0 after:-inset-y-3">
@@ -126,7 +126,7 @@ const Footer = ({ className = "" }) => {
           </motion.div>
           {/* Quick Links */}
           <motion.div variants={itemVariants}>
-            <h3 className="text-lg font-semibold mb-6 text-white/90">Quick Links</h3>
+            <h2 className="text-lg font-semibold mb-6 text-white/90">Quick Links</h2>
             <ul className="space-y-3">
               {footerQuickLinks.map((link) => link.action ? (
                 <li key={link.name}>
@@ -158,7 +158,7 @@ const Footer = ({ className = "" }) => {
           </motion.div>
           {/* Support */}
           <motion.div variants={itemVariants}>
-            <h3 className="text-lg font-semibold mb-6 text-white/90">Support</h3>
+            <h2 className="text-lg font-semibold mb-6 text-white/90">Support</h2>
             <ul className="space-y-3">
               {supportLinks.map((link) => (
                 <li key={link.name}>
@@ -177,7 +177,7 @@ const Footer = ({ className = "" }) => {
             </ul>
             {/* Additional Support Info */}
             <div className="mt-6 p-4 bg-white/5 rounded-lg border border-white/10">
-              <h4 className="font-medium text-white mb-2">Need Help?</h4>
+              <h3 className="font-medium text-white mb-2">Need Help?</h3>
               <p className="text-sm text-gray-300 mb-3">
                 Our team is here to help with any questions about SmartPYQ.
               </p>                <Link
@@ -192,8 +192,8 @@ const Footer = ({ className = "" }) => {
           </motion.div>
           {/* Contact Info */}
           <motion.div variants={itemVariants}>
-            <h3 className="text-lg font-semibold mb-6 text-white/90">Get in Touch</h3>
-            <p className="text-gray-400 mb-4">
+            <h2 className="text-lg font-semibold mb-6 text-white/90">Get in Touch</h2>
+            <p className="text-gray-300 mb-4">
               Questions or feedback? We are here to support your exam preparation journey.
             </p>
             <div className="space-y-3">

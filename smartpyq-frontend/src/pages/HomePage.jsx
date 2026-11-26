@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo, useRef } from 'react';
 import { motion, useInView, useReducedMotion, useScroll, useTransform } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   FileText, Bot, Search, BookOpen, Upload, TrendingUp,
   ArrowRight, Repeat, Brain, ChevronRight,
@@ -22,7 +22,6 @@ import CursorGlow from '../components/ui/CursorGlow';
 import PerspectiveGrid from '../components/ui/PerspectiveGrid';
 import TextScramble from '../components/ui/TextScramble';
 import Marquee from '../components/ui/Marquee';
-import { Star } from 'lucide-react';
 import { EASE_OUT, useReducedMotionSafe } from '../lib/motion';
 
 /* ---- Animation Variants ---- */
@@ -127,6 +126,14 @@ const AnnotatedPaper = () => {
 /* ---- Reusable Animation Components ---- */
 
 const WordReveal = ({ text, className, delay = 0 }) => {
+  // Never leave the words at opacity 0. The entrance runs on requestAnimationFrame,
+  // which does not fire in a background tab, so a page opened in the background
+  // (or with reduced motion on) kept the first line invisible and the headline
+  // read only its static second line, "Predict Exam Trends." In both cases render
+  // plain text — the animation is decorative, the sentence is not.
+  const prefersReduced = useReducedMotion();
+  const [openedInBackground] = useState(() => typeof document !== 'undefined' && document.hidden);
+  if (prefersReduced || openedInBackground) return <span className={className}>{text}</span>;
   const words = text.split(/\s+/);
   return (
     <span className={className}>
@@ -246,32 +253,29 @@ const demoTrendingTopics = [
 /* ================================================================
    MAIN COMPONENT
    ================================================================ */
-const testimonials = [
-  { name: 'Priya Sharma', course: 'B.Com General, 3rd Year', text: 'SmartPYQ helped me identify the most repeated questions in Accounting. I scored 85% in my finals by focusing on just the high-priority topics it suggested.', rating: 5 },
-  { name: 'Rahul Verma', course: 'B.Sc Computer Science, 2nd Year', text: 'The AI analysis showed me that 40% of Data Structures questions repeat every year. I stopped wasting time on low-priority topics and my preparation became 3x more efficient.', rating: 5 },
-  { name: 'Ananya Reddy', course: 'BCA, 4th Semester', text: 'I used to browse random PDFs for exam prep. SmartPYQ changed everything � the pattern analysis told me exactly what to study. Got the highest marks in my batch!', rating: 5 },
-  { name: 'Vikram Patel', course: 'BBA, 2nd Year', text: 'The repeated questions feature is a game-changer. I could see which topics appeared in 4 out of 5 papers. My exam preparation is now data-driven, not guesswork.', rating: 5 },
-  { name: 'Sneha Kumari', course: 'B.Sc Mathematics, 3rd Year', text: 'SmartPYQ AI assistant explained complex calculus concepts when I was stuck at 2 AM. Having both PYQ access and AI help in one platform is incredible.', rating: 5 },
-  { name: 'Arjun Nair', course: 'B.Com Honors, 1st Year', text: 'As a first-year student, I had no idea what to expect. SmartPYQ showed me the exact exam pattern and important topics. I walked into my exams feeling confident.', rating: 4 },
+/* Product highlights.
+
+   These replace the previous testimonial cards, which named students and
+   claimed specific scores and efficiency gains ("scored 85%", "3x more
+   efficient"). Nothing in this repository verifies those people or outcomes,
+   so the section now describes only capabilities that exist in the code. It
+   carries no names, ratings or results. */
+const highlights = [
+  { tag: 'PYQ Hub', title: 'Papers by course and semester', text: 'Published previous-year papers are grouped by stream, specialization, semester and subject, so you can go straight to your course.' },
+  { tag: 'Repeated questions', title: 'See what keeps coming back', text: 'Questions that appear across several papers are grouped together, so recurring topics are visible instead of buried in separate PDFs.' },
+  { tag: 'AI analysis', title: 'Topic frequency from real papers', text: 'Analysis counts how often a topic appears in the papers you select. The numbers come from those papers, not from a fixed demo dataset.' },
+  { tag: 'Practice mode', title: 'Answer, then compare', text: 'Work through questions extracted from papers and check your attempt against answers published by contributors.' },
+  { tag: 'AI assistant', title: 'Ask about concepts', text: 'Ask a study question and get an explanation. Answers are AI-generated, so verify anything you rely on.' },
+  { tag: 'Search', title: 'Search the whole library', text: 'Search papers and extracted questions by subject, course or year, and open the paper the question came from.' },
 ];
 
-const TestimonialCard = ({ t }) => (
+const HighlightCard = ({ h }) => (
   <div className="shrink-0 w-[320px] sm:w-[360px] p-5 rounded-2xl bg-white/[0.04] border border-white/10 mx-3">
-    <div className="flex gap-0.5 mb-3">
-      {Array.from({ length: 5 }, (_, i) => (
-        <Star key={i} className={`h-3.5 w-3.5 ${i < t.rating ? 'text-yellow-400 fill-current' : 'text-gray-600'}`} />
-      ))}
+    <div className="inline-flex items-center rounded-full bg-brand-500/10 border border-brand-500/20 px-2.5 py-1 text-[11px] font-medium text-brand-200 mb-3">
+      {h.tag}
     </div>
-    <p className="text-sm text-gray-300 leading-relaxed mb-4">"{t.text}"</p>
-    <div className="flex items-center gap-3">
-      <div className="w-8 h-8 rounded-full bg-linear-to-br from-brand-500 to-accent-500 flex items-center justify-center text-xs font-bold text-white">
-        {t.name.split(' ').map(n => n[0]).join('')}
-      </div>
-      <div>
-        <p className="text-sm font-medium text-white">{t.name}</p>
-        <p className="text-xs text-gray-500">{t.course}</p>
-      </div>
-    </div>
+    <p className="text-sm font-semibold text-white mb-2">{h.title}</p>
+    <p className="text-sm text-gray-300 leading-relaxed">{h.text}</p>
   </div>
 );
 
@@ -281,8 +285,11 @@ const HomePage = () => {
   // replays never count toward intro analytics).
   const replayIntro = useSmartPYQIntroSafe()?.replayIntro ?? null;
   const { isAuthenticated } = useAuth();
-  const [papers, setPapers] = useState([]);
-  const [stats, setStats] = useState({ total: 0, subjects: new Set(), streams: new Set() });
+  const [library, setLibrary] = useState({ papers: 0, subjects: 0 });
+  // loading | ready | empty | error — the counts are never rendered as a
+  // placeholder zero, because "0 papers" reads as a fact when it is not.
+  const [libraryState, setLibraryState] = useState('loading');
+  const [libraryReload, setLibraryReload] = useState(0);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -303,22 +310,34 @@ const HomePage = () => {
   const heroY = useTransform(scrollYProgress, [0, 1], [0, 80]);
   const heroOpacity = useTransform(scrollYProgress, [0, 0.8], [1, 0]);
 
-  // Load papers
+  // Library pulse: counts come from the public catalog endpoint, which is
+  // derived from the papers actually in the database. (The old code counted
+  // subjects in the first 50 rows of /papers and printed 0 on any failure.)
   useEffect(() => {
-    const load = async () => {
+    let active = true;
+    setLibraryState('loading');
+    (async () => {
       try {
-        const r = await apiClient.getPapers({ limit: 50 });
-        const list = r.papers || [];
-        setPapers(list);
-        const subjects = new Set(list.map(p => p.subject).filter(Boolean));
-        const streams = new Set(list.map(p => p.stream).filter(Boolean));
-        setStats({ total: r.total || list.length, subjects, streams });
-      } catch(e) { console.error(e); }
-    };
-    load();
-  }, []);
-
-  const recentPapers = useMemo(() => papers.slice(0, 6), [papers]);
+        const catalog = await apiClient.getPaperCatalog();
+        if (!active) return;
+        const streams = Array.isArray(catalog?.streams) ? catalog.streams : [];
+        const subjects = new Set();
+        streams.forEach((s) => (s.specializations || []).forEach((sp) => (sp.semesters || []).forEach((se) => {
+          (se.subjects || []).forEach((sub) => { if (sub?.name) subjects.add(sub.name); });
+        })));
+        const paperCount = Number.isFinite(catalog?.paper_count)
+          ? catalog.paper_count
+          : streams.reduce((sum, s) => sum + (Number(s.paper_count) || 0), 0);
+        setLibrary({ papers: paperCount, subjects: subjects.size });
+        setLibraryState(paperCount > 0 ? 'ready' : 'empty');
+      } catch (error) {
+        if (!active) return;
+        if (import.meta.env.DEV) console.error('Could not load library counts:', error);
+        setLibraryState('error');
+      }
+    })();
+    return () => { active = false; };
+  }, [libraryReload]);
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -435,18 +454,45 @@ const HomePage = () => {
 
               {/* Live library pulse — real numbers from the database */}
               <motion.div
-                className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-500"
+                className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-gray-400"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 1.6 }}
               >
-                <span className="relative inline-flex h-2 w-2">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
-                </span>
-                <span><span className="text-white font-semibold">{stats.total}</span> papers in the library</span>
-                <span aria-hidden="true" className="text-gray-700">|</span>
-                <span><span className="text-white font-semibold">{stats.subjects.size}</span> subjects covered</span>
+                {libraryState === 'loading' && (
+                  <span role="status" className="text-gray-400">Checking the paper library…</span>
+                )}
+                {libraryState === 'ready' && (
+                  <>
+                    <span className="relative inline-flex h-2 w-2" aria-hidden="true">
+                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-60" />
+                      <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+                    </span>
+                    <span><span className="text-white font-semibold">{library.papers}</span> papers in the library</span>
+                    <span aria-hidden="true" className="text-gray-700">|</span>
+                    <span><span className="text-white font-semibold">{library.subjects}</span> subjects covered</span>
+                  </>
+                )}
+                {libraryState === 'empty' && (
+                  <span className="inline-flex flex-wrap items-center gap-2">
+                    <span>No papers have been published yet — the library is empty.</span>
+                    <Link to="/my-papers" className="font-medium text-brand-300 underline underline-offset-2 hover:text-brand-200">
+                      Upload the first paper
+                    </Link>
+                  </span>
+                )}
+                {libraryState === 'error' && (
+                  <span role="alert" className="inline-flex flex-wrap items-center gap-2 text-amber-200">
+                    <span>We couldn't load the paper library counts just now.</span>
+                    <button
+                      type="button"
+                      onClick={() => setLibraryReload((n) => n + 1)}
+                      className="font-medium underline underline-offset-2 hover:text-amber-100"
+                    >
+                      Retry
+                    </button>
+                  </span>
+                )}
               </motion.div>
             </motion.div>
 
@@ -604,13 +650,13 @@ const HomePage = () => {
           >
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-orange-500/10 border border-orange-500/20 mb-4">
               <Flame className="h-3.5 w-3.5 text-orange-400" />
-              <span className="text-xs font-medium text-orange-300">Live Demo</span>
+              <span className="text-xs font-medium text-orange-300">Example Analysis</span>
             </div>
             <h2 className="text-3xl font-bold text-white mb-1">
               <AnimatedUnderline><TextScramble text="SmartPYQ AI Analysis" className="text-3xl font-bold text-white" delay={300} /></AnimatedUnderline>
             </h2>
             <span className="section-accent" aria-hidden="true" />
-            <p className="text-gray-400 mt-3">Upload a paper — AI reveals repeated questions, topic frequency, and exam patterns</p>
+            <p className="text-gray-400 mt-3">Upload a paper and the AI reveals repeated questions, topic frequency and exam patterns. The cards below are an illustrative example, not live library data.</p>
           </motion.div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -951,7 +997,7 @@ const HomePage = () => {
       </motion.section>
 
       {/* ================================================================
-          10. STUDENT TESTIMONIALS
+          10. PRODUCT HIGHLIGHTS (no named students, no claimed results)
           ================================================================ */}
       <motion.section
         className="py-20 overflow-hidden"
@@ -968,31 +1014,34 @@ const HomePage = () => {
             viewport={{ once: true }}
             transition={{ duration: 0.5 }}
           >
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-yellow-500/10 border border-yellow-500/20 mb-4">
-              <Star className="h-3.5 w-3.5 text-yellow-400 fill-current" />
-              <span className="text-xs font-medium text-yellow-300">Student Stories</span>
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-brand-500/10 border border-brand-500/20 mb-4">
+              <Lightbulb className="h-3.5 w-3.5 text-brand-300" />
+              <span className="text-xs font-medium text-brand-200">Product Overview</span>
             </div>
             <h2 className="text-3xl font-bold text-white mb-1">
-              <AnimatedUnderline><TextScramble text="What Students Say" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>
+              <AnimatedUnderline><TextScramble text="What SmartPYQ Does" className="text-3xl font-bold text-white" delay={200} /></AnimatedUnderline>
             </h2>
             <span className="section-accent" aria-hidden="true" />
-            <p className="text-gray-400 mt-3">Real students. Real results. Real preparation.</p>
+            <p className="text-gray-400 mt-3">How the platform works — these are product capabilities, not student testimonials.</p>
           </motion.div>
         </div>
 
-        {/* Row 1 � scrolling left */}
+        {/* Row 1 — scrolls left */}
         <Marquee speed={35} direction="left" className="mb-4">
-          {testimonials.map((t, i) => (
-            <TestimonialCard key={i} t={t} />
+          {highlights.map((h, i) => (
+            <HighlightCard key={i} h={h} />
           ))}
         </Marquee>
 
-        {/* Row 2 � scrolling right (reverse) */}
-        <Marquee speed={40} direction="right">
-          {[...testimonials].reverse().map((t, i) => (
-            <TestimonialCard key={i} t={t} />
-          ))}
-        </Marquee>
+        {/* Row 2 — decorative repeat of the same cards; hidden from assistive
+            technology so the content is not announced twice. */}
+        <div aria-hidden="true">
+          <Marquee speed={40} direction="right">
+            {[...highlights].reverse().map((h, i) => (
+              <HighlightCard key={i} h={h} />
+            ))}
+          </Marquee>
+        </div>
       </motion.section>
 
       {/* ================================================================

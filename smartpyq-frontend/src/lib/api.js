@@ -16,13 +16,45 @@ const ensureBackendConfigured = () => {
   }
 };
 
+// Requests must never hang forever: a backend that accepts the TCP connection
+// and then never answers used to leave every page on its loading skeleton.
+// 20s is long enough for a slow list response (and a Render cold start) and
+// short enough that the user sees a real error instead of an endless spinner.
+export const REQUEST_TIMEOUT_MS = 20000;
+
+const isDev = import.meta.env.DEV;
+
+// Development-only diagnostics. Production stays quiet (no console noise, no
+// endpoint names leaked into the browser console for visitors).
+const devLog = (message, details) => {
+  if (!isDev) return;
+  if (details === undefined) console.error(`[api] ${message}`);
+  else console.error(`[api] ${message}`, details);
+};
+
+/** AbortController that fires after `ms`, so a stalled fetch rejects. */
+const abortAfter = (ms) => {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), ms);
+  return { signal: controller.signal, cancel: () => clearTimeout(timer) };
+};
+
+const timeoutError = (baseURL, ms) => new ApiError(
+  `The server at ${baseURL} did not respond within ${Math.round(ms / 1000)} seconds. ` +
+  'It may be starting up — please try again.',
+  0,
+  null,
+  'TIMEOUT'
+);
+
 // Custom error classes for better error handling
 class ApiError extends Error {
-  constructor(message, status, data = null) {
+  constructor(message, status, data = null, code = null) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.data = data;
+    this.code = code;
   }
 }
 
@@ -73,11 +105,18 @@ class ApiClient {
     if (!refreshToken) return null;
     this._refreshPromise = (async () => {
       try {
-        const refreshResponse = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ refresh_token: refreshToken })
-        });
+        const guard = abortAfter(REQUEST_TIMEOUT_MS);
+        let refreshResponse;
+        try {
+          refreshResponse = await fetch(`${this.baseURL}/api/v1/auth/refresh`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ refresh_token: refreshToken }),
+            signal: guard.signal
+          });
+        } finally {
+          guard.cancel();
+        }
         if (!refreshResponse.ok) return null;
         const refreshData = await refreshResponse.json();
         localStorage.setItem('auth_token', refreshData.access_token);
@@ -119,9 +158,15 @@ class ApiClient {
   async request(endpoint, options = {}) {
     ensureBackendConfigured();
     const url = `${this.baseURL}${endpoint}`;
+    // `timeoutMs` and `signal` are transport controls, not fetch options.
+    const {
+      timeoutMs = REQUEST_TIMEOUT_MS,
+      signal: callerSignal,
+      ...fetchOptions
+    } = options;
     const config = {
       headers: this.getAuthHeaders(),
-      ...options,
+      ...fetchOptions,
     };
     // JSON bodies need the JSON content-type. FormData must set its own
     // boundary — never send a JSON content-type with a FormData payload.
@@ -150,6 +195,20 @@ class ApiClient {
       }
     }
 
+    // One deadline covers the request and any single 401 retry below.
+    const controller = new AbortController();
+    let timedOut = false;
+    const deadline = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, timeoutMs);
+    const forwardAbort = () => controller.abort();
+    if (callerSignal) {
+      if (callerSignal.aborted) controller.abort();
+      else callerSignal.addEventListener('abort', forwardAbort, { once: true });
+    }
+    config.signal = controller.signal;
+
     try {
       const response = await fetch(url, config);
       
@@ -163,6 +222,7 @@ class ApiClient {
         }
 
         const errorMessage = errorData?.detail || errorData?.message || `HTTP ${response.status}`;
+        devLog(`${response.status} ${endpoint}`, errorMessage);
 
         switch (response.status) {
           case 401: {
@@ -227,17 +287,32 @@ class ApiClient {
         throw error;
       }
 
+      // Our own deadline fired: report a timeout, not a generic network error.
+      if (timedOut) {
+        devLog(`timeout after ${timeoutMs}ms: ${endpoint}`);
+        throw timeoutError(this.baseURL, timeoutMs);
+      }
+
+      // The caller cancelled (route change, new keystroke in search). Let the
+      // caller decide — callers already ignore AbortError.
+      if (error?.name === 'AbortError') throw error;
+
       // Network errors or other fetch failures — name the backend so the
       // message tells the user what to check instead of a bare "Failed to fetch".
-      console.error('API request failed:', error);
+      devLog(`request failed: ${endpoint}`, error);
       const unreachable = error instanceof TypeError ||
         /failed to fetch|load failed|networkerror/i.test(error?.message || '');
       throw new ApiError(
         unreachable
           ? `Can't reach the server at ${this.baseURL}. Check that the backend is running, then try again.`
           : `Network error: ${error.message}`,
-        0
+        0,
+        null,
+        'NETWORK'
       );
+    } finally {
+      clearTimeout(deadline);
+      callerSignal?.removeEventListener?.('abort', forwardAbort);
     }
   }
 
@@ -272,7 +347,16 @@ class ApiClient {
     const headers = {};
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const response = await fetch(url, { method: 'GET', headers });
+    const guard = abortAfter(REQUEST_TIMEOUT_MS * 3);
+    let response;
+    try {
+      response = await fetch(url, { method: 'GET', headers, signal: guard.signal });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw timeoutError(this.baseURL, REQUEST_TIMEOUT_MS * 3);
+      throw new ApiError('Download failed — the server could not be reached.', 0, null, 'NETWORK');
+    } finally {
+      guard.cancel();
+    }
     if (!response.ok) {
       if (response.status === 401) { this.clearAuth(); throw new UnauthorizedError('Authentication required'); }
       throw new ApiError('Download failed', response.status);
@@ -325,6 +409,19 @@ class ApiClient {
     return this.request('/api/v1/chat', {
       method: 'POST',
       body: JSON.stringify({ message, session_id: sessionId })
+    });
+  }
+
+  // One-shot AI answer for the /ai page (public endpoint, no auth needed).
+  // Routed through request() so it inherits the abort deadline: a backend that
+  // accepts the connection and never answers must reject, not hang forever.
+  // Generation is slower than a list call, so it gets a longer (45s) budget.
+  async simpleChat(prompt, sessionId, options = {}) {
+    return this.request('/api/v1/chat/simple', {
+      method: 'POST',
+      body: JSON.stringify({ prompt, session_id: sessionId }),
+      timeoutMs: 45000,
+      ...(options.signal ? { signal: options.signal } : {}),
     });
   }
 
@@ -399,7 +496,8 @@ class ApiClient {
   async searchAll(query, options = {}) {
     const params = new URLSearchParams({ q: query });
     if (options.limit) params.set('limit', options.limit);
-    return this.request('/api/v1/search?' + params.toString());
+    // A caller-provided signal lets a new keystroke cancel the in-flight search.
+    return this.request('/api/v1/search?' + params.toString(), options.signal ? { signal: options.signal } : {});
   }
 
   async searchQuestions(query, subject) {
@@ -465,6 +563,9 @@ class ApiClient {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
       xhr.open('POST', `${this.baseURL}/api/v1/papers/upload-student`);
+      // Uploads are slow but must still fail visibly instead of spinning.
+      xhr.timeout = 120000;
+      xhr.ontimeout = () => reject(new ApiError('The upload timed out. Please try again.', 0, null, 'TIMEOUT'));
       if (token) xhr.setRequestHeader('Authorization', `Bearer ${token}`);
       xhr.upload.onprogress = (e) => {
         if (e.lengthComputable && onProgress) onProgress(Math.round((e.loaded / e.total) * 100));
@@ -495,7 +596,16 @@ class ApiClient {
     ensureBackendConfigured();
     const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
     const headers = token ? { Authorization: `Bearer ${token}` } : {};
-    const res = await fetch(`${this.baseURL}${endpoint}`, { headers });
+    const guard = abortAfter(REQUEST_TIMEOUT_MS * 3);
+    let res;
+    try {
+      res = await fetch(`${this.baseURL}${endpoint}`, { headers, signal: guard.signal });
+    } catch (error) {
+      if (error?.name === 'AbortError') throw timeoutError(this.baseURL, REQUEST_TIMEOUT_MS * 3);
+      throw new ApiError('The server could not be reached.', 0, null, 'NETWORK');
+    } finally {
+      guard.cancel();
+    }
     if (!res.ok) {
       throw new ApiError(`HTTP ${res.status}`, res.status);
     }

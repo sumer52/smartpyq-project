@@ -396,6 +396,67 @@ p, li, td, th, label, span { font-weight: var(--fw-body); }
 :focus:not(:focus-visible) { outline: none; }
 :focus-visible { outline: 2px solid var(--brand-500); outline-offset: 2px; }
 
+/* ============================================================
+   PAGE SHELL — clears the fixed header and the floating chat
+   ============================================================ */
+main {
+  scroll-margin-top: 90px;
+}
+
+/* Every routed page renders inside #main-content. The fixed header is ~58px
+   tall, so 96px of top padding keeps page titles clear of it; the bottom
+   padding keeps footer text and form controls clear of the chat launcher. */
+.page-content {
+  padding-top: 96px;
+  padding-bottom: 110px;
+}
+
+/* Floating chat launcher: above page content, below the mobile menu. */
+.floating-chat {
+  position: fixed;
+  right: 16px;
+  bottom: max(24px, env(safe-area-inset-bottom));
+  z-index: 900;
+}
+
+/* ============================================================
+   REDUCED MOTION — global contract (pairs with motion.js)
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Touch targets: nothing under 44x44 on phones and tablets. */
+@media (max-width: 1024px) {
+  .btn, .btn-xs, .btn-sm, .btn-lg { min-height: 44px; }
+  .btn-icon, .btn-icon.btn-xs, .btn-icon.btn-sm { min-width: 44px; min-height: 44px; }
+}
+
+@media (max-width: 767px) {
+  .page-content { padding-top: 84px; padding-bottom: 112px; }
+}
+
+@media (max-width: 640px) {
+  .floating-chat {
+    right: 16px;
+    bottom: calc(env(safe-area-inset-bottom) + 84px);
+  }
+}
+
+/* Bottom safe space so the fixed chat launcher never sits on top of the last
+   footer row (links, legal text) when the page is scrolled to the end. */
+@media (max-width: 1024px) {
+  footer { padding-bottom: 96px; }
+}
+@media (max-width: 640px) {
+  footer { padding-bottom: calc(150px + env(safe-area-inset-bottom)); }
+}
+
 /* Form inputs: use subtle glow instead of thick outline */
 input:focus-visible, select:focus-visible, textarea:focus-visible {
   outline: none;
@@ -686,7 +747,7 @@ display: none;
 .fh__nav-item--active { color: #E08A7C; background: rgba(192,57,43,0.12); }
 .fh__nav-item--active:hover { color: #F7D8D3; background: rgba(192,57,43,0.18); }
 .fh__nav-icon { width: 18px; height: 18px; }
-.fh__nav-label { font-size: 10px; font-weight: 600; letter-spacing: 0.02em; }
+.fh__nav-label { font-size: 11px; font-weight: 600; letter-spacing: 0.02em; }
 .fh__nav-indicator {
 position: absolute; bottom: -2px; left: 50%; transform: translateX(-50%);
   width: 16px; height: 2px; border-radius: 1px;
@@ -764,8 +825,8 @@ width: 34px; height: 34px; border-radius: 50%;
   .fh__right { margin-left: 4px; }
 }
 @media (min-width: 768px) and (max-width: 1024px) {
-  .fh__nav-item { padding: 4px 6px; }
-  .fh__nav-label { font-size: 9px; }
+  .fh__nav-item { padding: 6px 8px; }
+  .fh__nav-label { font-size: 11px; }
   .fh__nav-icon { width: 16px; height: 16px; }
   .fh__login { padding: 5px 12px; font-size: 10px; }
 }
@@ -790,12 +851,17 @@ position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
 
 /* Mobile menu dropdown (entrance/exit animated by framer-motion in FuturisticHeader;
    items stagger via CSS animation so JS throttling can never freeze them) */
+/* Opaque enough that page content can no longer be read through it, and
+   above every page layer (header 45, chat 900) so it is never click-blocked. */
 .fh__mobile-menu {
-  position: fixed; top: 60px; left: 8px; right: 8px; z-index: 50;
-  background: rgba(25,21,16,0.95); backdrop-filter: blur(24px);
-  border: 1px solid rgba(255,255,255,0.1); border-radius: 16px;
-  box-shadow: 0 16px 48px rgba(0,0,0,0.5);
+  position: fixed; top: 60px; left: 8px; right: 8px; z-index: 1000;
+  background: rgba(20,16,14,0.98);
+  backdrop-filter: blur(16px) saturate(1.1);
+  -webkit-backdrop-filter: blur(16px) saturate(1.1);
+  border: 1px solid rgba(244,238,224,0.14); border-radius: 16px;
+  box-shadow: 0 16px 48px rgba(0,0,0,0.6);
   padding: 8px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px;
+  max-height: calc(100dvh - 80px); overflow-y: auto;
 }
 .fh__mobile-item--in {
   animation: fhMobileItemIn 0.22s cubic-bezier(0.22,1,0.36,1) backwards;

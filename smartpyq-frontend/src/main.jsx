@@ -25,12 +25,35 @@ window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change',
 document.addEventListener('contextmenu', (e) => e.preventDefault());
 
 // app:ready handshake — reveal the app over the static splash.
-// Two rAFs: guarantee the first commit has painted before we flip
-// [data-app-ready], so the splash never flickers away before content exists.
-const revealApp = () => requestAnimationFrame(() => requestAnimationFrame(() => {
+//
+// The splash is a full-screen, click-blocking overlay at z-index 9999, so it
+// MUST always be lifted. Two rAFs guarantee the first commit has painted
+// before [data-app-ready] flips (no flash of empty page), but rAF does not
+// fire at all in a background/hidden tab and can be throttled — which used to
+// leave the splash on screen forever, blocking every click on the site
+// underneath. So: reveal on paint when visible, plus a hard deadline and a
+// visibility-change fallback.
+let appRevealed = false;
+const reveal = () => {
+  if (appRevealed) return;
+  appRevealed = true;
   document.documentElement.setAttribute('data-app-ready', '');
   document.getElementById('splash')?.remove();
-}));
+};
+
+const revealApp = () => {
+  if (document.hidden) {
+    reveal();
+    return;
+  }
+  requestAnimationFrame(() => requestAnimationFrame(reveal));
+  // Deadline: never let a throttled frame callback keep the splash up.
+  setTimeout(reveal, 1200);
+};
+
+document.addEventListener('visibilitychange', () => {
+  if (!document.hidden) reveal();
+});
 
 try {
   ReactDOM.createRoot(document.getElementById('root')).render(

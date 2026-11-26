@@ -508,6 +508,7 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                   type="file"
                   accept=".pdf,.jpg,.jpeg,.png,.webp"
                   onChange={(e) => handleFileSelect(e.target.files)}
+                  aria-label="Choose a question paper file (PDF or image, up to 50MB)"
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                 />
 
@@ -553,8 +554,8 @@ const UploadStepper = ({ onUploadComplete, onCancel, mode = 'admin' }) => {
                       <CloudArrowUpIcon className="h-7 w-7 text-gray-400 group-hover:text-brand-400 transition-colors" />
                     </div>
                     <p className="text-white font-medium text-sm">Drop your file here or click to browse</p>
-                    <p className="text-gray-500 text-xs mt-1">PDF, JPG, JPEG, PNG, or WEBP &bull; Up to 50MB</p>
-                    <p className="text-gray-600 text-xs mt-0.5">Files must contain readable text — photos of signatures or blank pages are rejected.</p>
+                    <p className="text-gray-300 text-xs mt-1">PDF, JPG, JPEG, PNG, or WEBP &bull; Up to 50MB</p>
+                    <p className="text-gray-400 text-xs mt-0.5">Files must contain readable text — photos of signatures or blank pages are rejected.</p>
                   </div>
                 )}
               </div>

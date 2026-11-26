@@ -29,10 +29,10 @@ const TermsPage = () => {
       icon: CogIcon,
       content: [
         {
-          text: 'SmartPYQ is an online platform that provides students with access to previous year question papers, study materials, and AI-powered study assistance.'
+          text: 'SmartPYQ is an online platform that provides access to previously published university question papers and AI-assisted study tools built on them.'
         },
         {
-          text: 'Our service includes features such as paper search and download, AI chat assistance, content upload capabilities, and personalized study recommendations.'
+          text: 'The service includes searching and downloading published papers, pattern analysis of the papers you select, practice questions with published answers, paper uploads (reviewed before publication), and an AI study assistant. Features are offered as they exist on the site at the time you use it.'
         },
         {
           text: 'We reserve the right to modify, suspend, or discontinue any aspect of the service at any time with or without notice.'
@@ -116,7 +116,7 @@ const TermsPage = () => {
       ]
     }
   ];
-  const lastUpdated = 'January 15, 2024';
+  const lastUpdated = 'November 26, 2026';
   return (
     <div className="min-h-screen bg-linear-to-br from-bg-dark via-slate-900 to-bg-dark">
       {/* Hero Section */}
@@ -204,7 +204,7 @@ const TermsPage = () => {
               SmartPYQ is a free educational platform. There are no subscription fees, paywalls, or premium tiers for accessing previous year question papers or using the AI study assistant.
             </p>
             <p className="text-gray-300 leading-relaxed">
-              We reserve the right to introduce paid features in the future. If we do, existing free features will remain free, and any new pricing will be communicated in advance.
+              We may add paid features later. If that happens, the free features available today will be reviewed at that point, and any price or plan will be stated clearly on the site before it takes effect.
             </p>
           </motion.div>
           {/* Privacy and Data */}
@@ -234,7 +234,7 @@ const TermsPage = () => {
               In no event shall SmartPYQ, its directors, employees, partners, agents, suppliers, or affiliates be liable for any indirect, incidental, special, consequential, or punitive damages, including without limitation, loss of profits, data, use, goodwill, or other intangible losses, resulting from your use of the service.
             </p>
             <p className="text-gray-300 leading-relaxed">
-              As a  educational platform, our total liability to you for all claims arising from or relating to the service shall not exceed ₹1,000.
+              As an educational platform, our total liability to you for all claims arising from or relating to the service shall not exceed ₹1,000.
             </p>
           </motion.div>
           {/* Governing Law */}
@@ -245,9 +245,21 @@ const TermsPage = () => {
             className="bg-slate-800/50 backdrop-blur-sm border border-slate-700 rounded-2xl p-8 mt-8"
           >
             <h2 className="text-2xl font-bold text-white mb-4">Governing Law and Jurisdiction</h2>
-            <p className="text-gray-300 leading-relaxed">
-              These Terms shall be governed by and construed in accordance with the laws of India. Any disputes arising from these Terms or your use of the service shall be subject to the exclusive jurisdiction of the courts in Bangalore, India.
+            <p className="text-gray-300 leading-relaxed mb-4">
+              These Terms are governed by and construed in accordance with the laws of India.
             </p>
+            {/* Jurisdiction is deliberately left unstated: the repository has no
+                verified legal address, and the site identifies Hyderabad while an
+                earlier draft of this page named Bangalore. Deciding between them is
+                the owner's / legal counsel's call, not the code's. */}
+            <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4">
+              <p className="text-sm font-semibold text-amber-200 mb-1">Pending legal review</p>
+              <p className="text-sm text-gray-200 leading-relaxed">
+                The exclusive jurisdiction clause has not been confirmed. This page previously named Bangalore,
+                while the site identifies Hyderabad, Telangana. Neither location is stated as the agreed forum
+                here until the owner or legal counsel confirms one.
+              </p>
+            </div>
           </motion.div>
           {/* Changes to Terms */}
           <motion.div
@@ -258,7 +270,7 @@ const TermsPage = () => {
           >
             <h2 className="text-2xl font-bold text-white mb-4">Changes to Terms</h2>
             <p className="text-gray-300 leading-relaxed mb-4">
-              We reserve the right to modify or replace these Terms at any time. If a revision is material, we will try to provide at least 30 days notice prior to any new terms taking effect.
+              We may modify or replace these Terms at any time. Material changes are published on this page with a new "Last updated" date; where a change is significant we will also try to give advance notice, but we cannot promise a fixed notice period.
             </p>
             <p className="text-gray-300 leading-relaxed">
               Your continued use of the service after any such changes constitutes your acceptance of the new Terms.

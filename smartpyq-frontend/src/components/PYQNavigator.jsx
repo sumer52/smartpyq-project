@@ -6,9 +6,9 @@ import { getStreamIcon } from '../data/streamIcons';
 import { apiClient } from '../lib/api';
 import SpotlightCard from './ui/SpotlightCard';
 import MagneticButton from './ui/MagneticButton';
-import { Skeleton, SkeletonCard } from './ui/Loaders';
+import { Skeleton } from './ui/Loaders';
+import { ErrorState, LoadingState } from './feedback/States';
 import { backdrop, modalPanel, sheetPanel } from '../lib/motion';
-import { BACKEND_URL } from '../lib/backendUrl';
 
 // ---------------------------------------------------------------------------
 // URL contract
@@ -41,6 +41,9 @@ const PYQNavigator = () => {
   const [catalog, setCatalog] = useState({ streams: [], paper_count: 0 });
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [catalogError, setCatalogError] = useState('');
+  // Bumped by the Retry buttons to re-run a request without a page reload.
+  const [catalogReload, setCatalogReload] = useState(0);
+  const [papersReload, setPapersReload] = useState(0);
 
   const [papers, setPapers] = useState([]);
   const [paperTotal, setPaperTotal] = useState(0);
@@ -53,6 +56,8 @@ const PYQNavigator = () => {
   const [queryDraft, setQueryDraft] = useState(searchParams.get('q') || '');
   const [previewPaper, setPreviewPaper] = useState(null);
   const [previewUrl, setPreviewUrl] = useState(null);
+  const [previewError, setPreviewError] = useState('');
+  const [previewReload, setPreviewReload] = useState(0);
 
   const [selectedYears, setSelectedYears] = useState([]);
   const [analyzeBusy, setAnalyzeBusy] = useState(false);
@@ -83,7 +88,7 @@ const PYQNavigator = () => {
       })
       .finally(() => { if (!cancelled) setCatalogLoading(false); });
     return () => { cancelled = true; };
-  }, []);
+  }, [catalogReload]);
 
   // --- resolve the URL against that tree -----------------------------------
   // Guard on the param being present: the catalog can contain entries with an
@@ -181,36 +186,41 @@ const PYQNavigator = () => {
       })
       .catch((err) => {
         if (cancelled) return;
-        console.error('Failed to load papers:', err);
+        if (import.meta.env.DEV) console.error('Failed to load papers:', err);
         setPapers([]);
         setPaperError('Could not load papers right now. Please try again.');
       })
       .finally(() => { if (!cancelled) setPapersLoading(false); });
     return () => { cancelled = true; };
-  }, [level, q, subject, stream, semester, yearParam]);
+  }, [level, q, subject, stream, semester, yearParam, papersReload]);
 
   // Keep the input in sync when the URL changes (Back/Forward, shared link).
   useEffect(() => { setQueryDraft(q); }, [q]);
 
   // --- preview ------------------------------------------------------------
   useEffect(() => {
-    if (!previewPaper) { if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); } return; }
+    if (!previewPaper) {
+      if (previewUrl) { URL.revokeObjectURL(previewUrl); setPreviewUrl(null); }
+      setPreviewError('');
+      return;
+    }
     let cancelled = false;
+    setPreviewError('');
     const fetchPreview = async () => {
       try {
-        const url = `${BACKEND_URL}/api/v1/papers/${previewPaper.id}/download`;
-        const headers = {};
-        const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const resp = await fetch(url, { headers });
-        if (!resp.ok) throw new Error('Failed to load preview');
-        const blob = await resp.blob();
+        // getFileBlob sends the auth header and enforces a deadline, so a server
+        // that never answers shows an error instead of a permanent skeleton.
+        const blob = await apiClient.getFileBlob(`/api/v1/papers/${previewPaper.id}/download`);
         if (!cancelled) setPreviewUrl(URL.createObjectURL(blob));
-      } catch (e) { console.error('Preview fetch failed:', e); }
+      } catch (e) {
+        if (cancelled) return;
+        if (import.meta.env.DEV) console.error('Preview fetch failed:', e);
+        setPreviewError('This preview could not be loaded. You can still try downloading the paper.');
+      }
     };
     fetchPreview();
     return () => { cancelled = true; };
-  }, [previewPaper]);
+  }, [previewPaper, previewReload]);
 
   // --- handlers -----------------------------------------------------------
   const handleSearch = (e) => {
@@ -309,18 +319,15 @@ const PYQNavigator = () => {
   // --- renderers ----------------------------------------------------------
   const renderStreams = () => {
     if (catalogLoading) {
-      return (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6" aria-busy="true" aria-label="Loading courses">
-          {[1, 2, 3, 4].map((i) => <Skeleton key={i} className="h-48 w-full rounded-2xl" />)}
-        </div>
-      );
+      return <LoadingState label="Loading courses…" hint="Fetching the courses in the library" rows={2} />;
     }
     if (catalogError) {
       return (
-        <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
-          <p className="text-yellow-400 mb-3">{catalogError}</p>
-          <button type="button" className="btn btn-sm btn-secondary" onClick={() => window.location.reload()}>Retry</button>
-        </div>
+        <ErrorState
+          message={catalogError}
+          onRetry={() => setCatalogReload((n) => n + 1)}
+          retryBusy={catalogLoading}
+        />
       );
     }
     if (!catalog.streams.length) {
@@ -488,11 +495,7 @@ const PYQNavigator = () => {
 
   const renderPapers = () => {
     if (papersLoading) {
-      return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4" aria-busy="true" aria-label="Loading papers">
-          {[1, 2, 3, 4, 5, 6].map((i) => <SkeletonCard key={i} lines={3} />)}
-        </div>
-      );
+      return <LoadingState label="Loading papers…" rows={3} />;
     }
     const heading = level === 'search' ? 'Matching papers' : displayName(subject?.name);
     const subheading = level === 'search'
@@ -513,7 +516,12 @@ const PYQNavigator = () => {
           </div>
         </motion.div>
 
-        {paperError && <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4"><p className="text-yellow-400">{paperError}</p></div>}
+        {paperError && (
+          <ErrorState
+            message={paperError}
+            onRetry={() => setPapersReload((n) => n + 1)}
+          />
+        )}
 
         {papers.length === 0 && !paperError ? (
           <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
@@ -582,7 +590,7 @@ const PYQNavigator = () => {
 
         {/* One search box that finds papers directly (no tree required). */}
         <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8" role="search">
-          <div className="relative flex items-center gap-2">
+          <div className="relative flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5 pointer-events-none" aria-hidden="true" />
               <input
@@ -601,7 +609,7 @@ const PYQNavigator = () => {
                 </button>
               )}
             </div>
-            <button type="submit" className="btn btn-primary btn-lg">Search</button>
+            <button type="submit" className="btn btn-primary btn-lg w-full sm:w-auto shrink-0">Search</button>
           </div>
         </form>
 
@@ -616,6 +624,10 @@ const PYQNavigator = () => {
           </div>
         </div>
 
+        {/* The breadcrumb starts with “PYQ Hub”, which is already the page h1 —
+            on the root level it would only repeat the title, so it is hidden
+            until the visitor has drilled into the tree. */}
+        {level !== 'streams' && (
         <div className="flex items-center gap-2 mb-6 text-sm text-gray-400 flex-wrap">
           {breadcrumb.map((crumb, i) => (
             <React.Fragment key={`${crumb.label}-${i}`}>
@@ -628,6 +640,7 @@ const PYQNavigator = () => {
             </React.Fragment>
           ))}
         </div>
+        )}
 
         <motion.h2 className="text-2xl md:text-3xl font-bold text-white text-center mb-8" key={level} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>{title}</motion.h2>
 
@@ -659,8 +672,19 @@ const PYQNavigator = () => {
                 <button onClick={() => setPreviewPaper(null)} className="text-gray-400 hover:text-white text-2xl leading-none px-2" aria-label="Close preview">&times;</button>
               </div>
               <div className="flex-1 overflow-hidden rounded-b-2xl">
-                {previewUrl ? <iframe src={previewUrl} className="w-full h-full border-0" title={previewPaper.title} /> : (
-                  <div className="p-6 space-y-4" aria-busy="true">
+                {previewUrl ? <iframe src={previewUrl} className="w-full h-full border-0" title={previewPaper.title} /> : previewError ? (
+                  <div className="p-6 space-y-4 text-center" role="alert">
+                    <p className="text-gray-200">{previewError}</p>
+                    <button
+                      type="button"
+                      className="btn btn-sm btn-secondary"
+                      onClick={() => { setPreviewUrl(null); setPreviewReload((n) => n + 1); }}
+                    >
+                      Retry preview
+                    </button>
+                  </div>
+                ) : (
+                  <div className="p-6 space-y-4" aria-busy="true" aria-label="Loading paper preview">
                     <Skeleton className="h-full w-full min-h-[50vh]" />
                   </div>
                 )}

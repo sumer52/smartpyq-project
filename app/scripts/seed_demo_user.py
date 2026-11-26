@@ -6,9 +6,9 @@ Behaviour:
       (production default). Safe to run unconditionally at deploy time.
     - demo@smartpyq.com  -> STUDENT role (public demo login; must NEVER be
       an admin — the credentials are public on the login page).
-    - admin@smartpyq.com -> ADMIN role, ONLY when ADMIN_EMAIL +
-      ADMIN_PASSWORD are set in the environment. The password is never
-      logged and must be changed from the default.
+    - admin@smartpyq.com -> ADMIN role, ONLY when ADMIN_PASSWORD is set in
+      the environment. There is no default password; the value is never
+      logged. Running with a new ADMIN_PASSWORD rotates the stored hash.
     - Never prints passwords or secrets.
     - Rolls back cleanly on failure (exit 1 only when seeding was enabled
       and actually failed).
@@ -36,11 +36,11 @@ DEMO_PASSWORD = "demo123"  # public credentials; role is STUDENT by design
 ADMIN_EMAIL = os.environ.get("ADMIN_EMAIL", "admin@smartpyq.com").strip().lower()
 ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "").strip()
 
-# Dev/demo convenience admin (ADMIN_ID "admin" style login). Only seeded when
-# ENABLE_DEMO_ACCOUNT is on AND ADMIN_PASSWORD is not explicitly provided.
-# Production must set ADMIN_PASSWORD; these defaults never apply there.
-DEV_ADMIN_EMAIL = "admin@smartpyq.com"
-DEV_ADMIN_PASSWORD = "smartpyq@admin"
+# There is deliberately NO fallback admin password. The previous default
+# ("smartpyq@admin") was published on the public admin login page, so it can
+# never be trusted again. Set ADMIN_PASSWORD in the environment to create or
+# rotate the admin account; running this script with a new value rewrites the
+# stored hash, which is how the exposed password gets rotated.
 
 
 async def _upsert_user(db, *, email: str, username: str, full_name: str,
@@ -123,19 +123,20 @@ async def seed_demo_user() -> None:
             year_of_study=3,
         )
 
-        # 2) Admin account — ADMIN_PASSWORD wins; otherwise fall back to the
-        #    documented dev/demo credentials (only reachable when demo mode is
-        #    enabled, since main() gates on demo_account_enabled()).
-        admin_password = ADMIN_PASSWORD or DEV_ADMIN_PASSWORD
-        if len(admin_password) < 8:
-            print("[WARN] Admin password too short (min 8 chars) — admin not seeded")
+        # 2) Admin account — created or rotated from ADMIN_PASSWORD only.
+        #    Without it the admin is left exactly as it is (no default, no
+        #    guessable fallback).
+        if not ADMIN_PASSWORD:
+            print("[SKIP] ADMIN_PASSWORD is not set — admin account left unchanged")
+        elif len(ADMIN_PASSWORD) < 12:
+            print("[WARN] ADMIN_PASSWORD is shorter than 12 chars — admin not seeded")
         else:
             await _upsert_user(
                 db=db,
                 email=ADMIN_EMAIL,
                 username="admin",
                 full_name="SmartPYQ Admin",
-                password_hash=auth_mgr.hash_password(admin_password),
+                password_hash=auth_mgr.hash_password(ADMIN_PASSWORD),
                 role=UserRole.ADMIN,
                 course=None,
                 semester=None,

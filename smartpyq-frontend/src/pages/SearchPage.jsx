@@ -5,6 +5,7 @@ import { Search, FileText, BookOpen, Flame, ExternalLink, ArrowRight, X } from '
 import api from '../lib/api';
 import GlowEffect from '../components/ui/GlowEffect';
 import MagneticButton from '../components/ui/MagneticButton';
+import { EmptyState, ErrorState, LoadingState } from '../components/feedback/States';
 
 const EXAMPLES = ['DBMS 2023', 'Data Structures', 'Computer Networks', 'Physics'];
 
@@ -38,6 +39,7 @@ const SearchPage = () => {
   const [results, setResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [retryKey, setRetryKey] = useState(0);
   const abortRef = useRef(null);
 
   useEffect(() => { setDraft(q); }, [q]);
@@ -56,18 +58,22 @@ const SearchPage = () => {
 
     setLoading(true);
     setError('');
-    api.searchAll(q.trim())
+    api.searchAll(q.trim(), { signal: controller.signal })
       .then((data) => { if (!cancelled) setResults(data); })
       .catch((err) => {
         if (cancelled || err?.name === 'AbortError') return;
-        console.error('Search failed:', err);
+        if (import.meta.env.DEV) console.error('Search failed:', err);
         setResults(null);
-        setError("Search isn't responding right now. Please try again.");
+        setError(
+          err?.code === 'TIMEOUT'
+            ? 'The search service took too long to respond. Please try again.'
+            : "Search isn't responding right now. Please try again."
+        );
       })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; controller.abort(); };
-  }, [q]);
+  }, [q, retryKey]);
 
   const submit = useCallback((e) => {
     e?.preventDefault();
@@ -131,25 +137,16 @@ const SearchPage = () => {
         </GlowEffect>
 
         {error && (
-          <div className="mb-6 bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4">
-            <p className="text-yellow-400 text-sm">{error}</p>
-          </div>
+          <ErrorState
+            className="mb-6"
+            message={error}
+            onRetry={() => setRetryKey((n) => n + 1)}
+          />
         )}
 
-        {/* Loading */}
+        {/* Loading: labelled, so the page never shows an unlabelled spinner */}
         {loading && (
-          <div className="space-y-3" aria-busy="true">
-            {[1, 2, 3].map((i) => (
-              <div key={i} className="bg-white/5 rounded-xl border border-white/10 p-4 animate-pulse">
-                <div className="h-4 bg-white/10 rounded w-3/4 mb-3" />
-                <div className="h-3 bg-white/10 rounded w-1/2 mb-3" />
-                <div className="flex gap-2">
-                  <div className="h-5 bg-white/10 rounded w-20" />
-                  <div className="h-5 bg-white/10 rounded w-16" />
-                </div>
-              </div>
-            ))}
-          </div>
+          <LoadingState label={`Searching for “${q}”…`} rows={2} />
         )}
 
         {/* Results */}
@@ -263,17 +260,13 @@ const SearchPage = () => {
 
             {/* Nothing found: point somewhere useful and say the gap was noted */}
             {nothingFound && (
-              <div className="text-center py-12 bg-white/5 rounded-xl border border-white/10">
-                <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-4">
-                  <Search className="h-8 w-8 text-gray-500" aria-hidden="true" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-2">No papers or questions matched</h3>
-                <p className="text-gray-400 text-sm max-w-md mx-auto mb-5">
-                  Try fewer words, a subject name, or a year on its own — for example “Physics” or “2024”.
-                  We&apos;ve recorded this search so the missing content can be added.
-                </p>
-                <Link to="/pyq" className="btn btn-secondary">Browse the PYQ Hub</Link>
-              </div>
+              <EmptyState
+                icon={Search}
+                title="No papers or questions matched"
+                message={'Try fewer words, a subject name, or a year on its own — for example “Physics” or “2024”. ' +
+                  'We have recorded this search so the missing content can be added.'}
+                action={<Link to="/pyq" className="btn btn-secondary">Browse the PYQ Hub</Link>}
+              />
             )}
           </div>
         )}

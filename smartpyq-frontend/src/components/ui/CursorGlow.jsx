@@ -1,5 +1,5 @@
-import React, { useRef, useState, useCallback } from 'react';
-import { motion, useMotionValue, useSpring, useTransform } from 'framer-motion';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { motion, useMotionValue, useSpring } from 'framer-motion';
 import { useReducedMotionSafe } from '../../lib/motion';
 
 /**
@@ -13,6 +13,7 @@ import { useReducedMotionSafe } from '../../lib/motion';
 const CursorGlow = ({
   children,
   className = '',
+  contentClassName = '',
   glowColor = 'rgba(192,57,43,0.15)',
   glowSize = 250,
   springConfig = { stiffness: 300, damping: 25 },
@@ -27,9 +28,25 @@ const CursorGlow = ({
   const springX = useSpring(mouseX, springConfig);
   const springY = useSpring(mouseY, springConfig);
 
-  // Compute gradient position based on spring values
-  const gradientX = useTransform(springX, (v) => `${v}px`);
-  const gradientY = useTransform(springY, (v) => `${v}px`);
+  const glowRef = useRef(null);
+
+  // The glow position is written to CSS variables instead of interpolating a
+  // gradient string through framer-motion. Mixing `radial-gradient(...)`
+  // strings that contain `transparent` makes framer treat that token as a
+  // colour it cannot parse, which throws
+  // "Cannot read properties of undefined (reading 'parse')" as soon as the
+  // cursor moves. CSS variables animate visually identically and cost less.
+  useEffect(() => {
+    const el = glowRef.current;
+    if (!el) return undefined;
+    el.style.setProperty('--cursor-x', `${springX.get()}px`);
+    el.style.setProperty('--cursor-y', `${springY.get()}px`);
+    const stopX = springX.on('change', (v) => el.style.setProperty('--cursor-x', `${v}px`));
+    const stopY = springY.on('change', (v) => el.style.setProperty('--cursor-y', `${v}px`));
+    return () => { stopX(); stopY(); };
+  }, [springX, springY]);
+
+  const glowBackground = `radial-gradient(${glowSize}px circle at var(--cursor-x, 50%) var(--cursor-y, 50%), ${glowColor}, transparent 60%)`;
 
   const [isHovering, setIsHovering] = useState(false);
 
@@ -68,19 +85,17 @@ const CursorGlow = ({
     >
       {/* Radial glow that follows cursor with spring physics */}
       <motion.div
+        ref={glowRef}
+        aria-hidden="true"
         className="pointer-events-none absolute inset-0"
-        style={{
-          background: useTransform(
-            [springX, springY],
-            ([x, y]) => `radial-gradient(${glowSize}px circle at ${x}px ${y}px, ${glowColor}, transparent 60%)`
-          ),
-          opacity: isHovering ? 1 : 0,
-        }}
-        transition={{ opacity: { duration: 0.2 } }}
+        style={{ background: glowBackground }}
+        animate={{ opacity: isHovering ? 1 : 0 }}
+        transition={{ duration: 0.2 }}
       />
 
-      {/* Content */}
-      <div className="relative z-10">{children}</div>
+      {/* Content: contentClassName lets a caller keep a flex/height chain
+          through this wrapper (e.g. a fixed-height card with a scrolling body). */}
+      <div className={`relative z-10 ${contentClassName}`}>{children}</div>
     </motion.div>
   );
 };

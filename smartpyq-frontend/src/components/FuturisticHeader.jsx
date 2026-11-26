@@ -48,6 +48,14 @@ const FuturisticHeader = memo(() => {
     setShowUserMenu(false);
     setShowMobileMenu(false);
   }, [location.pathname, location.search]);
+
+  // Escape closes the mobile menu (keyboard users can always get back out).
+  useEffect(() => {
+    if (!showMobileMenu) return undefined;
+    const onKeyDown = (e) => { if (e.key === 'Escape') setShowMobileMenu(false); };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [showMobileMenu]);
   const handleLogout = () => {
     logout();
     setShowUserMenu(false);
@@ -98,7 +106,13 @@ const FuturisticHeader = memo(() => {
         </nav>
 
         {/* Mobile hamburger */}
-        <button className='fh__hamburger' onClick={() => setShowMobileMenu(!showMobileMenu)} aria-label='Menu' aria-expanded={showMobileMenu}>
+        <button
+          className='fh__hamburger'
+          onClick={() => setShowMobileMenu(!showMobileMenu)}
+          aria-label={showMobileMenu ? 'Close menu' : 'Open menu'}
+          aria-expanded={showMobileMenu}
+          aria-controls='mobile-navigation'
+        >
           <svg width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='currentColor' strokeWidth='2'>
             {showMobileMenu
               ? <path d='M18 6L6 18M6 6l12 12' />
@@ -149,7 +163,10 @@ const FuturisticHeader = memo(() => {
       <AnimatePresence>
         {showMobileMenu && (
           <motion.div
+            id='mobile-navigation'
             className='fh__mobile-menu'
+            role='navigation'
+            aria-label='Mobile navigation'
             onClick={(e) => { if (e.target.closest('a')) setShowMobileMenu(false); }}
             initial={{ opacity: 0, y: -12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}

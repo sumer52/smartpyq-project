@@ -7,6 +7,7 @@ import { Counter } from '../components/ui/Loaders';
 import { Button } from '@/components/ui/button';
 import AnswerView from '../components/AnswerView';
 import { stagger, cardUp, EASE } from '../lib/motion';
+import { EmptyState, ErrorState, LoadingState } from '../components/feedback/States';
 
 const PracticePage = () => {
   const [questions, setQuestions] = useState([]);
@@ -24,6 +25,11 @@ const PracticePage = () => {
   // original format (text / image / pdf).
   const [answerDetail, setAnswerDetail] = useState(null);
   const [answerLoading, setAnswerLoading] = useState(false);
+  // Load outcome: a failed question fetch must say so (with a retry) instead of
+  // spinning, and a silent fallback to the built-in bank is announced.
+  const [loadError, setLoadError] = useState('');
+  const [usingFallback, setUsingFallback] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   // PYQ Analysis Dashboard integration: ?papers=1,2,3 restricts practice to
   // the analyzed papers (most-repeated first); &q=<id> deep-links a question.
@@ -32,13 +38,20 @@ const PracticePage = () => {
   const focusQuestionId = searchParams.get('q') ? Number(searchParams.get('q')) : null;
 
   useEffect(() => {
+    // `cancelled` stops a slower earlier load (e.g. the previous ?papers= value)
+    // from overwriting the newer result when the effect re-runs.
+    let cancelled = false;
     // Load local practice questions from question bank
     const loadQuestions = async () => {
+      setLoading(true);
+      setLoadError('');
+      setUsingFallback(false);
       let loadedFromPapers = false;
       if (papersParam) {
         try {
           const qs = await api.getQuestions({ paper_ids: papersParam, limit: 300 });
-          if (qs && qs.length > 0) {
+          if (cancelled) return;
+          if (Array.isArray(qs) && qs.length > 0) {
             const sorted = [...qs].sort((a, b) => (b.frequency || 1) - (a.frequency || 1));
             setAllQuestions(sorted);
             setQuestions(sorted);
@@ -54,13 +67,17 @@ const PracticePage = () => {
         try {
           // Try backend first
           const qs = await api.getQuestions({ limit: 200 });
-          if (qs && qs.length > 0) {
+          if (cancelled) return;
+          if (Array.isArray(qs) && qs.length > 0) {
             setAllQuestions(qs);
             setQuestions(qs);
           } else {
             throw new Error('No backend questions');
           }
         } catch (e) {
+          if (cancelled) return;
+          if (import.meta.env.DEV) console.warn('[practice] question library unreachable, using the built-in set:', e?.message);
+          setUsingFallback(true);
           // Fall back to local question bank
           const localQs = [];
           let qNum = 1;
@@ -84,6 +101,9 @@ const PracticePage = () => {
           }
           setAllQuestions(localQs);
           setQuestions(localQs);
+          if (localQs.length === 0) {
+            setLoadError('No practice questions could be loaded. Please try again in a moment.');
+          }
         }
       }
       // Practice history is account-scoped. Without a token the call always
@@ -95,13 +115,16 @@ const PracticePage = () => {
           const hist = await api.getPracticeHistory();
           setHistory(hist || []);
         } catch (e) {
+          if (cancelled) return;
           setHistory([]);
         }
       }
+      if (cancelled) return;
       setLoading(false);
     };
     loadQuestions();
-  }, [papersParam, focusQuestionId]);
+    return () => { cancelled = true; };
+  }, [papersParam, focusQuestionId, reloadKey]);
 
   // Build filter options
   const subjects = [...new Set(allQuestions.map(q => q.subject).filter(Boolean))];
@@ -185,11 +208,36 @@ const PracticePage = () => {
     needsPractice: history.filter(h => h.status === 'attempted').length,
   };
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center" role="status" aria-label="Loading questions">
-      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-500"></div>
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="min-h-screen">
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Exam Practice Mode</h1>
+          <p className="text-gray-300 mb-8">Sharpen your preparation with real questions from previous year exams.</p>
+          <LoadingState
+            label="Loading questions…"
+            hint="Fetching extracted questions from the paper library"
+            rows={3}
+          />
+        </main>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="min-h-screen">
+        <main className="max-w-4xl mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold text-white mb-2">Exam Practice Mode</h1>
+          <p className="text-gray-300 mb-8">Sharpen your preparation with real questions from previous year exams.</p>
+          <ErrorState
+            message={loadError}
+            onRetry={() => setReloadKey((n) => n + 1)}
+          />
+        </main>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen">
@@ -205,11 +253,17 @@ const PracticePage = () => {
           </div>
         )}
 
-        {allQuestions.length === 0 ? (
-          <div className="text-center py-16 bg-white/5 rounded-2xl border border-white/10">
-            <p className="text-gray-400 text-lg">No questions available for practice yet</p>
-            <p className="text-gray-500 text-sm mt-2">Run a paper analysis first to extract questions that you can practice with here.</p>
+        {usingFallback && (
+          <div role="status" className="bg-amber-500/10 border border-amber-500/30 text-amber-200 rounded-xl p-4 text-sm mb-6">
+            Showing the built-in practice set — the live question library could not be reached.
           </div>
+        )}
+
+        {allQuestions.length === 0 ? (
+          <EmptyState
+            title="No questions available for practice yet"
+            message="Run a paper analysis first to extract questions that you can practice with here."
+          />
         ) : (
           <>
             {/* Stats Bar */}

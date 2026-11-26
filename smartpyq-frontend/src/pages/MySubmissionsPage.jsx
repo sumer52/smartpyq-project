@@ -7,6 +7,7 @@ import {
 import api, { getAnonUploadToken } from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import UploadStepper from '../components/UploadStepper';
+import { EmptyState, ErrorState, LoadingState } from '../components/feedback/States';
 
 /**
  * My Submissions — /my-papers (public; no account needed).
@@ -46,10 +47,12 @@ const MySubmissionsPage = () => {
   const [dupes, setDupes] = useState([]);
   const [submissions, setSubmissions] = useState([]);
   const [subsLoading, setSubsLoading] = useState(true);
+  const [subsError, setSubsError] = useState('');
   const [yearFilter, setYearFilter] = useState('all');
 
   const loadSubmissions = useCallback(async () => {
     setSubsLoading(true);
+    setSubsError('');
     try {
       // Signed-out visitors: identify via the stored anon upload token.
       const anonToken = !isAuthenticated ? getAnonUploadToken() : undefined;
@@ -60,9 +63,11 @@ const MySubmissionsPage = () => {
       const res = await api.getMySubmissions(anonToken);
       setSubmissions(res?.papers || []);
     } catch (e) {
+      // A failed list is reported, not swallowed: the visitor needs to know
+      // the status of papers they already submitted.
+      if (import.meta.env.DEV) console.error('[my-papers] could not load submissions:', e);
       setSubmissions([]);
-      // A missing/expired anon token is not an error worth shouting about —
-      // the empty state below invites the first upload.
+      setSubsError(e?.message || 'Your submissions could not be loaded right now.');
     } finally {
       setSubsLoading(false);
     }
@@ -140,12 +145,19 @@ const MySubmissionsPage = () => {
         </div>
 
         {subsLoading ? (
-          <div className="py-10 flex justify-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-brand-500" /></div>
+          <LoadingState label="Loading your submissions…" rows={2} />
+        ) : subsError ? (
+          <ErrorState
+            title="Something went wrong"
+            message={subsError}
+            onRetry={loadSubmissions}
+            retryBusy={subsLoading}
+          />
         ) : visibleSubs.length === 0 ? (
-          <div className="text-center py-12 bg-white/5 rounded-2xl border border-white/10">
-            <p className="text-gray-400">You haven't uploaded any papers yet.</p>
-            <p className="text-gray-500 text-sm mt-1">Upload your first paper above — approved papers appear in the public PYQ Hub.</p>
-          </div>
+          <EmptyState
+            title="You haven't uploaded any papers yet"
+            message="Upload your first paper above — approved papers appear in the public PYQ Hub."
+          />
         ) : (
           <div className="space-y-3">
             {visibleSubs.map(s => (

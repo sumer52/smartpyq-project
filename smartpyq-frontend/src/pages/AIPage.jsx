@@ -7,7 +7,6 @@ import MagneticButton from '../components/ui/MagneticButton';
 import CursorGlow from '../components/ui/CursorGlow';
 import BorderBeam from '../components/ui/BorderBeam';
 import TextScramble from '../components/ui/TextScramble';
-import { BACKEND_URL } from '../lib/backendUrl';
 const AIPage = () => {
   const [messages, setMessages] = useState([
     {
@@ -28,24 +27,36 @@ const AIPage = () => {
   const [isTyping, setIsTyping] = useState(false);
   const [sessionId] = useState(() => `session_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`);
   const messagesEndRef = useRef(null);
+  const messagesRef = useRef(null);
   const inputRef = useRef(null);
+  // Monotonic id per send: a slow reply that lands after a newer one is dropped
+  // instead of overwriting the newer conversation state.
+  const lastRequestRef = useRef(0);
   
+  // Scroll the message list itself, never the page: scrollIntoView on the end
+  // marker also scrolled the document, which pushed the composer under the
+  // fixed header on first load at some viewport sizes.
   const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    const list = messagesRef.current;
+    if (!list) return;
+    list.scrollTo({ top: list.scrollHeight, behavior: 'smooth' });
   };
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
   useEffect(() => {
-    // Focus input on mount
-    inputRef.current?.focus();
+    // Focus input on mount, without scrolling the page to it.
+    inputRef.current?.focus({ preventScroll: true });
   }, []);
   const handleSendMessage = async (message = inputMessage) => {
-    if (!message.trim() || isLoading) return;
+    const text = message.trim();
+    if (!text || isLoading) return;
+    const requestId = lastRequestRef.current + 1;
+    lastRequestRef.current = requestId;
     const userMessage = {
       id: Date.now(),
       type: 'user',
-      content: message.trim(),
+      content: text,
       timestamp: new Date().toISOString()
     };
     setMessages(prev => [...prev, userMessage]);
@@ -53,42 +64,44 @@ const AIPage = () => {
     setIsLoading(true);
     setIsTyping(true);
     try {
-      // Use the chat API (simple endpoint works for guests and logged-in users)
-      const response = await fetch(`${BACKEND_URL}/api/v1/chat/simple`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          prompt: message.trim(),
-          session_id: sessionId
-        })
-      });
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+      // apiClient (not a bare fetch) so the request has a deadline: the old
+      // fetch had none, so a stalled backend left the spinner running forever.
+      const data = await apiClient.simpleChat(text, sessionId);
+      if (requestId !== lastRequestRef.current) return; // a newer send superseded this one
+      const answer = typeof data?.response === 'string' ? data.response.trim() : '';
+      if (!answer) {
+        throw new Error('The AI assistant returned an empty answer.');
       }
-      const data = await response.json();
-      const aiResponse = {
+      setMessages(prev => [...prev, {
         id: Date.now() + 1,
         type: 'ai',
-        content: data.response || 'I apologize, but I\'m having trouble processing your request right now. Please try again.',
+        content: answer,
         timestamp: new Date().toISOString(),
-        suggestions: generateSuggestions(message.trim())
-      };
-      setMessages(prev => [...prev, aiResponse]);
+        suggestions: generateSuggestions(text)
+      }]);
     } catch (error) {
-      console.error('Chat API error:', error);
-      const errorMessage = {
+      if (requestId !== lastRequestRef.current) return;
+      if (import.meta.env.DEV) console.error('Chat API error:', error);
+      const reason = error?.code === 'TIMEOUT'
+        ? 'The AI assistant did not respond in time.'
+        : error?.name === 'BackendConfigurationError'
+          ? 'The AI service is not configured for this deployment.'
+          : error?.status
+            ? `The AI assistant returned an error (HTTP ${error.status}).`
+            : 'The AI assistant could not be reached.';
+      setMessages(prev => [...prev, {
         id: Date.now() + 1,
         type: 'ai',
-        content: "Failed to send message. Please try again.",
+        content: `${reason} Please try again.`,
         timestamp: new Date().toISOString(),
-        isError: true
-      };
-      setMessages(prev => [...prev, errorMessage]);
+        isError: true,
+        retryPrompt: text
+      }]);
     } finally {
-      setIsLoading(false);
-      setIsTyping(false);
+      if (requestId === lastRequestRef.current) {
+        setIsLoading(false);
+        setIsTyping(false);
+      }
     }
   };
   // This function is no longer needed since we use real AI responses
@@ -164,9 +177,19 @@ const AIPage = () => {
           {/* Chat Interface */}
           <div className="lg:col-span-3">
             <BorderBeam className="rounded-xl" colorFrom="rgba(246,152,92,0.2)" colorTo="rgba(246,80,59,0.15)">
-            <CursorGlow className="bg-white/5 rounded-xl shadow-xs border border-white/10 h-[600px] flex flex-col" glowColor="rgba(246,152,92,0.06)">
+            <CursorGlow
+              className="bg-white/5 rounded-xl shadow-xs border border-white/10 h-[600px]"
+              contentClassName="flex h-full min-h-0 flex-col"
+              glowColor="rgba(246,152,92,0.06)"
+            >
               {/* Chat Messages */}
-              <div className="flex-1 overflow-y-auto p-6 space-y-4">
+              <div
+                ref={messagesRef}
+                className="flex-1 min-h-0 overflow-y-auto p-6 space-y-4"
+                role="log"
+                aria-live="polite"
+                aria-label="AI assistant conversation"
+              >
                 <AnimatePresence>
                   {messages.map((message) => (
                     <motion.div
@@ -188,14 +211,28 @@ const AIPage = () => {
                             </span>
                           </div>
                         )}
-                        <div className={`rounded-2xl px-4 py-3 ${
-                          message.type === 'user'
-                            ? 'bg-linear-to-r from-brand-600 to-accent-600 text-white'
-                            : message.isError
-                            ? 'bg-red-50 text-red-800 border border-red-200'
-                            : 'bg-white/10 text-white'
-                        }`}>
+                        <div
+                          className={`rounded-2xl px-4 py-3 ${
+                            message.type === 'user'
+                              ? 'bg-linear-to-r from-brand-600 to-accent-600 text-white'
+                              : message.isError
+                              ? 'bg-red-50 text-red-800 border border-red-200'
+                              : 'bg-white/10 text-white'
+                          }`}
+                          role={message.isError ? 'alert' : undefined}
+                        >
                           <div className="whitespace-pre-wrap">{message.content}</div>
+                          {message.isError && message.retryPrompt && (
+                            <button
+                              type="button"
+                              onClick={() => handleSendMessage(message.retryPrompt)}
+                              disabled={isLoading}
+                              aria-label="Retry the last message"
+                              className="mt-3 inline-flex items-center gap-1.5 rounded-lg border border-red-300 bg-white/70 px-3 py-2 text-sm font-medium text-red-800 hover:bg-white disabled:opacity-60"
+                            >
+                              Try again
+                            </button>
+                          )}
                         </div>
                         {message.type === 'user' && (
                           <div className="flex items-center justify-end mt-2">
@@ -245,7 +282,7 @@ const AIPage = () => {
                           <div className="w-8 h-8 bg-linear-to-r from-brand-500 to-accent-500 rounded-full flex items-center justify-center text-white text-sm font-medium mr-2">
                             AI
                           </div>
-                          <span className="text-xs text-gray-500">typing...</span>
+                          <span className="text-xs text-gray-300">typing…</span>
                         </div>
                         <div className="bg-white/10 rounded-2xl px-4 py-3">
                           <div className="flex space-x-1">
@@ -266,9 +303,11 @@ const AIPage = () => {
                   <div className="flex-1">
                     <textarea
                       ref={inputRef}
+                      id="ai-page-message"
+                      aria-label="Ask the AI assistant"
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      onKeyPress={handleKeyPress}
+                      onKeyDown={handleKeyPress}
                       placeholder="Ask me anything..."
                       className="w-full px-4 py-3 border border-white/15 rounded-xl focus:ring-2 focus:ring-brand-500/50 focus:border-brand-500/50 resize-none transition-colors bg-white/5 text-white placeholder-gray-500"
                       rows={1}
@@ -279,6 +318,8 @@ const AIPage = () => {
                   <MagneticButton
                     onClick={() => handleSendMessage()}
                     disabled={!inputMessage.trim() || isLoading}
+                    aria-label="Send message"
+                    title="Send message"
                     className="btn btn-primary btn-lg"
                   >
                     {isLoading ? (

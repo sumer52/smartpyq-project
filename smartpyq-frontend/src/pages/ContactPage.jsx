@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import api from '../lib/api';
 import {
   EnvelopeIcon,
-  PhoneIcon,
+  ClockIcon,
   MapPinIcon,
   ChatBubbleLeftRightIcon,
 } from '@heroicons/react/24/outline';
@@ -43,7 +43,7 @@ const ContactPage = () => {
         category: 'general'
       });
     } catch (error) {
-      console.error('Error submitting contact form:', error);
+      if (import.meta.env.DEV) console.error('Error submitting contact form:', error);
       setSubmitStatus('error');
     } finally {
       setIsSubmitting(false);
@@ -54,30 +54,28 @@ const ContactPage = () => {
     {
       icon: EnvelopeIcon,
       title: 'Email Support',
-      description: 'Reach us anytime and we will get back within 24 hours',
+      description: 'Email is the support channel we actually monitor',
       contact: 'smartpyq@gmail.com',
       action: 'mailto:smartpyq@gmail.com'
     },
     {
       icon: ChatBubbleLeftRightIcon,
-      title: 'Live Chat',
-      description: 'Get quick answers to frequently asked questions',
-      contact: 'Available 9 AM - 6 PM IST',
-      action: '#'
+      title: 'AI Study Assistant',
+      description: 'Ask academic questions at any time — answers are AI-generated',
+      contact: 'Open the AI assistant',
+      action: '/ai'
     },
     {
-      icon: PhoneIcon,
-      title: 'Phone Support',
-      description: 'For urgent matters that need immediate attention',
-      contact: '+91 00000 00000',
-      action: 'tel:+910000000000'
+      icon: ClockIcon,
+      title: 'Response Time',
+      description: 'We read every message and reply by email',
+      contact: 'Usually within 1–2 working days'
     },
     {
       icon: MapPinIcon,
-      title: 'Address',
-      description: '',
-      contact: 'Hyderabad, Telangana',
-      action: '#'
+      title: 'Where We Are',
+      description: 'Based in',
+      contact: 'Hyderabad, Telangana'
     }
   ];
   const categories = [
@@ -234,15 +232,16 @@ const ContactPage = () => {
                   <motion.div
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
+                    role={submitStatus === 'error' ? 'alert' : 'status'}
                     className={`p-4 rounded-lg text-center ${
                       submitStatus === 'success'
-                        ? 'bg-green-500/20 border border-green-500/50 text-green-400'
-                        : 'bg-red-500/20 border border-red-500/50 text-red-400'
+                        ? 'bg-green-500/20 border border-green-500/50 text-green-300'
+                        : 'bg-red-500/20 border border-red-500/50 text-red-300'
                     }`}
                   >
                     {submitStatus === 'success'
-                      ? '✅ Message sent successfully! We\'ll get back to you soon.'
-                      : '❌ Failed to send message. Please try again or contact us directly.'}
+                      ? 'Message sent. We\'ll reply by email.'
+                      : `Could not send your message. Please try again, or email smartpyq@gmail.com.`}
                   </motion.div>
                 )}
                 <motion.button
