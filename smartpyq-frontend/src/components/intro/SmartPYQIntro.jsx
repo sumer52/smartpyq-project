@@ -110,6 +110,20 @@ export default function SmartPYQIntro({ onFinish }) {
       )}
       <IntroParticles exiting={exiting} converging={step === 4} reducedMotion={reducedMotion} />
 
+      {/* Letterbox cinema presentation. Decorative only: the matte bars crop the
+          composition to a widescreen frame that opens as the reel starts and
+          closes as it ends, with grain and a projector-lit screen edge. */}
+      <div className="sp-intro__grain" aria-hidden="true" />
+      <div className="sp-intro__frame" aria-hidden="true" />
+      <div className="sp-intro__matte sp-intro__matte--top" aria-hidden="true" />
+      <div className="sp-intro__matte sp-intro__matte--bottom" aria-hidden="true" />
+      <div className="sp-intro__hud" aria-hidden="true">
+        <span className="sp-intro__hud-label">SmartPYQ presents</span>
+        <span className="sp-intro__hud-count">
+          {String(step + 1).padStart(2, '0')} / {String(TOTAL_STEPS).padStart(2, '0')}
+        </span>
+      </div>
+
       {!reducedMotion && step < 4 && (
         <div className="sp-intro__academic" aria-hidden="true">
           <div className="sp-intro__paper sp-intro__paper--one"><b>PYQ</b><i /><i /><i /><span>✓</span></div>
