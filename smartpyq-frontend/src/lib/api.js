@@ -22,6 +22,13 @@ const ensureBackendConfigured = () => {
 // short enough that the user sees a real error instead of an endless spinner.
 export const REQUEST_TIMEOUT_MS = 20000;
 
+// A sleeping free-tier instance answers its first request only after 30-60s of
+// cold start, and a deploy in progress answers 502/503 for a few seconds. Public
+// reads get one extra attempt with this budget, so the first visitor of the day
+// sees the library instead of
+// "We couldn't load the paper library counts just now."
+export const COLD_START_RETRY_TIMEOUT_MS = 60000;
+
 const isDev = import.meta.env.DEV;
 
 // Development-only diagnostics. Production stays quiet (no console noise, no
@@ -455,8 +462,20 @@ class ApiClient {
   // Browse tree derived from the papers actually in the database, so every
   // published paper is reachable (the old hardcoded catalog hid anything it
   // didn't know about).
+  // One retry on a cold-start-shaped failure only: a 20s timeout (no bytes at
+  // all — the instance is booting) or a 502/503 (deploy in progress). A plain
+  // network/DNS failure is NOT retried: the backend is unreachable, and making
+  // the visitor wait another minute before the error appears helps nobody.
   async getPaperCatalog() {
-    return this.request('/api/v1/papers/catalog');
+    try {
+      return await this.request('/api/v1/papers/catalog');
+    } catch (error) {
+      const coldStart = error?.code === 'TIMEOUT' ||
+        error?.status === 502 || error?.status === 503;
+      if (!coldStart) throw error;
+      devLog('catalog: retrying once after a cold-start failure');
+      return this.request('/api/v1/papers/catalog', { timeoutMs: COLD_START_RETRY_TIMEOUT_MS });
+    }
   }
 
   // Available PYQ years with per-year approved-paper counts (public).
