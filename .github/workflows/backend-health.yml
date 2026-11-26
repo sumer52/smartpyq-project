@@ -1,0 +1,91 @@
+# Health monitor for the production backend.
+#
+# Pings /health on a schedule and FAILS the run when it stops answering 200.
+# The failed scheduled run is the alert: GitHub emails the workflow author /
+# repo watcher, and if the ALERT_WEBHOOK_URL secret is set the failure is also
+# pushed to Slack, Discord or any other webhook. See docs/MONITORING.md.
+#
+# Not the same job as keep-warm.yml: that one only keeps the free Render
+# instance from spinning down and never fails, so an outage inside it is
+# invisible. This workflow is the one that must go red.
+#
+# Caveats: GitHub cron is best-effort (runs can be minutes late) and GitHub
+# disables scheduled workflows after 60 days without repo activity.
+
+name: Backend health monitor
+
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: backend-health
+  cancel-in-progress: false
+
+jobs:
+  health:
+    name: GET /health
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Override with a repo secret/variable when the backend URL changes.
+      BACKEND_URL: ${{ secrets.BACKEND_URL || 'https://smartpyq-backend.onrender.com' }}
+      ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+    steps:
+      - name: Probe /health (cold-start tolerant)
+        id: probe
+        run: |
+          set +e
+          attempts=3
+          status=""
+          payload=""
+          for i in $(seq 1 "$attempts"); do
+            body=$(curl -sS -m 90 -w '\n%{http_code}' "$BACKEND_URL/health")
+            status=$(printf '%s' "$body" | tail -n1)
+            payload=$(printf '%s' "$body" | sed '$d')
+            echo "attempt $i -> HTTP ${status:-none}"
+            printf '%s\n' "$payload" | head -c 500
+            echo
+            if [ "$status" = "200" ]; then
+              {
+                echo "### Backend healthy"
+                echo ""
+                echo "- \`$BACKEND_URL/health\` returned 200 on attempt $i"
+                echo "- Response: \`$payload\`"
+              } >> "$GITHUB_STEP_SUMMARY"
+              echo "healthy=true" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+            [ "$i" -lt "$attempts" ] && sleep 20
+          done
+
+          {
+            echo "### Backend health check FAILED"
+            echo ""
+            echo "- URL: \`$BACKEND_URL/health\`"
+            echo "- Last status: \`${status:-no response}\`"
+            echo "- Attempts: $attempts over ~2 minutes (cold start tolerated)"
+            echo ""
+            echo "What this means and what to check: \`docs/MONITORING.md\`."
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "healthy=false" >> "$GITHUB_OUTPUT"
+          echo "last_status=${status:-none}" >> "$GITHUB_OUTPUT"
+          exit 1
+
+      - name: Push failure to ALERT_WEBHOOK_URL
+        if: failure()
+        run: |
+          if [ -z "$ALERT_WEBHOOK_URL" ]; then
+            echo "::notice::ALERT_WEBHOOK_URL is not set — relying on GitHub notifications"
+            exit 0
+          fi
+          message="SmartPYQ backend is DOWN: $BACKEND_URL/health did not return 200 after 3 attempts. Run: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+          # "text" is read by Slack/incoming webhooks, "content" by Discord.
+          curl -sS -m 30 -H 'Content-Type: application/json' \
+            -d "{\"text\":\"$message\",\"content\":\"$message\"}" \
+            "$ALERT_WEBHOOK_URL" \
+            || echo "::warning::could not deliver the alert webhook"

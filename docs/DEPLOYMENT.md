@@ -101,6 +101,10 @@ See `.env.example` for all available configuration options.
 - `/ready` - Readiness check (dependencies reachable)
 - `/version` - Build information
 
+The live `/health` is polled every 10 minutes by
+[`backend-health.yml`](../.github/workflows/backend-health.yml); a failed run is
+the alert. What that alert means and how to triage it: [MONITORING.md](MONITORING.md).
+
 ## Production Checklist
 
 - [ ] Set strong `JWT_SECRET` (min 32 characters)
