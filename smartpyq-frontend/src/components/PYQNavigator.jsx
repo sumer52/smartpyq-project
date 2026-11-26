@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Search, BookOpen, Calendar, GraduationCap, FileText, Download, Eye, Flame, CheckSquare, Loader2, X } from 'lucide-react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getStreamIcon } from '../data/streamIcons';
+import { pyqData } from '../data/pyqData';
 import { apiClient } from '../lib/api';
 import SpotlightCard from './ui/SpotlightCard';
 import MagneticButton from './ui/MagneticButton';
@@ -33,6 +34,87 @@ const prettySemester = (name) => {
 };
 
 const formatFileSize = (bytes) => (bytes ? `${(bytes / 1048576).toFixed(1)} MB` : '');
+
+// ---------------------------------------------------------------------------
+// Course catalogue vs. live papers
+//   The backend catalog only contains courses that already have an approved
+//   paper, so a young library showed a single stream and B.Com / BCA / BBA
+//   looked missing. The static course catalogue supplies the full tree; the
+//   backend fills in live paper counts, matched level by level by name. Every
+//   level is a union, so a paper uploaded under a course the static tree does
+//   not list stays reachable instead of disappearing from the hub.
+// ---------------------------------------------------------------------------
+
+const staticTree = () => Object.values(pyqData.streams).map((stream) => ({
+  name: stream.displayName || stream.name,
+  specializations: Object.values(stream.specializations || {}).map((spec) => ({
+    name: spec.displayName || spec.name,
+    semesters: Object.entries(spec.semesters || {}).map(([semesterName, subjects]) => ({
+      name: semesterName,
+      subjects: subjects.map((subject) => ({ name: subject, paper_count: 0 })),
+    })),
+  })),
+}));
+
+const countPapers = (items) => items.reduce((total, item) => total + (item.paper_count || 0), 0);
+
+const mergeSubjects = (staticSubjects = [], liveSubjects = []) => {
+  const merged = staticSubjects.map((subject) => {
+    const live = liveSubjects.find((item) => slug(item.name) === slug(subject.name));
+    return { name: subject.name, paper_count: live?.paper_count || 0 };
+  });
+  liveSubjects.forEach((live) => {
+    if (!merged.some((item) => slug(item.name) === slug(live.name))) {
+      merged.push({ name: displayName(live.name), paper_count: live.paper_count || 0 });
+    }
+  });
+  return merged;
+};
+
+const mergeSemesters = (staticSemesters = [], liveSemesters = []) => {
+  const merged = staticSemesters.map((semester) => {
+    const live = liveSemesters.find((item) => slug(item.name) === slug(semester.name));
+    const subjects = mergeSubjects(semester.subjects, live?.subjects || []);
+    return { name: semester.name, subjects, paper_count: countPapers(subjects) };
+  });
+  liveSemesters.forEach((live) => {
+    if (!merged.some((item) => slug(item.name) === slug(live.name))) {
+      const subjects = mergeSubjects([], live.subjects || []);
+      merged.push({ name: displayName(live.name), subjects, paper_count: countPapers(subjects) });
+    }
+  });
+  return merged;
+};
+
+const mergeSpecializations = (staticSpecializations = [], liveSpecializations = []) => {
+  const merged = staticSpecializations.map((spec) => {
+    const live = liveSpecializations.find((item) => slug(item.name) === slug(spec.name));
+    const semesters = mergeSemesters(spec.semesters, live?.semesters || []);
+    return { name: spec.name, semesters, paper_count: countPapers(semesters) };
+  });
+  liveSpecializations.forEach((live) => {
+    if (!merged.some((item) => slug(item.name) === slug(live.name))) {
+      const semesters = mergeSemesters([], live.semesters || []);
+      merged.push({ name: displayName(live.name), semesters, paper_count: countPapers(semesters) });
+    }
+  });
+  return merged;
+};
+
+const mergeCatalogStreams = (liveStreams = []) => {
+  const streams = staticTree().map((stream) => {
+    const live = liveStreams.find((item) => slug(item.name) === slug(stream.name));
+    const specializations = mergeSpecializations(stream.specializations, live?.specializations || []);
+    return { name: stream.name, specializations, paper_count: countPapers(specializations) };
+  });
+  liveStreams.forEach((live) => {
+    if (!streams.some((item) => slug(item.name) === slug(live.name))) {
+      const specializations = mergeSpecializations([], live.specializations || []);
+      streams.push({ name: displayName(live.name), specializations, paper_count: countPapers(specializations) });
+    }
+  });
+  return streams;
+};
 
 const PYQNavigator = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -78,7 +160,7 @@ const PYQNavigator = () => {
     apiClient.getPaperCatalog()
       .then((data) => {
         if (cancelled) return;
-        setCatalog({ streams: data?.streams || [], paper_count: data?.paper_count || 0 });
+        setCatalog({ streams: mergeCatalogStreams(data?.streams || []), paper_count: data?.paper_count || 0 });
         setCatalogError('');
       })
       .catch((err) => {
@@ -356,7 +438,7 @@ const PYQNavigator = () => {
               </div>
               <h3 className="text-2xl font-bold text-white mb-2">{displayName(s.name)}</h3>
               <p className="text-gray-400 text-sm">
-                {s.specializations.length} specialization{s.specializations.length === 1 ? '' : 's'} · {s.paper_count} paper{s.paper_count === 1 ? '' : 's'}
+                {s.specializations.length} specialization{s.specializations.length === 1 ? '' : 's'} · {s.paper_count > 0 ? `${s.paper_count} paper${s.paper_count === 1 ? '' : 's'}` : 'No papers yet'}
               </p>
             </motion.button>
           );
