@@ -4,18 +4,31 @@ import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
 
+// Demo admin credentials shown on the login page. The admin account is
+// created server-side from ADMIN_EMAIL / ADMIN_PASSWORD; this card documents
+// the seeded demo admin so the portal can be tried without a private invite.
+// The admin-login endpoint accepts the bare ID "admin" and resolves it to
+// ADMIN_EMAIL (admin@smartpyq.com).
+const DEMO_ADMIN_ID = 'admin';
+const DEMO_ADMIN_PASSWORD = 'smartpyq@admin';
+
 /**
  * Separate admin authentication page — /admin/login.
  *
  * POSTs to /api/v1/auth/admin-login which REFUSES to issue a token to any
  * non-admin role (403), so a student password can never unlock this area.
  *
- * No credentials are embedded here, in any build: the admin account is
- * created server-side from ADMIN_EMAIL / ADMIN_PASSWORD and the password is
- * never shipped to the browser.
+ * The demo admin credentials are documented on this page on purpose (it is a
+ * demo deployment); rotating ADMIN_PASSWORD in Render invalidates the card.
  */
 const AdminLoginPage = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+  // Auto-filled: the demo admin credentials are prefilled on load so the admin
+  // portal can be entered in one click. Editing either field overrides them;
+  // the "Fill demo credentials" button puts them back.
+  const [formData, setFormData] = useState({
+    email: DEMO_ADMIN_ID,
+    password: DEMO_ADMIN_PASSWORD,
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -100,7 +113,7 @@ const AdminLoginPage = () => {
                   value={formData.email}
                   onChange={(e) => setFormData((f) => ({ ...f, email: e.target.value }))}
                   className="w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-white placeholder-gray-500 outline-hidden focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20"
-                  placeholder="you@example.com"
+                  placeholder="admin"
                   required
                 />
               </div>
@@ -139,6 +152,29 @@ const AdminLoginPage = () => {
                 {isSubmitting ? 'Verifying…' : 'Sign in to Admin'}
               </button>
             </form>
+
+            {/* Public demo credentials — the demo admin is intentionally
+                documented on the login page (the seed script keeps the
+                password working for exactly this purpose). */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.2 }}
+              className="mt-6 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-4 py-3"
+            >
+              <p className="text-xs font-semibold text-emerald-300 mb-1.5 tracking-wide">DEMO ADMIN LOGIN</p>
+              <div className="text-xs text-gray-300 space-y-0.5 font-mono">
+                <p>Admin ID: <span className="text-emerald-300">{DEMO_ADMIN_ID}</span></p>
+                <p>Password: <span className="text-emerald-300">{DEMO_ADMIN_PASSWORD}</span></p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setFormData({ email: DEMO_ADMIN_ID, password: DEMO_ADMIN_PASSWORD })}
+                className="mt-2 text-xs text-emerald-400 hover:text-emerald-300 underline"
+              >
+                Fill demo credentials
+              </button>
+            </motion.div>
 
             <div className="mt-6 text-center">
               <Link to="/" className="text-sm text-gray-400 hover:text-gray-200">
