@@ -33,6 +33,57 @@ export const clearDemoSession = () => {
   } catch {}
 };
 
+// ---------------------------------------------------------------------------
+// Demo ADMIN session
+//
+// The admin login is frontend-only: these credentials create a local session
+// and are never sent anywhere, so /admin/login works with no backend at all
+// (API down, Render asleep, no network to the API). Admin data pages still call
+// the API and will show their own error states when it is unreachable.
+// The same pair is documented on the login card.
+// ---------------------------------------------------------------------------
+
+export const DEMO_ADMIN_ID = 'admin';
+export const DEMO_ADMIN_EMAIL = 'admin@smartpyq.com';
+export const DEMO_ADMIN_PASSWORD = 'smartpyq@admin';
+export const DEMO_ADMIN_SESSION_KEY = 'demo_admin_session';
+
+export const isDemoAdminSessionActive = () => {
+  try {
+    const session = localStorage.getItem(DEMO_ADMIN_SESSION_KEY);
+    if (!session) return false;
+    const parsed = JSON.parse(session);
+    return !!parsed && typeof parsed.ts === 'number';
+  } catch {
+    return false;
+  }
+};
+
+// True for the documented demo pair, whether typed as the bare ID or the email.
+export const isDemoAdminCredentials = (id, password) => {
+  const normalized = String(id || '').trim().toLowerCase();
+  const matchesId = normalized === DEMO_ADMIN_ID || normalized === DEMO_ADMIN_EMAIL;
+  return matchesId && password === DEMO_ADMIN_PASSWORD;
+};
+
+export const startDemoAdminSession = () => {
+  try {
+    localStorage.setItem(
+      DEMO_ADMIN_SESSION_KEY,
+      JSON.stringify({ id: DEMO_ADMIN_ID, ts: Date.now() })
+    );
+    return true;
+  } catch {
+    return false;
+  }
+};
+
+export const clearDemoAdminSession = () => {
+  try {
+    localStorage.removeItem(DEMO_ADMIN_SESSION_KEY);
+  } catch {}
+};
+
 let connecting = null;
 
 // Log the demo account into the backend and store its tokens under the same

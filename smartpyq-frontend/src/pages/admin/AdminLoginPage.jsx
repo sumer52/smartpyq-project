@@ -3,14 +3,7 @@ import { motion } from 'framer-motion';
 import { useNavigate, useLocation, Link } from 'react-router-dom';
 import { EyeIcon, EyeSlashIcon, ShieldCheckIcon, ExclamationCircleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '../../contexts/AuthContext';
-
-// Demo admin credentials shown on the login page. The admin account is
-// created server-side from ADMIN_EMAIL / ADMIN_PASSWORD; this card documents
-// the seeded demo admin so the portal can be tried without a private invite.
-// The admin-login endpoint accepts the bare ID "admin" and resolves it to
-// ADMIN_EMAIL (admin@smartpyq.com).
-const DEMO_ADMIN_ID = 'admin';
-const DEMO_ADMIN_PASSWORD = 'smartpyq@admin';
+import { DEMO_ADMIN_ID, DEMO_ADMIN_PASSWORD } from '../../lib/demoSession';
 
 /**
  * Separate admin authentication page — /admin/login.
@@ -19,7 +12,10 @@ const DEMO_ADMIN_PASSWORD = 'smartpyq@admin';
  * non-admin role (403), so a student password can never unlock this area.
  *
  * The demo admin credentials are documented on this page on purpose (it is a
- * demo deployment); rotating ADMIN_PASSWORD in Render invalidates the card.
+ * demo deployment). They are handled entirely in the browser by
+ * AuthContext.adminLogin — no request is made — so this portal opens with no
+ * backend at all. Only non-demo credentials (a real admin account) go to
+ * /api/v1/auth/admin-login.
  */
 const AdminLoginPage = () => {
   // Auto-filled: the demo admin credentials are prefilled on load so the admin
@@ -167,6 +163,9 @@ const AdminLoginPage = () => {
                 <p>Admin ID: <span className="text-emerald-300">{DEMO_ADMIN_ID}</span></p>
                 <p>Password: <span className="text-emerald-300">{DEMO_ADMIN_PASSWORD}</span></p>
               </div>
+              <p className="mt-2 text-[11px] text-gray-400">
+                Signs in locally — works even when the backend is unreachable.
+              </p>
               <button
                 type="button"
                 onClick={() => setFormData({ email: DEMO_ADMIN_ID, password: DEMO_ADMIN_PASSWORD })}

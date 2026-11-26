@@ -1,5 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef } from 'react';
-import { DEMO_EMAIL, DEMO_PASSWORD, DEMO_SESSION_KEY, attachDemoBackendSession, clearDemoSession } from '../lib/demoSession';
+import {
+  DEMO_EMAIL,
+  DEMO_PASSWORD,
+  DEMO_SESSION_KEY,
+  attachDemoBackendSession,
+  clearDemoSession,
+  clearDemoAdminSession,
+  isDemoAdminCredentials,
+  isDemoAdminSessionActive,
+  startDemoAdminSession,
+} from '../lib/demoSession';
 import { BACKEND_URL } from '../lib/backendUrl';
 
 const AuthContext = createContext();
@@ -21,6 +31,19 @@ const DEMO_USER = {
   academic_year: '3rd Year',
   onboarding_completed: true,
   stats: { papersDownloaded: 47, studyStreak: 12 }
+};
+
+// Local admin identity used by the backend-free demo admin login.
+const DEMO_ADMIN_USER = {
+  id: 'demo-admin-001',
+  name: 'Demo Admin',
+  email: 'admin@smartpyq.com',
+  avatar: null,
+  role: 'admin',
+  course: null,
+  semester: null,
+  onboarding_completed: true,
+  stats: { papersDownloaded: 0, studyStreak: 0 },
 };
 
 export const useAuth = () => {
@@ -78,6 +101,15 @@ export const AuthProvider = ({ children }) => {
         localStorage.removeItem(DEMO_SESSION_KEY);
       }
 
+      // 1b. Local demo-admin session. Created by the demo admin login, which
+      // never touches the backend, so it must survive reloads without a token.
+      if (isDemoAdminSessionActive()) {
+        setUser(DEMO_ADMIN_USER);
+        setIsAuthenticated(true);
+        setIsLoading(false);
+        return;
+      }
+
       // 2. Check for real token-based session
       const token = localStorage.getItem('auth_token') || localStorage.getItem('authToken');
       const userData = localStorage.getItem('userData') || localStorage.getItem('user');
@@ -117,6 +149,7 @@ export const AuthProvider = ({ children }) => {
   // Frontend-only demo login
   const loginDemo = useCallback((email, password) => {
     if (email === DEMO_EMAIL && password === DEMO_PASSWORD) {
+      clearDemoAdminSession();
       localStorage.setItem(DEMO_SESSION_KEY, JSON.stringify({ email: DEMO_EMAIL, ts: Date.now() }));
       setUser(DEMO_USER);
       setIsAuthenticated(true);
@@ -130,6 +163,16 @@ export const AuthProvider = ({ children }) => {
   // Admin authentication — hits the admin-only endpoint which REFUSES to
   // issue a token to non-admin roles (403). Never accepts demo credentials.
   const adminLogin = useCallback(async (email, password) => {
+    // The documented demo credentials sign in locally — no fetch, no token, no
+    // backend. This is what lets /admin/login work while the API is down.
+    if (isDemoAdminCredentials(email, password)) {
+      startDemoAdminSession();
+      setUser(DEMO_ADMIN_USER);
+      setIsAuthenticated(true);
+      setIsLoading(false);
+      return { success: true, user: DEMO_ADMIN_USER, offline: true };
+    }
+
     setIsLoading(true);
     try {
       const response = await fetch(`${BACKEND_URL}/api/v1/auth/admin-login`, {
@@ -252,6 +295,8 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const logout = useCallback(async () => {
+    // A local demo-admin session has no server state to invalidate.
+    clearDemoAdminSession();
     if (localStorage.getItem(DEMO_SESSION_KEY)) {
       // Demo session: also drop any backend token the demo attach created
       localStorage.removeItem('auth_token');
