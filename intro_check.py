@@ -149,10 +149,15 @@ window.addEventListener('unhandledrejection', e => window.__errlog.push('REJ ' +
             check("C2 intro replays on demand", await wait_intro(True))
             check("C3 flag still true during replay", (await ev("localStorage.getItem('smartpyq_intro_seen')")) == "true")
 
-            # thumbnails: jump to scene 5, Enter SmartPYQ
-            await ev("document.querySelector('.thumbnail-carousel [data-index=\"4\"]')?.click()")
-            await asyncio.sleep(1.0)
-            check("C4 thumbnail jump -> scene 5", "Scene 5 of 5" in (await ev(SCENE) or ""))
+            # Scene 5 via the keyboard path. The thumbnail carousel these checks
+            # used to drive was removed from the intro in 7648a52, so the suite
+            # exercises what the component actually renders: ArrowRight steps
+            # through scenes (window keydown listener), same as A5/A6 above.
+            for _ in range(4):  # scene 1 -> scene 5
+                await ev("window.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowRight'}))")
+                await asyncio.sleep(0.45)
+            await asyncio.sleep(0.6)  # scene 5 mounts the logo + enter button
+            check("C4 ArrowRight x4 -> scene 5", "Scene 5 of 5" in (await ev(SCENE) or ""))
             enter = None
             for _ in range(30):  # Enter button animates in ~1.6s after scene 5 lands
                 enter = await ev("""(() => {
